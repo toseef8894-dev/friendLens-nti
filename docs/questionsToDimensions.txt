@@ -1,0 +1,15 @@
+Question to Dimension Weights
+
+
+
+[
+{"rule":"Initiate, pursue, take charge, start plans","weights":{"DA":0.6,"EN":0.4}},
+{"rule":"Compete, win, intensity, standards, dominance","weights":{"EN":0.7,"DA":0.3}},
+{"rule":"Care, bond, nurture, check-in, warmth","weights":{"OX":0.7,"5HT":0.3}},
+{"rule":"Reflect, analyze, learn, understand, language","weights":{"ACh":0.8,"5HT":0.2}},
+{"rule":"Play, humor, spontaneity, vibe, ease","weights":{"ACh":0.6,"DA":0.4}},
+{"rule":"Calm, stabilize, patience, low-drama, regulate","weights":{"GABA":0.8,"5HT":0.2}},
+{"rule":"Tradition, duty, consistency, long-term","weights":{"5HT":0.7,"GABA":0.3}},
+{"rule":"Explore, novelty, adventure, risk","weights":{"ACh":0.6,"DA":0.4}}
+]
+

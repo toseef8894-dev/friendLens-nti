@@ -1,0 +1,255 @@
+'use client'
+
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { setAuthToken, setAuthUser } from '@/lib/auth-storage'
+
+export default function LoginPage() {
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [isSignUp, setIsSignUp] = useState(false)
+    const router = useRouter()
+    const supabase = createClient()
+
+    // Get error from URL if present
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+    const errorParam = searchParams?.get('error')
+
+    useEffect(() => {
+        if (errorParam) {
+            setError('Authentication failed. Please try again.')
+            toast.error('Authentication failed')
+        }
+    }, [errorParam])
+
+    const handleAuth = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
+        setError(null)
+
+        try {
+            if (isSignUp) {
+                // Validate required fields for signup
+                if (!firstName.trim() || !lastName.trim()) {
+                    setError('First name and last name are required')
+                    toast.error('Please enter your first and last name')
+                    setLoading(false)
+                    return
+                }
+
+                const { data: signupData, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: `${location.origin}/auth/callback`,
+                        data: {
+                            first_name: firstName.trim(),
+                            last_name: lastName.trim(),
+                            full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+                        },
+                    },
+                })
+                
+                if (error) {
+                    // Provide more specific error messages
+                    if (error.message.includes('database') || error.message.includes('profile')) {
+                        throw new Error('Database error: Please contact support if this persists.')
+                    }
+                    throw error
+                }
+                
+                if (!signupData.user) {
+                    throw new Error('Failed to create user account')
+                }
+                
+                // Check if email confirmation is required
+                // If session exists, email confirmation is disabled - user can sign in immediately
+                // If no session, email confirmation is enabled - user needs to confirm email
+                if (signupData.user && !signupData.session) {
+                    toast.success('Check your email to confirm your account')
+                    // Clear form after successful signup
+                    setFirstName('')
+                    setLastName('')
+                    setEmail('')
+                    setPassword('')
+                } else if (signupData.session) {
+                    // Store token and user in localStorage
+                    if (signupData.session.access_token) {
+                        setAuthToken(signupData.session.access_token)
+                        setAuthUser(signupData.user)
+                    }
+                    toast.success('Account created successfully!')
+                    // Redirect new users to landing page, not assessment
+                    router.push('/')
+                    router.refresh()
+                }
+            } else {
+                const { data: signInData, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                })
+                if (error) throw error
+                
+                // Store token and user in localStorage
+                if (signInData.session?.access_token) {
+                    setAuthToken(signInData.session.access_token)
+                    setAuthUser(signInData.user)
+                }
+                
+                toast.success('Signed in successfully')
+                router.push('/')
+                router.refresh()
+            }
+        } catch (err: any) {
+            setError(err.message)
+            toast.error(err.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+                    {isSignUp ? 'Create your account' : 'Sign in to your account'}
+                </h2>
+                <p className="mt-2 text-center text-sm text-gray-600">
+                    Or{' '}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsSignUp(!isSignUp)
+                            setError(null)
+                            // Clear name fields when switching to login
+                            if (!isSignUp) {
+                                setFirstName('')
+                                setLastName('')
+                            }
+                        }}
+                        className="font-medium text-indigo-600 hover:text-indigo-500"
+                    >
+                        {isSignUp ? 'sign in to existing account' : 'create a new account'}
+                    </button>
+                </p>
+            </div>
+
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                    <form className="space-y-6" onSubmit={handleAuth}>
+                        {isSignUp && (
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label
+                                            htmlFor="firstName"
+                                            className="block text-sm font-medium text-gray-700"
+                                        >
+                                            First Name
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                id="firstName"
+                                                name="firstName"
+                                                type="text"
+                                                autoComplete="given-name"
+                                                required={isSignUp}
+                                                value={firstName}
+                                                onChange={(e) => setFirstName(e.target.value)}
+                                                className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                                placeholder="John"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label
+                                            htmlFor="lastName"
+                                            className="block text-sm font-medium text-gray-700"
+                                        >
+                                            Last Name
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                id="lastName"
+                                                name="lastName"
+                                                type="text"
+                                                autoComplete="family-name"
+                                                required={isSignUp}
+                                                value={lastName}
+                                                onChange={(e) => setLastName(e.target.value)}
+                                                className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                                placeholder="Doe"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        <div>
+                            <label
+                                htmlFor="email"
+                                className="block text-sm font-medium text-gray-700"
+                            >
+                                Email address
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="password"
+                                className="block text-sm font-medium text-gray-700"
+                            >
+                                Password
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    autoComplete={isSignUp ? "new-password" : "current-password"}
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="text-red-600 text-sm">{error}</div>
+                        )}
+
+                        <div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                            >
+                                {loading ? 'Processing...' : isSignUp ? 'Sign up' : 'Sign in'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    )
+}

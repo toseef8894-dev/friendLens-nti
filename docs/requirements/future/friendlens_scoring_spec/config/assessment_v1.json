@@ -1,0 +1,84 @@
+{
+  "assessment_id": "FRIENDLENS_V1",
+  "rank_weights": [
+    1.0,
+    0.7,
+    0.4,
+    0.2,
+    0.1
+  ],
+  "questions": [
+    {
+      "question_id": "Q1_SOCIAL_ENERGY",
+      "text": "When I'm with people, my energy naturally goes toward...",
+      "options": [
+        {
+          "id": "Q1_A_FUN",
+          "label": "Energizing the room and making things fun",
+          "dimension_weights": [
+            {
+              "dimension_id": "FUN_DRIVE",
+              "weight": 1.0
+            },
+            {
+              "dimension_id": "BASELINE_VOLTAGE",
+              "weight": 0.6
+            }
+          ]
+        },
+        {
+          "id": "Q1_B_WARMTH",
+          "label": "Making others feel welcome and at ease",
+          "dimension_weights": [
+            {
+              "dimension_id": "WARMTH_DRIVE",
+              "weight": 1.0
+            }
+          ]
+        },
+        {
+          "id": "Q1_C_OBSERVE",
+          "label": "Observing quietly and taking things in",
+          "dimension_weights": [
+            {
+              "dimension_id": "DEPTH_DRIVE",
+              "weight": 0.7
+            },
+            {
+              "dimension_id": "BASELINE_VOLTAGE",
+              "weight": -0.4
+            }
+          ]
+        },
+        {
+          "id": "Q1_D_STRUCTURE",
+          "label": "Keeping things on track and practical",
+          "dimension_weights": [
+            {
+              "dimension_id": "STRUCTURE_DRIVE",
+              "weight": 1.0
+            }
+          ]
+        },
+        {
+          "id": "Q1_E_HYBRID",
+          "label": "A mix (depends on the setting)",
+          "dimension_weights": [
+            {
+              "dimension_id": "FUN_DRIVE",
+              "weight": 0.4
+            },
+            {
+              "dimension_id": "WARMTH_DRIVE",
+              "weight": 0.4
+            },
+            {
+              "dimension_id": "STRUCTURE_DRIVE",
+              "weight": 0.4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

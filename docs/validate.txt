@@ -1,0 +1,83 @@
+Here’s a 5-profile synthetic test set to validate the engine end-to-end. These are normalized vectors (0–100) with expected outputs.
+
+
+
+Assumed mapping (per your current UI labels):
+
+
+
+Drive → Hunter
+
+
+
+Connection → Bonder
+
+
+
+Wisdom → Sage
+
+
+
+Focus → Competitor
+
+
+
+Joy → FlowMaker
+
+
+
+Calm → Anchor
+
+
+
+Also assumed: normalization-by-max (so at least one dimension hits 100).
+
+
+
+[
+{
+"test_id": "SYN01_ANCHOR_HEAVY",
+"normalized_scores": {"Drive": 20, "Connection": 45, "Wisdom": 55, "Focus": 25, "Joy": 20, "Calm": 100},
+"expected_primary_archetype": "Anchor",
+"expected_secondary_archetype": "Sage",
+"expected_primary_type16": "Anchor",
+"notes": "High Calm dominant; Wisdom second. Should not classify as Anchorite unless Connection is notably low."
+},
+{
+"test_id": "SYN02_BONDER_COMPANION",
+"normalized_scores": {"Drive": 25, "Connection": 100, "Wisdom": 55, "Focus": 20, "Joy": 30, "Calm": 60},
+"expected_primary_archetype": "Bonder",
+"expected_secondary_archetype": "Anchor",
+"expected_primary_type16": "Companion",
+"notes": "High Connection + high Calm/Wisdom. If it returns Host/Giver instead of Companion, templates may be too close or Connection-biased."
+},
+{
+"test_id": "SYN03_HUNTER_CATALYST",
+"normalized_scores": {"Drive": 100, "Connection": 25, "Wisdom": 25, "Focus": 45, "Joy": 35, "Calm": 20},
+"expected_primary_archetype": "Hunter",
+"expected_secondary_archetype": "Competitor",
+"expected_primary_type16": "Catalyst",
+"notes": "Drive dominant, Focus second. Should not land on Builder unless Wisdom/Calm are higher."
+},
+{
+"test_id": "SYN04_SAGE_MIRROR",
+"normalized_scores": {"Drive": 30, "Connection": 35, "Wisdom": 100, "Focus": 55, "Joy": 35, "Calm": 45},
+"expected_primary_archetype": "Sage",
+"expected_secondary_archetype": "Competitor",
+"expected_primary_type16": "Mirror",
+"notes": "Wisdom dominant with decent Focus. If Pathfinder wins instead of Mirror, ACh-ish template vectors may be too similar."
+},
+{
+"test_id": "SYN05_FLOWMAKER_SPARK",
+"normalized_scores": {"Drive": 65, "Connection": 45, "Wisdom": 35, "Focus": 30, "Joy": 100, "Calm": 25},
+"expected_primary_archetype": "FlowMaker",
+"expected_secondary_archetype": "Hunter",
+"expected_primary_type16": "Spark",
+"notes": "Joy dominant with solid Drive. Should not land on Explorer unless Wisdom is lower and Drive is higher with Joy."
+}
+]
+
+
+
+If you want, I can also generate a 6th “tie/flip” case (top-3 within 2 points) to verify tie-break rules + rounding stability.
+

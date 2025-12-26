@@ -1,0 +1,10 @@
+{
+  "archetypes": [
+    {
+      "id": "ARCH_STOIC_BUILDER",
+      "name": "Stoic Builder",
+      "short_label": "Steady, responsible, low-drama anchor",
+      "description": "Calm, structured, warm-in-action, activity-bonding, with periodic withdrawal under overload."
+    }
+  ]
+}
