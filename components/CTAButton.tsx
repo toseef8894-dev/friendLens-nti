@@ -21,24 +21,39 @@ export default function CTAButton({ text, className = '', variant = 'primary' }:
     useEffect(() => {
         const checkAuthAndAssessment = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser()
+                setIsLoading(true)
+                const { data: { user }, error: userError } = await supabase.auth.getUser()
+                
+                if (userError) {
+                    console.error('Error getting user:', userError)
+                    setIsAuthenticated(false)
+                    setHasCompletedAssessment(false)
+                    return
+                }
+
                 const authenticated = !!user
                 setIsAuthenticated(authenticated)
 
                 if (authenticated && user) {
-                    // Check if user has completed assessment
-                    const { data: result } = await supabase
+                    // Check if user has completed assessment (has results)
+                    const { data: result, error: resultError } = await supabase
                         .from('results')
                         .select('id')
                         .eq('user_id', user.id)
                         .limit(1)
                         .maybeSingle()
 
-                    setHasCompletedAssessment(!!result)
+                    if (resultError) {
+                        console.error('Error checking results:', resultError)
+                        setHasCompletedAssessment(false)
+                    } else {
+                        setHasCompletedAssessment(!!result)
+                    }
                 } else {
                     setHasCompletedAssessment(false)
                 }
             } catch (error) {
+                console.error('Error in checkAuthAndAssessment:', error)
                 setIsAuthenticated(false)
                 setHasCompletedAssessment(false)
             } finally {
@@ -48,28 +63,37 @@ export default function CTAButton({ text, className = '', variant = 'primary' }:
 
         checkAuthAndAssessment()
 
-        // Listen for auth state changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             const authenticated = !!session?.user
             setIsAuthenticated(authenticated)
 
             if (authenticated && session?.user) {
-                // Check if user has completed assessment
-                const { data: result } = await supabase
-                    .from('results')
-                    .select('id')
-                    .eq('user_id', session.user.id)
-                    .limit(1)
-                    .maybeSingle()
+                // Re-check results when auth state changes
+                try {
+                    const { data: result, error: resultError } = await supabase
+                        .from('results')
+                        .select('id')
+                        .eq('user_id', session.user.id)
+                        .limit(1)
+                        .maybeSingle()
 
-                setHasCompletedAssessment(!!result)
+                    if (resultError) {
+                        console.error('Error checking results on auth change:', resultError)
+                        setHasCompletedAssessment(false)
+                    } else {
+                        setHasCompletedAssessment(!!result)
+                    }
+                } catch (error) {
+                    console.error('Error in auth state change handler:', error)
+                    setHasCompletedAssessment(false)
+                }
             } else {
                 setHasCompletedAssessment(false)
             }
         })
 
         return () => subscription.unsubscribe()
-    }, [])
+    }, [supabase])
 
     const getRedirectPath = () => {
         if (!isAuthenticated) {
@@ -88,11 +112,10 @@ export default function CTAButton({ text, className = '', variant = 'primary' }:
         }
 
         const redirectPath = getRedirectPath()
-        if (redirectPath !== '/login') {
-            e.preventDefault()
-            router.push(redirectPath)
-        }
-        // If not authenticated, let the Link handle navigation to /login
+        e.preventDefault()
+        
+        // Use router.push for client-side navigation
+        router.push(redirectPath)
     }
 
     const baseClasses = variant === 'primary'

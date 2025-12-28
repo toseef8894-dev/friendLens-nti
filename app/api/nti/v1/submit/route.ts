@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runNTIScoring, UserResponse } from '@/lib/nti-scoring'
-import { QUESTIONS, NTI_TYPES } from '@/lib/nti-config'
+import { QUESTIONS, NTI_TYPES, BEHAVIORAL_RULES } from '@/lib/nti-config'
 
 export async function POST(request: NextRequest) {
     try {
         const supabase = createClient()
 
-        // Check authentication
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         if (authError || !user) {
             return NextResponse.json(
@@ -16,7 +15,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Ensure profile exists (fix for users created before trigger was set up)
         const { data: existingProfile } = await supabase
             .from('profiles')
             .select('id')
@@ -24,7 +22,6 @@ export async function POST(request: NextRequest) {
             .single()
 
         if (!existingProfile) {
-            // Create profile if it doesn't exist
             const { error: profileError } = await supabase
                 .from('profiles')
                 .insert({
@@ -44,7 +41,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Parse request body
         const body = await request.json()
         const { responses } = body as { responses: UserResponse[] }
 
@@ -55,10 +51,8 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Run NTI scoring
-        const scoringResult = runNTIScoring(QUESTIONS, NTI_TYPES, responses)
+        const scoringResult = runNTIScoring(QUESTIONS, NTI_TYPES, responses, BEHAVIORAL_RULES)
 
-        // Save raw response
         const { data: responseData, error: responseError } = await supabase
             .from('responses')
             .insert({
@@ -77,7 +71,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Save result
         const { data: result, error: resultError } = await supabase
             .from('results')
             .insert({

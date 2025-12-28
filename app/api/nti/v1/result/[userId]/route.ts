@@ -10,7 +10,6 @@ export async function GET(
     try {
         const supabase = createClient()
 
-        // Check authentication
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         if (authError || !user) {
             return NextResponse.json(
@@ -21,7 +20,6 @@ export async function GET(
 
         const { userId } = params
 
-        // Users can only access their own results
         if (user.id !== userId) {
             return NextResponse.json(
                 { error: 'Forbidden: Cannot access other user results' },
@@ -29,7 +27,6 @@ export async function GET(
             )
         }
 
-        // Fetch latest result for user
         const { data: result, error: resultError } = await supabase
             .from('results')
             .select('*')
@@ -52,10 +49,8 @@ export async function GET(
             )
         }
 
-        // Get 16-type details
         const ntiType = NTI_TYPES.find(t => t.id === result.archetype_id)
 
-        // Get archetype details (primary and secondary from microtype_tags)
         const primaryArchetypeId = result.microtype_id as ArchetypeId
         const secondaryArchetypeId = result.microtype_tags?.[1] as ArchetypeId
 
@@ -66,19 +61,15 @@ export async function GET(
             success: true,
             result: {
                 id: result.id,
-                // 16-type
                 primary_type_16: {
                     id: ntiType?.id || result.archetype_id,
                     name: ntiType?.name || 'Unknown',
                     short_label: ntiType?.short_label || '',
                     distance: result.distance_score
                 },
-                // 6-archetypes (archetype objects already have id property)
                 primary_archetype_6: primaryArchetype || null,
                 secondary_archetype_6: secondaryArchetype || null,
-                // Scores
                 normalized_scores: result.user_vector,
-                // Confidence (calculate from distance)
                 confidence: result.distance_score ? Math.max(0, 1 - (result.distance_score / 100)) : 0.5,
                 created_at: result.created_at,
             }

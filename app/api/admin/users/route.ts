@@ -1,6 +1,3 @@
-// app/api/admin/users/route.ts
-// Admin API - List all users with their roles and results
-
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/rbac'
@@ -8,12 +5,9 @@ import { NTI_TYPES, ARCHETYPES } from '@/lib/nti-config'
 
 export async function GET() {
     try {
-        // Verify admin access
         await requireAdmin()
 
         const supabase = createClient()
-
-        // Get all profiles with their roles and latest results
         const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
             .select('id, email, first_name, last_name, full_name, created_at')
@@ -26,7 +20,6 @@ export async function GET() {
             )
         }
 
-        // Get roles for all users
         const { data: userRoles } = await supabase
             .from('user_roles')
             .select(`
@@ -34,17 +27,14 @@ export async function GET() {
         roles (name)
       `)
 
-        // Get latest results for all users
         const { data: results } = await supabase
             .from('results')
             .select('user_id, archetype_id, microtype_id, created_at')
             .order('created_at', { ascending: false })
 
-        // Build user map with roles and results
         const roleMap = new Map<string, string>()
         userRoles?.forEach((ur: any) => {
             const existing = roleMap.get(ur.user_id)
-            // Prioritize admin role
             if (ur.roles?.name === 'admin' || !existing) {
                 roleMap.set(ur.user_id, ur.roles?.name || 'user')
             }
@@ -52,13 +42,11 @@ export async function GET() {
 
         const resultMap = new Map<string, any>()
         results?.forEach((r: any) => {
-            // Only keep first (latest) result per user
             if (!resultMap.has(r.user_id)) {
                 resultMap.set(r.user_id, r)
             }
         })
 
-        // Combine data
         const users = profiles?.map(profile => {
             const result = resultMap.get(profile.id)
             const ntiType = result ? NTI_TYPES.find(t => t.id === result.archetype_id) : null

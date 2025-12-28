@@ -17,7 +17,7 @@ export default function Header() {
     const router = useRouter()
     const supabase = createClient()
 
-    // Function to check admin status
+
     async function checkAdminStatus(userId: string) {
         try {
             const { data: userRoles, error: userRolesError } = await supabase
@@ -47,8 +47,6 @@ export default function Header() {
             console.error('Error checking admin status:', err)
         }
     }
-
-    // Close menu when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -67,29 +65,23 @@ export default function Header() {
 
     useEffect(() => {
         const getUser = async () => {
-            // Check if we have a stored token
             const storedToken = getAuthToken()
-            
+
             const { data: { user }, error } = await supabase.auth.getUser()
-            
-            // If we have a stored token but no user, try to restore session
+
             if (storedToken && !user && !error) {
-                // Token exists but session might be expired, let Supabase handle it
-                // The onAuthStateChange will update the state accordingly
             }
-            
+
             setUser(user)
 
             if (user) {
                 await checkAdminStatus(user.id)
-                // Ensure token is stored if user exists
                 const { data: { session } } = await supabase.auth.getSession()
                 if (session?.access_token) {
                     setAuthToken(session.access_token)
                     setAuthUser(user)
                 }
             } else {
-                // No user, clear any stale tokens
                 clearAuthToken()
             }
         }
@@ -100,19 +92,19 @@ export default function Header() {
             setIsMenuOpen(false)
 
             if (session?.user) {
-                // Store token and user in localStorage on login
                 if (session.access_token) {
                     setAuthToken(session.access_token)
                     setAuthUser(session.user)
                 }
-                // Check admin status immediately after login
                 await checkAdminStatus(session.user.id)
             } else {
-                // Clear localStorage on logout
-                if (event === 'SIGNED_OUT') {
+                if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
                     clearAuthToken()
+                    setIsAdmin(false)
+                    if (typeof window !== 'undefined') {
+                        sessionStorage.clear()
+                    }
                 }
-                setIsAdmin(false)
             }
         })
 
@@ -121,50 +113,34 @@ export default function Header() {
 
     const handleLogout = async () => {
         setIsMenuOpen(false)
-        
+
         try {
-            // Clear localStorage first
-            clearAuthToken()
-            
-            // Create a promise that resolves when auth state changes to SIGNED_OUT
-            const signOutPromise = new Promise<void>((resolve) => {
-                const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-                    if (event === 'SIGNED_OUT') {
-                        subscription.unsubscribe()
-                        resolve()
-                    }
-                })
-                
-                // Timeout after 1 second to prevent hanging
-                setTimeout(() => {
-                    subscription.unsubscribe()
-                    resolve()
-                }, 1000)
-            })
-            
-            // Sign out from Supabase
             const { error } = await supabase.auth.signOut()
-            
+
             if (error) {
                 toast.error('Error signing out')
                 console.error('Signout error:', error)
                 return
             }
-            
-            // Wait for auth state change event to fire
-            await signOutPromise
-            
-            // Ensure localStorage is cleared
+
             clearAuthToken()
             
+            if (typeof window !== 'undefined') {
+                sessionStorage.clear()
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 100))
+
             toast.success('Signed out successfully')
-            
-            // Force a full page reload to clear server-rendered data
-            // This ensures the results page and other server components get fresh data
             window.location.href = '/'
         } catch (err) {
             console.error('Logout error:', err)
+            clearAuthToken()
+            if (typeof window !== 'undefined') {
+                sessionStorage.clear()
+            }
             toast.error('Error signing out')
+            window.location.href = '/'
         }
     }
 
@@ -179,7 +155,6 @@ export default function Header() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {/* Admin Link - Only visible to admins */}
                         {isAdmin && (
                             <Link
                                 href="/admin"

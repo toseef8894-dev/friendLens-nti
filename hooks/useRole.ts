@@ -1,6 +1,3 @@
-// hooks/useRole.ts
-// Client-side hook for checking user role
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -23,7 +20,6 @@ export function useRole() {
                 return
             }
 
-            // Fetch user's roles
             const { data } = await supabase
                 .from('user_roles')
                 .select(`

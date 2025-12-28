@@ -36,17 +36,16 @@ const DIMENSION_COLORS: Record<DimensionId, string> = {
 
 export default function ResultsView({ userId, initialData }: { userId: string, initialData: ResultData | null }) {
     const [result, setResult] = useState<ResultData | null>(initialData)
-    const [loading, setLoading] = useState(false) // Don't show loading if we have initialData
+    const [loading, setLoading] = useState(false) 
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        // If we already have data from server, don't fetch
+
         if (initialData) {
             setLoading(false)
             return
         }
 
-        // If no initial data, we should have been redirected, but handle gracefully
         setError('No results found. Please complete the assessment first.')
         setLoading(false)
     }, [userId, initialData])
@@ -77,8 +76,6 @@ export default function ResultsView({ userId, initialData }: { userId: string, i
             </div>
         )
     }
-
-    // Result is guaranteed to exist at this point due to check above
 
     const ntiType = NTI_TYPES.find(t => t.id === result.archetype_id)
     const primaryArchetypeId = result.microtype_id as ArchetypeId

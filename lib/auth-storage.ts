@@ -1,5 +1,3 @@
-// Utility functions for managing auth token in localStorage
-
 const AUTH_TOKEN_KEY = 'friendlens_auth_token'
 const AUTH_USER_KEY = 'friendlens_auth_user'
 

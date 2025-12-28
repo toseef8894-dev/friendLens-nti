@@ -11,10 +11,8 @@ export default async function ResultsPage() {
         redirect('/login')
     }
 
-    // Fetch results server-side
     const result = await getUserResult(user.id)
 
-    // If no results, redirect to assessment page
     if (!result) {
         redirect('/assessment')
     }

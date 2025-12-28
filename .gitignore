@@ -35,3 +35,10 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Test/validation scripts (local development only)
+scripts/test-scoring.ts
+scripts/validate-engine.ts
+scripts/debug-type-distances.ts
+scripts/verify-distance-function.ts
+scripts/verify-engine-checklist.ts

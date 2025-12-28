@@ -1,6 +1,3 @@
-// app/api/admin/users/[userId]/role/route.ts
-// Admin API - Change user role
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin, setUserRole, Role } from '@/lib/rbac'
@@ -10,7 +7,6 @@ export async function PUT(
     { params }: { params: { userId: string } }
 ) {
     try {
-        // Verify admin access
         await requireAdmin()
 
         const { userId } = params
@@ -24,11 +20,9 @@ export async function PUT(
             )
         }
 
-        // Prevent changing admin role (admin role cannot be changed)
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
-        // Check if target user is admin
         const { data: targetUserRoles } = await supabase
             .from('user_roles')
             .select(`
@@ -46,7 +40,6 @@ export async function PUT(
             )
         }
 
-        // Prevent admin from removing their own admin role (additional safety)
         if (user?.id === userId && role !== 'admin') {
             return NextResponse.json(
                 { error: 'Cannot remove your own admin role' },
@@ -54,7 +47,6 @@ export async function PUT(
             )
         }
 
-        // Update the role
         await setUserRole(userId, role)
 
         return NextResponse.json({

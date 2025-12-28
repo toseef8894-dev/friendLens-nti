@@ -25,14 +25,10 @@ export default function Home() {
                 variant="primary"
               />
             </div>
-            {/* <p className="mt-4 text-sm text-gray-500">
-              Free assessment • No credit card required
-            </p> */}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
       <section className="py-20 bg-white/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">

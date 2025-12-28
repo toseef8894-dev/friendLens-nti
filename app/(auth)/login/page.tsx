@@ -17,15 +17,27 @@ export default function LoginPage() {
     const router = useRouter()
     const supabase = createClient()
 
-    // Get error from URL if present
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
     const errorParam = searchParams?.get('error')
 
     useEffect(() => {
+        const checkAndClearStaleAuth = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession()
+                if (session && !session.user) {
+                    await supabase.auth.signOut()
+                }
+            } catch (err) {
+                console.error('Error clearing stale auth:', err)
+            }
+        }
+        checkAndClearStaleAuth()
+
         if (errorParam) {
             setError('Authentication failed. Please try again.')
             toast.error('Authentication failed')
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [errorParam])
 
     const handleAuth = async (e: React.FormEvent) => {
@@ -35,7 +47,6 @@ export default function LoginPage() {
 
         try {
             if (isSignUp) {
-                // Validate required fields for signup
                 if (!firstName.trim() || !lastName.trim()) {
                     setError('First name and last name are required')
                     toast.error('Please enter your first and last name')
@@ -57,7 +68,6 @@ export default function LoginPage() {
                 })
                 
                 if (error) {
-                    // Provide more specific error messages
                     if (error.message.includes('database') || error.message.includes('profile')) {
                         throw new Error('Database error: Please contact support if this persists.')
                     }
@@ -68,24 +78,18 @@ export default function LoginPage() {
                     throw new Error('Failed to create user account')
                 }
                 
-                // Check if email confirmation is required
-                // If session exists, email confirmation is disabled - user can sign in immediately
-                // If no session, email confirmation is enabled - user needs to confirm email
                 if (signupData.user && !signupData.session) {
                     toast.success('Check your email to confirm your account')
-                    // Clear form after successful signup
                     setFirstName('')
                     setLastName('')
                     setEmail('')
                     setPassword('')
                 } else if (signupData.session) {
-                    // Store token and user in localStorage
                     if (signupData.session.access_token) {
                         setAuthToken(signupData.session.access_token)
                         setAuthUser(signupData.user)
                     }
                     toast.success('Account created successfully!')
-                    // Redirect new users to landing page, not assessment
                     router.push('/')
                     router.refresh()
                 }
@@ -96,7 +100,6 @@ export default function LoginPage() {
                 })
                 if (error) throw error
                 
-                // Store token and user in localStorage
                 if (signInData.session?.access_token) {
                     setAuthToken(signInData.session.access_token)
                     setAuthUser(signInData.user)
@@ -127,7 +130,6 @@ export default function LoginPage() {
                         onClick={() => {
                             setIsSignUp(!isSignUp)
                             setError(null)
-                            // Clear name fields when switching to login
                             if (!isSignUp) {
                                 setFirstName('')
                                 setLastName('')

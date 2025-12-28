@@ -1,8 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 
-/**
- * Check if user has completed the assessment
- */
 export async function hasCompletedAssessment(userId: string): Promise<boolean> {
     const supabase = createClient()
     
@@ -21,9 +18,6 @@ export async function hasCompletedAssessment(userId: string): Promise<boolean> {
     return data !== null
 }
 
-/**
- * Get user's latest result
- */
 export async function getUserResult(userId: string) {
     const supabase = createClient()
     

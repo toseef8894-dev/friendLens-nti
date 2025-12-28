@@ -1,6 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-// Create a singleton Supabase client to avoid multiple instances
 let supabaseClient: ReturnType<typeof createBrowserClient> | null = null
 
 export function createClient() {
@@ -12,7 +11,6 @@ export function createClient() {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
-            // Disable realtime to reduce background connections
             realtime: {
                 params: {
                     eventsPerSecond: 1

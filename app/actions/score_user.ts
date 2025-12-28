@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { runNTIScoring, UserResponse } from '@/lib/nti-scoring'
-import { QUESTIONS, NTI_TYPES, ARCHETYPES } from '@/lib/nti-config'
+import { QUESTIONS, NTI_TYPES, ARCHETYPES, BEHAVIORAL_RULES } from '@/lib/nti-config'
 
 interface ScoreUserInput {
     responses: UserResponse[]
@@ -12,21 +12,17 @@ interface ScoreUserInput {
 export async function scoreUser(input: ScoreUserInput) {
     const supabase = createClient()
 
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
         return { error: 'Not authenticated' }
     }
 
     try {
-        // Run the NTI scoring algorithm
-        const result = runNTIScoring(QUESTIONS, NTI_TYPES, input.responses)
+        const result = runNTIScoring(QUESTIONS, NTI_TYPES, input.responses, BEHAVIORAL_RULES)
 
-        // Get archetype details
         const primaryArchetype = ARCHETYPES[result.primary_archetype_6]
         const secondaryArchetype = ARCHETYPES[result.secondary_archetype_6]
 
-        // Save raw response to database
         const { data: responseData, error: responseError } = await supabase
             .from('responses')
             .insert({
@@ -42,7 +38,6 @@ export async function scoreUser(input: ScoreUserInput) {
             return { error: 'Failed to save response: ' + responseError.message }
         }
 
-        // Save result to database
         const { error: resultError } = await supabase
             .from('results')
             .insert({
@@ -65,15 +60,11 @@ export async function scoreUser(input: ScoreUserInput) {
         return {
             success: true,
             result: {
-                // 16-type
                 primary_type_16: result.primary_type_16,
-                // 6-archetypes (archetype already has id property)
                 primary_archetype_6: primaryArchetype,
                 secondary_archetype_6: secondaryArchetype,
-                // Scores
                 raw_scores: result.raw_scores,
                 normalized_scores: result.normalized_scores,
-                // Confidence
                 confidence: result.confidence,
             }
         }
