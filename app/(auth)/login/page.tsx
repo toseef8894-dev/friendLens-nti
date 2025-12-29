@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { setAuthToken, setAuthUser } from '@/lib/auth-storage'
+import { setAuthToken, setAuthUser, clearAuthToken } from '@/lib/auth-storage'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -23,12 +23,24 @@ export default function LoginPage() {
     useEffect(() => {
         const checkAndClearStaleAuth = async () => {
             try {
+                const { data: { user }, error } = await supabase.auth.getUser()
                 const { data: { session } } = await supabase.auth.getSession()
-                if (session && !session.user) {
+
+                if (error || !user || !session) {
                     await supabase.auth.signOut()
+                    clearAuthToken()
+                    if (typeof window !== 'undefined') {
+                        localStorage.clear()
+                        sessionStorage.clear()
+                    }
                 }
             } catch (err) {
                 console.error('Error clearing stale auth:', err)
+                clearAuthToken()
+                if (typeof window !== 'undefined') {
+                    localStorage.clear()
+                    sessionStorage.clear()
+                }
             }
         }
         checkAndClearStaleAuth()

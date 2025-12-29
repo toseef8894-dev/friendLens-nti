@@ -65,24 +65,37 @@ export default function Header() {
 
     useEffect(() => {
         const getUser = async () => {
-            const storedToken = getAuthToken()
-
-            const { data: { user }, error } = await supabase.auth.getUser()
-
-            if (storedToken && !user && !error) {
-            }
-
-            setUser(user)
-
-            if (user) {
-                await checkAdminStatus(user.id)
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser()
                 const { data: { session } } = await supabase.auth.getSession()
+
+                if (error || !user || !session) {
+                    clearAuthToken()
+                    setUser(null)
+                    setIsAdmin(false)
+                    if (typeof window !== 'undefined') {
+                        localStorage.clear()
+                        sessionStorage.clear()
+                    }
+                    return
+                }
+
+                setUser(user)
+
                 if (session?.access_token) {
                     setAuthToken(session.access_token)
                     setAuthUser(user)
+                    await checkAdminStatus(user.id)
+                } else {
+                    clearAuthToken()
+                    setUser(null)
+                    setIsAdmin(false)
                 }
-            } else {
+            } catch (err) {
+                console.error('Error getting user:', err)
                 clearAuthToken()
+                setUser(null)
+                setIsAdmin(false)
             }
         }
         getUser()
@@ -91,17 +104,16 @@ export default function Header() {
             setUser(session?.user ?? null)
             setIsMenuOpen(false)
 
-            if (session?.user) {
-                if (session.access_token) {
-                    setAuthToken(session.access_token)
-                    setAuthUser(session.user)
-                }
+            if (session?.user && session?.access_token) {
+                setAuthToken(session.access_token)
+                setAuthUser(session.user)
                 await checkAdminStatus(session.user.id)
             } else {
-                if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-                    clearAuthToken()
-                    setIsAdmin(false)
-                    if (typeof window !== 'undefined') {
+                clearAuthToken()
+                setIsAdmin(false)
+                if (typeof window !== 'undefined') {
+                    if (event === 'SIGNED_OUT' || !session) {
+                        localStorage.clear()
                         sessionStorage.clear()
                     }
                 }
@@ -115,31 +127,31 @@ export default function Header() {
         setIsMenuOpen(false)
 
         try {
-            const { error } = await supabase.auth.signOut()
-
-            if (error) {
-                toast.error('Error signing out')
-                console.error('Signout error:', error)
-                return
+            const { data: { session } } = await supabase.auth.getSession()
+            
+            if (session) {
+                const { error } = await supabase.auth.signOut()
+                if (error) {
+                    console.warn('Signout error (session may be expired):', error)
+                }
+            } else {
+                console.log('No active session to sign out from')
             }
-
+        } catch (err) {
+            console.warn('Error during signout attempt:', err)
+        } finally {
             clearAuthToken()
+            setUser(null)
+            setIsAdmin(false)
             
             if (typeof window !== 'undefined') {
+                localStorage.clear()
                 sessionStorage.clear()
             }
 
             await new Promise(resolve => setTimeout(resolve, 100))
 
             toast.success('Signed out successfully')
-            window.location.href = '/'
-        } catch (err) {
-            console.error('Logout error:', err)
-            clearAuthToken()
-            if (typeof window !== 'undefined') {
-                sessionStorage.clear()
-            }
-            toast.error('Error signing out')
             window.location.href = '/'
         }
     }
