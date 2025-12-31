@@ -12,7 +12,7 @@ export default function Home() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 leading-tight">
               Understand your{" "}
               <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                friendship wiring
+                friendship wiring 
               </span>
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -21,7 +21,7 @@ export default function Home() {
             </p>
             <div className="mt-10">
               <CTAButton 
-                text="Add more better humans to your life with FriendLens.ai"
+                text="Add better people to your life with FriendLens.ai"
                 variant="primary"
               />
             </div>
@@ -121,7 +121,7 @@ export default function Home() {
       <footer className="py-8 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-500 text-sm">
-            © 2025 FriendLens. All rights reserved.
+            © 2026 FriendLens. All rights reserved.
           </p>
         </div>
       </footer>
