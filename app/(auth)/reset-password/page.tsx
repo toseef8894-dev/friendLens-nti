@@ -19,35 +19,51 @@ function ResetPasswordForm() {
 
     useEffect(() => {
         const checkToken = async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (session) {
-                setIsValidToken(true)
-            } else {
-                const hashParams = new URLSearchParams(window.location.hash.substring(1))
-                const accessToken = hashParams.get('access_token')
-                const type = hashParams.get('type')
+            // Check for hash-based recovery tokens first (from direct email links)
+            const hashParams = new URLSearchParams(window.location.hash.substring(1))
+            const accessToken = hashParams.get('access_token')
+            const type = hashParams.get('type')
 
-                if (accessToken && type === 'recovery') {
-                    try {
-                        const { data, error } = await supabase.auth.setSession({
-                            access_token: accessToken,
-                            refresh_token: hashParams.get('refresh_token') || '',
-                        })
+            if (accessToken && type === 'recovery') {
+                try {
+                    const { data, error } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: hashParams.get('refresh_token') || '',
+                    })
 
-                        if (error) {
-                            setIsValidToken(false)
-                            setError('Invalid or expired reset link. Please request a new one.')
-                        } else if (data.session) {
-                            setIsValidToken(true)
-                        }
-                    } catch (err) {
+                    if (error) {
                         setIsValidToken(false)
                         setError('Invalid or expired reset link. Please request a new one.')
+                    } else if (data.session) {
+                        setIsValidToken(true)
                     }
-                } else {
+                } catch (err) {
                     setIsValidToken(false)
-                    setError('Invalid reset link. Please check your email and try again.')
+                    setError('Invalid or expired reset link. Please request a new one.')
                 }
+                return
+            }
+
+            // Check for existing session (from code-based flow via auth callback)
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session) {
+                // Check if this is a recovery session by looking at the URL or session metadata
+                // Recovery sessions are temporary and should allow password reset
+                const urlParams = new URLSearchParams(window.location.search)
+                const recoveryType = urlParams.get('type')
+                
+                // If we have a session and we're on reset-password page, allow it
+                // This handles the case where Supabase created a session from recovery token
+                if (recoveryType === 'recovery' || window.location.pathname === '/reset-password') {
+                    setIsValidToken(true)
+                } else {
+                    // If it's a regular session (not recovery), the user shouldn't be here
+                    // But we'll still allow them to reset password if they want
+                    setIsValidToken(true)
+                }
+            } else {
+                setIsValidToken(false)
+                setError('Invalid reset link. Please check your email and try again.')
             }
         }
 
@@ -65,8 +81,21 @@ function ResetPasswordForm() {
             return
         }
 
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters long')
+        // Enhanced password validation
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters long')
+            setLoading(false)
+            return
+        }
+        
+        // Check for password strength
+        const hasUpperCase = /[A-Z]/.test(password)
+        const hasLowerCase = /[a-z]/.test(password)
+        const hasNumber = /[0-9]/.test(password)
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+        
+        if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+            setError('Password must contain at least one uppercase letter, one lowercase letter, and one number')
             setLoading(false)
             return
         }

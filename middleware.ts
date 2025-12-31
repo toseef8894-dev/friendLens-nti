@@ -66,10 +66,19 @@ export async function middleware(request: NextRequest) {
     }
 
     // Auth routes (redirect to landing page if already logged in)
+    // BUT: Allow reset-password even if logged in (for password reset flow)
     if (request.nextUrl.pathname.startsWith('/login')) {
         if (user) {
             return NextResponse.redirect(new URL('/', request.url))
         }
+    }
+    
+    // Allow reset-password and forgot-password even if user is authenticated
+    // (needed for password reset flow where user gets a session from recovery token)
+    if (request.nextUrl.pathname.startsWith('/reset-password') || 
+        request.nextUrl.pathname.startsWith('/forgot-password')) {
+        // Always allow access, don't redirect
+        return response
     }
     
     // Results page - redirect to assessment if no results exist

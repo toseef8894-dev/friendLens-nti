@@ -19,6 +19,7 @@ export default function LoginPage() {
 
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
     const errorParam = searchParams?.get('error')
+    const confirmedParam = searchParams?.get('confirmed')
 
     useEffect(() => {
         const checkAndClearStaleAuth = async () => {
@@ -46,11 +47,21 @@ export default function LoginPage() {
         checkAndClearStaleAuth()
 
         if (errorParam) {
-            setError('Authentication failed. Please try again.')
-            toast.error('Authentication failed')
+            let errorMessage = 'Authentication failed. Please try again.'
+            if (errorParam === 'confirmation_failed') {
+                errorMessage = 'Email confirmation failed. Please request a new confirmation link.'
+            } else if (errorParam === 'auth-code-error') {
+                errorMessage = 'Invalid or expired confirmation link. Please try again.'
+            }
+            setError(errorMessage)
+            toast.error(errorMessage)
+        }
+        
+        if (confirmedParam === 'true') {
+            toast.success('Email confirmed successfully! You can now sign in.')
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [errorParam])
+    }, [errorParam, confirmedParam])
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -91,12 +102,21 @@ export default function LoginPage() {
                 }
                 
                 if (signupData.user && !signupData.session) {
-                    toast.success('Check your email to confirm your account')
+                    // Email confirmation required
+                    toast.success('Account created! Please check your email to confirm your account before signing in.')
                     setFirstName('')
                     setLastName('')
                     setEmail('')
                     setPassword('')
+                    setIsSignUp(false) // Switch to login view
+                    // Show link to resend confirmation
+                    setTimeout(() => {
+                        toast.info('Didn\'t receive the email? You can resend it from the login page.', {
+                            duration: 5000,
+                        })
+                    }, 2000)
                 } else if (signupData.session) {
+                    // Auto-confirmed (if email confirmation is disabled in Supabase)
                     if (signupData.session.access_token) {
                         setAuthToken(signupData.session.access_token)
                         setAuthUser(signupData.user)
@@ -110,7 +130,22 @@ export default function LoginPage() {
                     email,
                     password,
                 })
-                if (error) throw error
+                
+                if (error) {
+                    // Handle specific error cases
+                    if (error.message.includes('Email not confirmed')) {
+                        throw new Error('Please check your email and confirm your account before signing in.')
+                    } else if (error.message.includes('Invalid login credentials')) {
+                        throw new Error('Invalid email or password. Please try again.')
+                    }
+                    throw error
+                }
+                
+                // Check if email is confirmed
+                if (signInData.user && !signInData.user.email_confirmed_at) {
+                    toast.warning('Please confirm your email address. Check your inbox for the confirmation link.')
+                    // Still allow login if Supabase allows it, but show warning
+                }
                 
                 if (signInData.session?.access_token) {
                     setAuthToken(signInData.session.access_token)
@@ -151,6 +186,17 @@ export default function LoginPage() {
                     >
                         {isSignUp ? 'sign in to existing account' : 'create a new account'}
                     </button>
+                    {!isSignUp && (
+                        <>
+                            {' · '}
+                            <a
+                                href="/resend-confirmation"
+                                className="font-medium text-indigo-600 hover:text-indigo-500"
+                            >
+                                Resend confirmation email
+                            </a>
+                        </>
+                    )}
                 </p>
             </div>
 

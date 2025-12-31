@@ -13,18 +13,31 @@ export async function GET(request: Request) {
         
         if (!error && data.session) {
             // If it's a recovery (password reset) flow, redirect to reset-password
-            // We need to pass the session info via hash fragments
             if (type === 'recovery') {
-                // Redirect to reset-password with hash fragments for client-side session handling
-                return NextResponse.redirect(`${origin}/reset-password`)
+                return NextResponse.redirect(`${origin}/reset-password?type=recovery`)
             }
+            
+            // If it's an email confirmation (signup), redirect to login with success message
+            if (type === 'signup' || (!type && data.user)) {
+                return NextResponse.redirect(`${origin}/login?confirmed=true`)
+            }
+            
+            // Default redirect
             return NextResponse.redirect(`${origin}${next}`)
         }
         
-        // If there was an error, still try to redirect to reset-password for recovery
-        // The reset-password page will handle invalid tokens
+        // Handle errors
         if (type === 'recovery' && error) {
             return NextResponse.redirect(`${origin}/reset-password?error=invalid_token`)
+        }
+        
+        if (type === 'signup' && error) {
+            return NextResponse.redirect(`${origin}/login?error=confirmation_failed`)
+        }
+        
+        // Generic error
+        if (error) {
+            return NextResponse.redirect(`${origin}/login?error=auth-code-error`)
         }
     }
 
