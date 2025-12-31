@@ -12,6 +12,11 @@ function AuthCodeHandlerInner() {
         const type = searchParams.get('type')
 
         if (code) {
+            // If it's a recovery type, mark it in sessionStorage
+            if (type === 'recovery') {
+                sessionStorage.setItem('recovery_session', 'true')
+            }
+            
             // If we have a code parameter, redirect to auth callback
             // The callback will handle the code exchange and redirect appropriately
             const callbackUrl = type === 'recovery' 

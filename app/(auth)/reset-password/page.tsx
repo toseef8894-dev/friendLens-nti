@@ -44,17 +44,21 @@ function ResetPasswordForm() {
                 return
             }
 
-            // Check for existing session (from code-based flow via auth callback)
+            // Check for existing session (from code-based flow via auth callback or home page redirect)
             const { data: { session } } = await supabase.auth.getSession()
             if (session) {
-                // Check if this is a recovery session by looking at the URL or session metadata
-                // Recovery sessions are temporary and should allow password reset
+                // Check if this is a recovery session
                 const urlParams = new URLSearchParams(window.location.search)
                 const recoveryType = urlParams.get('type')
+                const isRecoverySession = sessionStorage.getItem('recovery_session') === 'true'
                 
                 // If we have a session and we're on reset-password page, allow it
                 // This handles the case where Supabase created a session from recovery token
-                if (recoveryType === 'recovery' || window.location.pathname === '/reset-password') {
+                if (recoveryType === 'recovery' || isRecoverySession || window.location.pathname === '/reset-password') {
+                    // Mark as recovery session if not already marked
+                    if (!isRecoverySession) {
+                        sessionStorage.setItem('recovery_session', 'true')
+                    }
                     setIsValidToken(true)
                 } else {
                     // If it's a regular session (not recovery), the user shouldn't be here
@@ -114,9 +118,15 @@ function ResetPasswordForm() {
                 }
             }
 
+            // Clear recovery session flag
+            sessionStorage.removeItem('recovery_session')
+            
             setSuccess(true)
             toast.success('Password reset successfully!')
 
+            // Sign out the recovery session and redirect to login
+            await supabase.auth.signOut()
+            
             setTimeout(() => {
                 router.push('/login')
             }, 2000)

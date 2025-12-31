@@ -3,11 +3,13 @@
 import Link from "next/link"
 import CTAButton from "@/components/CTAButton"
 import AuthCodeHandler from "@/components/AuthCodeHandler"
+import RecoverySessionHandler from "@/components/RecoverySessionHandler"
 
 export default function Home() {
   return (
     <>
       <AuthCodeHandler />
+      <RecoverySessionHandler />
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
