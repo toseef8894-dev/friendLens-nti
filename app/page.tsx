@@ -2,10 +2,29 @@
 
 import Link from "next/link"
 import CTAButton from "@/components/CTAButton"
+import { useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+
+function CodeHandler() {
+    const searchParams = useSearchParams()
+
+    useEffect(() => {
+        const code = searchParams.get('code')
+        if (code) {
+            const next = searchParams.get('next') || '/reset-password'
+            window.location.href = `/auth/callback?code=${code}&next=${encodeURIComponent(next)}`
+        }
+    }, [searchParams])
+
+    return null
+}
 
 export default function Home() {
   return (
     <>
+      <Suspense fallback={null}>
+        <CodeHandler />
+      </Suspense>
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
         {/* Hero Section */}
         <section className="relative overflow-hidden">

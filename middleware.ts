@@ -54,12 +54,21 @@ export async function middleware(request: NextRequest) {
         }
     )
 
+    if (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '') {
+        const code = request.nextUrl.searchParams.get('code')
+        if (code) {
+            const next = request.nextUrl.searchParams.get('next') || '/reset-password'
+            const callbackUrl = new URL('/auth/callback', request.url)
+            callbackUrl.searchParams.set('code', code)
+            callbackUrl.searchParams.set('next', next)
+            return NextResponse.redirect(callbackUrl)
+        }
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
     
-    // Check if this is a password reset session (should not access protected routes)
     const isResetSession = request.cookies.get('reset_session')?.value === 'true'
 
-    // Protected routes (require authentication)
     if (request.nextUrl.pathname.startsWith('/assessment') ||
         request.nextUrl.pathname.startsWith('/results') ||
         request.nextUrl.pathname.startsWith('/admin')) {
@@ -80,18 +89,13 @@ export async function middleware(request: NextRequest) {
         }
     }
     
-    // Allow reset-password and forgot-password even if user is authenticated
-    // (needed for password reset flow where user gets a session from recovery token)
     if (request.nextUrl.pathname.startsWith('/reset-password') || 
         request.nextUrl.pathname.startsWith('/forgot-password')) {
-        // Always allow access, don't redirect
         return response
     }
     
-    // Results page - redirect to assessment if no results exist
     if (request.nextUrl.pathname.startsWith('/results')) {
         if (user) {
-            // Check if user has completed assessment
             const { data: result } = await supabase
                 .from('results')
                 .select('id')

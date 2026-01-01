@@ -121,9 +121,7 @@ export default function LoginPage() {
 
                     await fetch('/api/auth/clear-reset-cookies', {
                         method: 'POST'
-                    }).catch(() => {
-                        // Ignore errors
-                    })
+                    }).catch(() => { })
 
                     toast.success('Account created successfully!')
                     router.push('/')
@@ -193,17 +191,7 @@ export default function LoginPage() {
                     >
                         {isSignUp ? 'sign in to existing account' : 'create a new account'}
                     </button>
-                    {!isSignUp && (
-                        <>
-                            {' · '}
-                            <a
-                                href="/resend-confirmation"
-                                className="font-medium text-indigo-600 hover:text-indigo-500"
-                            >
-                                Resend confirmation email
-                            </a>
-                        </>
-                    )}
+
                 </p>
             </div>
 

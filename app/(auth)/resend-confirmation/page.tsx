@@ -25,7 +25,7 @@ export default function ResendConfirmationPage() {
                 type: 'signup',
                 email: email,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback?type=signup`,
+                    emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback?type=signup`,
                 },
             })
 
