@@ -1,59 +1,51 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    const type = searchParams.get('type')
     const next = searchParams.get('next') ?? '/'
 
     if (code) {
         const supabase = createClient()
+        
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-        
-        if (!error && data.session) {
-            // If it's a recovery (password reset) flow, redirect to reset-password
-            if (type === 'recovery') {
-                return NextResponse.redirect(`${origin}/reset-password?type=recovery`)
-            }
-            
-            // If it's an email confirmation (signup), redirect to login with success message
-            if (type === 'signup' || (!type && data.user)) {
-                return NextResponse.redirect(`${origin}/login?confirmed=true`)
-            }
-            
-            // Default redirect
-            return NextResponse.redirect(`${origin}${next}`)
-        }
-        
-        // Handle errors
-        if (type === 'recovery' && error) {
-            return NextResponse.redirect(`${origin}/reset-password?error=invalid_token`)
-        }
-        
-        if (type === 'signup' && error) {
-            return NextResponse.redirect(`${origin}/login?error=confirmation_failed`)
-        }
-        
-        // Generic error
+
         if (error) {
-            return NextResponse.redirect(`${origin}/login?error=auth-code-error`)
+            const url = new URL(next, origin)
+            url.searchParams.set('error', 'invalid_or_expired_link')
+            return NextResponse.redirect(url)
         }
-    }
 
-    // Handle hash-based recovery tokens (from email links)
-    // These come as hash fragments, so we check if we're being redirected from Supabase verify
-    const hash = request.url.split('#')[1]
-    if (hash) {
-        const hashParams = new URLSearchParams(hash)
-        const accessToken = hashParams.get('access_token')
-        const recoveryType = hashParams.get('type')
+        const userId = data.user?.id
         
-        if (accessToken && recoveryType === 'recovery') {
-            // Redirect to reset-password page with hash fragments
-            return NextResponse.redirect(`${origin}/reset-password#${hash}`)
+        if (!userId) {
+            const url = new URL(next, origin)
+            url.searchParams.set('error', 'invalid_or_expired_link')
+            return NextResponse.redirect(url)
         }
+
+        const cookieStore = cookies()
+        
+        cookieStore.set('reset_user_id', userId, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 15 * 60,
+        })
+        
+        cookieStore.set('reset_session', 'true', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 15 * 60,
+        })
+
+        return NextResponse.redirect(new URL(next, origin))
     }
 
-    return NextResponse.redirect(`${origin}/login?error=auth-code-error`)
+    return NextResponse.redirect(new URL(next, origin))
 }

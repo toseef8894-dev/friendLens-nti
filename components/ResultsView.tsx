@@ -148,7 +148,7 @@ export default function ResultsView({ userId, initialData }: { userId: string, i
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                {/* <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900">Match Confidence</h3>
@@ -158,7 +158,7 @@ export default function ResultsView({ userId, initialData }: { userId: string, i
                             {Math.round((1 - Math.min(result.distance_score / 100, 1)) * 100)}%
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 <div className="text-center pt-4">
                     <Link href="/assessment" className="text-indigo-600 hover:text-indigo-500 font-medium">

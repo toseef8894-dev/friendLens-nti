@@ -1,10 +1,6 @@
-// scripts/validate-engine.ts
-// Validates NTI scoring engine against client's 5 synthetic test profiles
-
 import { runNTIScoring, UserResponse, DimensionId, DIMENSION_IDS } from '../lib/nti-scoring';
 import { QUESTIONS, NTI_TYPES } from '../lib/nti-config';
 
-// Test profiles from validate.txt
 const TEST_PROFILES = [
     {
         test_id: 'SYN01_ANCHOR_HEAVY',
@@ -43,7 +39,6 @@ const TEST_PROFILES = [
     }
 ];
 
-// Map dimension labels to IDs (client uses friendly names in test data)
 const LABEL_TO_DIM: Record<string, DimensionId> = {
     'Drive': 'DA',
     'Connection': 'OX',
@@ -53,8 +48,6 @@ const LABEL_TO_DIM: Record<string, DimensionId> = {
     'Calm': 'GABA'
 };
 
-// Convert test profile to user responses (mock answers that would produce these scores)
-// This is a simplified test - we directly test the type matching logic
 function testTypeMatching() {
     console.log('='.repeat(60));
     console.log('NTI Engine Validation - Type Matching Tests');
@@ -68,14 +61,12 @@ function testTypeMatching() {
         console.log(`Test: ${profile.test_id}`);
         console.log('-'.repeat(40));
 
-        // Find nearest type using the same logic as the scoring engine
         const normalizedScores = profile.normalized_scores as Record<DimensionId, number>;
 
         let bestType = NTI_TYPES[0];
         let bestDistance = Infinity;
 
         for (const t of NTI_TYPES) {
-            // Scale type vector from 0-1 to 0-100
             let dist = 0;
             for (const dim of DIMENSION_IDS) {
                 const scaledTypeVal = (t.vector[dim] || 0) * 100;
@@ -90,7 +81,6 @@ function testTypeMatching() {
             }
         }
 
-        // Get primary and secondary archetypes from normalized scores
         const sortedDims = DIMENSION_IDS
             .map(d => ({ dim: d, score: normalizedScores[d] }))
             .sort((a, b) => b.score - a.score);
@@ -107,7 +97,6 @@ function testTypeMatching() {
         const primaryArchetype = DIMENSION_TO_ARCHETYPE[sortedDims[0].dim];
         const secondaryArchetype = DIMENSION_TO_ARCHETYPE[sortedDims[1].dim];
 
-        // Check results
         const typeMatch = bestType.name === profile.expected_primary_type16;
         const primaryMatch = primaryArchetype === profile.expected_primary_archetype;
         const secondaryMatch = secondaryArchetype === profile.expected_secondary_archetype;

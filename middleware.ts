@@ -55,6 +55,9 @@ export async function middleware(request: NextRequest) {
     )
 
     const { data: { user } } = await supabase.auth.getUser()
+    
+    // Check if this is a password reset session (should not access protected routes)
+    const isResetSession = request.cookies.get('reset_session')?.value === 'true'
 
     // Protected routes (require authentication)
     if (request.nextUrl.pathname.startsWith('/assessment') ||
@@ -62,6 +65,10 @@ export async function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/admin')) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
+        }
+        // Block access if this is a reset session (security: prevent navigation during reset)
+        if (isResetSession) {
+            return NextResponse.redirect(new URL('/reset-password', request.url))
         }
     }
 

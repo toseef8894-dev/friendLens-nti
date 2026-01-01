@@ -56,7 +56,7 @@ export default function LoginPage() {
             setError(errorMessage)
             toast.error(errorMessage)
         }
-        
+
         if (confirmedParam === 'true') {
             toast.success('Email confirmed successfully! You can now sign in.')
         }
@@ -89,38 +89,42 @@ export default function LoginPage() {
                         },
                     },
                 })
-                
+
                 if (error) {
                     if (error.message.includes('database') || error.message.includes('profile')) {
                         throw new Error('Database error: Please contact support if this persists.')
                     }
                     throw error
                 }
-                
+
                 if (!signupData.user) {
                     throw new Error('Failed to create user account')
                 }
-                
+
                 if (signupData.user && !signupData.session) {
-                    // Email confirmation required
                     toast.success('Account created! Please check your email to confirm your account before signing in.')
                     setFirstName('')
                     setLastName('')
                     setEmail('')
                     setPassword('')
-                    setIsSignUp(false) // Switch to login view
-                    // Show link to resend confirmation
+                    setIsSignUp(false)
                     setTimeout(() => {
                         toast.info('Didn\'t receive the email? You can resend it from the login page.', {
                             duration: 5000,
                         })
                     }, 2000)
                 } else if (signupData.session) {
-                    // Auto-confirmed (if email confirmation is disabled in Supabase)
                     if (signupData.session.access_token) {
                         setAuthToken(signupData.session.access_token)
                         setAuthUser(signupData.user)
                     }
+
+                    await fetch('/api/auth/clear-reset-cookies', {
+                        method: 'POST'
+                    }).catch(() => {
+                        // Ignore errors
+                    })
+
                     toast.success('Account created successfully!')
                     router.push('/')
                     router.refresh()
@@ -130,9 +134,8 @@ export default function LoginPage() {
                     email,
                     password,
                 })
-                
+
                 if (error) {
-                    // Handle specific error cases
                     if (error.message.includes('Email not confirmed')) {
                         throw new Error('Please check your email and confirm your account before signing in.')
                     } else if (error.message.includes('Invalid login credentials')) {
@@ -140,18 +143,22 @@ export default function LoginPage() {
                     }
                     throw error
                 }
-                
-                // Check if email is confirmed
+
                 if (signInData.user && !signInData.user.email_confirmed_at) {
                     toast.warning('Please confirm your email address. Check your inbox for the confirmation link.')
-                    // Still allow login if Supabase allows it, but show warning
                 }
-                
+
                 if (signInData.session?.access_token) {
                     setAuthToken(signInData.session.access_token)
                     setAuthUser(signInData.user)
                 }
-                
+
+                await fetch('/api/auth/clear-reset-cookies', {
+                    method: 'POST'
+                }).catch(() => {
+                    // Ignore errors
+                })
+
                 toast.success('Signed in successfully')
                 router.push('/')
                 router.refresh()

@@ -1,5 +1,5 @@
 import { runNTIScoring, UserResponse } from '../lib/nti-scoring';
-import { QUESTIONS, NTI_TYPES } from '../lib/nti-config';
+import { QUESTIONS, NTI_TYPES, BEHAVIORAL_RULES } from '../lib/nti-config';
 
 // Mock Response: User selects options that lean toward Hunter/DA
 const mockResponses: UserResponse[] = [
@@ -20,7 +20,7 @@ const mockResponses: UserResponse[] = [
 console.log("Running NTI v1 Scoring Test...");
 
 try {
-    const result = runNTIScoring(QUESTIONS, NTI_TYPES, mockResponses);
+    const result = runNTIScoring(QUESTIONS, NTI_TYPES, mockResponses, BEHAVIORAL_RULES);
 
     console.log("\n--- Result ---");
     console.log("16-Type:", result.primary_type_16.name);

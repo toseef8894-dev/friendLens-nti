@@ -1,78 +1,78 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 import { toast } from 'sonner'
-import { setAuthToken, setAuthUser } from '@/lib/auth-storage'
 import Link from 'next/link'
 
 function ResetPasswordForm() {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const supabase = createClient()
+    
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [isValid, setIsValid] = useState<boolean | null>(null)
     const [success, setSuccess] = useState(false)
-    const [isValidToken, setIsValidToken] = useState<boolean | null>(null)
-    const router = useRouter()
-    const supabase = createClient()
 
     useEffect(() => {
-        const checkToken = async () => {
-            // Check for hash-based recovery tokens first (from direct email links)
-            const hashParams = new URLSearchParams(window.location.hash.substring(1))
-            const accessToken = hashParams.get('access_token')
-            const type = hashParams.get('type')
+        const verifyResetToken = async () => {
+            setError(null)
 
-            if (accessToken && type === 'recovery') {
-                try {
-                    const { data, error } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: hashParams.get('refresh_token') || '',
-                    })
-
-                    if (error) {
-                        setIsValidToken(false)
-                        setError('Invalid or expired reset link. Please request a new one.')
-                    } else if (data.session) {
-                        setIsValidToken(true)
-                    }
-                } catch (err) {
-                    setIsValidToken(false)
-                    setError('Invalid or expired reset link. Please request a new one.')
-                }
+            const errorParam = searchParams.get('error')
+            if (errorParam === 'invalid_or_expired_link') {
+                setIsValid(false)
+                setError('Invalid or expired reset link. Please request a new one.')
                 return
             }
 
-            // Check for existing session (from code-based flow via auth callback or home page redirect)
-            const { data: { session } } = await supabase.auth.getSession()
-            if (session) {
-                // Check if this is a recovery session
-                const urlParams = new URLSearchParams(window.location.search)
-                const recoveryType = urlParams.get('type')
-                const isRecoverySession = sessionStorage.getItem('recovery_session') === 'true'
-                
-                // If we have a session and we're on reset-password page, allow it
-                // This handles the case where Supabase created a session from recovery token
-                if (recoveryType === 'recovery' || isRecoverySession || window.location.pathname === '/reset-password') {
-                    // Mark as recovery session if not already marked
-                    if (!isRecoverySession) {
-                        sessionStorage.setItem('recovery_session', 'true')
-                    }
-                    setIsValidToken(true)
-                } else {
-                    // If it's a regular session (not recovery), the user shouldn't be here
-                    // But we'll still allow them to reset password if they want
-                    setIsValidToken(true)
-                }
-            } else {
-                setIsValidToken(false)
-                setError('Invalid reset link. Please check your email and try again.')
+            const code = searchParams.get('code')
+            if (code) {
+                window.location.href = `/auth/callback?code=${code}&next=/reset-password`
+                return
             }
+
+            try {
+                const response = await fetch('/api/auth/validate-reset-token')
+                
+                if (response.ok) {
+                    const data = await response.json()
+                    if (data.valid) {
+                        setIsValid(true)
+                        return
+                    }
+                }
+            } catch (err) {
+                // handle validation errors
+            }
+
+            if (document.referrer.includes('/auth/callback') || document.referrer.includes('supabase.co')) {
+                await new Promise(resolve => setTimeout(resolve, 500))
+                
+                try {
+                    const response = await fetch('/api/auth/validate-reset-token')
+                    
+                    if (response.ok) {
+                        const data = await response.json()
+                        if (data.valid) {
+                            setIsValid(true)
+                            return
+                        }
+                    }
+                } catch (err) {
+                    // handle validation errors
+                }
+            }
+            
+            setIsValid(false)
+            setError('Invalid or expired reset link. Please request a new one.')
         }
 
-        checkToken()
-    }, [supabase.auth])
+        verifyResetToken()
+    }, [searchParams])
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -85,19 +85,16 @@ function ResetPasswordForm() {
             return
         }
 
-        // Enhanced password validation
         if (password.length < 8) {
             setError('Password must be at least 8 characters long')
             setLoading(false)
             return
         }
-        
-        // Check for password strength
+
         const hasUpperCase = /[A-Z]/.test(password)
         const hasLowerCase = /[a-z]/.test(password)
         const hasNumber = /[0-9]/.test(password)
-        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-        
+
         if (!hasUpperCase || !hasLowerCase || !hasNumber) {
             setError('Password must contain at least one uppercase letter, one lowercase letter, and one number')
             setLoading(false)
@@ -105,40 +102,33 @@ function ResetPasswordForm() {
         }
 
         try {
-            const { data, error } = await supabase.auth.updateUser({
-                password: password,
+            const response = await fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
             })
 
-            if (error) throw error
+            const data = await response.json()
 
-            if (data.session?.access_token) {
-                setAuthToken(data.session.access_token)
-                if (data.user) {
-                    setAuthUser(data.user)
-                }
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to update password')
             }
 
-            // Clear recovery session flag
-            sessionStorage.removeItem('recovery_session')
-            
             setSuccess(true)
+            setLoading(false)
             toast.success('Password reset successfully!')
-
-            // Sign out the recovery session and redirect to login
-            await supabase.auth.signOut()
             
             setTimeout(() => {
-                router.push('/login')
+                window.location.href = '/login'
             }, 2000)
         } catch (err: any) {
-            setError(err.message)
-            toast.error(err.message)
-        } finally {
+            setError(err?.message ?? 'Failed to update password')
+            toast.error(err?.message ?? 'Failed to update password')
             setLoading(false)
         }
     }
 
-    if (isValidToken === null) {
+    if (isValid === null) {
         return (
             <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -152,7 +142,7 @@ function ResetPasswordForm() {
         )
     }
 
-    if (isValidToken === false) {
+    if (isValid === false) {
         return (
             <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -206,7 +196,7 @@ function ResetPasswordForm() {
                                             Password reset successful!
                                         </h3>
                                         <div className="mt-2 text-sm text-green-700">
-                                            <p>Redirecting to sign in...</p>
+                                            <p>Your password has been updated successfully. Redirecting to login...</p>
                                         </div>
                                     </div>
                                 </div>
@@ -214,73 +204,73 @@ function ResetPasswordForm() {
                         </div>
                     ) : (
                         <form className="space-y-6" onSubmit={handleResetPassword}>
-                            <div>
-                                <label
-                                    htmlFor="password"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    New Password
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                                        placeholder="Enter new password"
-                                    />
-                                </div>
+                        <div>
+                            <label
+                                htmlFor="password"
+                                className="block text-sm font-medium text-gray-700"
+                            >
+                                New Password
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                    placeholder="Enter new password"
+                                />
                             </div>
+                        </div>
 
-                            <div>
-                                <label
-                                    htmlFor="confirmPassword"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Confirm New Password
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        id="confirmPassword"
-                                        name="confirmPassword"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        required
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                                        placeholder="Confirm new password"
-                                    />
-                                </div>
+                        <div>
+                            <label
+                                htmlFor="confirmPassword"
+                                className="block text-sm font-medium text-gray-700"
+                            >
+                                Confirm New Password
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    required
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                    placeholder="Confirm new password"
+                                />
                             </div>
+                        </div>
 
-                            {error && (
-                                <div className="text-red-600 text-sm">{error}</div>
-                            )}
+                        {error && (
+                            <div className="text-red-600 text-sm">{error}</div>
+                        )}
 
-                            <div>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
-                                >
-                                    {loading ? 'Resetting...' : 'Reset password'}
-                                </button>
-                            </div>
+                        <div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                            >
+                                {loading ? 'Resetting...' : 'Reset password'}
+                            </button>
+                        </div>
 
-                            <div className="text-center">
-                                <Link
-                                    href="/login"
-                                    className="font-medium text-indigo-600 hover:text-indigo-500"
-                                >
-                                    Back to sign in
-                                </Link>
-                            </div>
-                        </form>
+                        <div className="text-center">
+                            <Link
+                                href="/login"
+                                className="font-medium text-indigo-600 hover:text-indigo-500"
+                            >
+                                Back to sign in
+                            </Link>
+                        </div>
+                    </form>
                     )}
                 </div>
             </div>
@@ -305,4 +295,3 @@ export default function ResetPasswordPage() {
         </Suspense>
     )
 }
-

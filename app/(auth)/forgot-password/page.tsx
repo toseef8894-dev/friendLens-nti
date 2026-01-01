@@ -21,12 +21,8 @@ export default function ForgotPasswordPage() {
         setSuccess(false)
 
         try {
-            // Redirect directly to reset-password page
-            // Supabase will append hash fragments with tokens after verification
-            const redirectUrl = `${window.location.origin}/reset-password`
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: redirectUrl,
-            })
+            const redirectTo = `${window.location.origin}/auth/callback?next=/reset-password`
+            const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
 
             if (error) throw error
 

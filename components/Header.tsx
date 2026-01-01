@@ -26,7 +26,6 @@ export default function Header() {
                 .eq('user_id', userId)
 
             if (userRolesError) {
-                console.error('Error fetching user roles:', userRolesError)
                 return
             }
 
@@ -92,7 +91,6 @@ export default function Header() {
                     setIsAdmin(false)
                 }
             } catch (err) {
-                console.error('Error getting user:', err)
                 clearAuthToken()
                 setUser(null)
                 setIsAdmin(false)
@@ -127,23 +125,21 @@ export default function Header() {
         setIsMenuOpen(false)
 
         try {
-            // Always try to sign out, even if session check fails
+            await fetch('/api/nti/v1/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).catch(() => {
+                // Ignore API errors, continue with client-side cleanup
+            })
+
             const { data: { session } } = await supabase.auth.getSession()
-            
             if (session) {
-                const { error } = await supabase.auth.signOut()
-                if (error) {
-                    console.warn('Signout error (session may be expired):', error)
-                    // Continue with cleanup even if signOut fails
-                }
-            } else {
-                console.log('No active session to sign out from')
+                await supabase.auth.signOut().catch(() => {
+                    // Ignore errors, continue with cleanup
+                })
             }
         } catch (err) {
-            console.warn('Error during signout attempt:', err)
-            // Continue with cleanup even if there's an error
         } finally {
-            // Always clear local state, regardless of signOut success
             clearAuthToken()
             setUser(null)
             setIsAdmin(false)
@@ -153,7 +149,6 @@ export default function Header() {
                 sessionStorage.clear()
             }
 
-            // Force a hard redirect to ensure clean state
             await new Promise(resolve => setTimeout(resolve, 100))
 
             toast.success('Signed out successfully')
