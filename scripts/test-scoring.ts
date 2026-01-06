@@ -23,10 +23,10 @@ try {
     const result = runNTIScoring(QUESTIONS, NTI_TYPES, mockResponses, BEHAVIORAL_RULES);
 
     console.log("\n--- Result ---");
-    console.log("16-Type:", result.primary_type_16.name);
-    console.log("16-Type Short Label:", result.primary_type_16.short_label);
-    console.log("Primary Archetype:", result.primary_archetype_6);
-    console.log("Secondary Archetype:", result.secondary_archetype_6);
+    console.log("NTI Type:", result.nti_type.name);
+    console.log("NTI Type Short Label:", result.nti_type.short_label);
+    console.log("Primary Archetype:", result.primary_archetype);
+    console.log("Secondary Archetype:", result.secondary_archetype);
     console.log("Confidence:", (result.confidence * 100).toFixed(1) + "%");
     console.log("\nNormalized Scores:");
     Object.entries(result.normalized_scores)

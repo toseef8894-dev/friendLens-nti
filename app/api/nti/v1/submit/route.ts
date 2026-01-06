@@ -76,11 +76,11 @@ export async function POST(request: NextRequest) {
             .insert({
                 user_id: user.id,
                 response_id: responseData.id,
-                archetype_id: scoringResult.primary_type_16.id,
-                microtype_id: scoringResult.primary_archetype_6,
+                archetype_id: scoringResult.nti_type.id,
+                microtype_id: scoringResult.primary_archetype,
                 user_vector: scoringResult.normalized_scores,
-                microtype_tags: [scoringResult.primary_archetype_6, scoringResult.secondary_archetype_6],
-                distance_score: scoringResult.primary_type_16.distance,
+                microtype_tags: [scoringResult.primary_archetype, scoringResult.secondary_archetype],
+                distance_score: scoringResult.nti_type.distance,
             })
             .select()
             .single()
@@ -97,9 +97,9 @@ export async function POST(request: NextRequest) {
             success: true,
             result: {
                 id: result.id,
-                primary_type_16: scoringResult.primary_type_16,
-                primary_archetype_6: scoringResult.primary_archetype_6,
-                secondary_archetype_6: scoringResult.secondary_archetype_6,
+                nti_type: scoringResult.nti_type,
+                primary_archetype: scoringResult.primary_archetype,
+                secondary_archetype: scoringResult.secondary_archetype,
                 raw_scores: scoringResult.raw_scores,
                 normalized_scores: scoringResult.normalized_scores,
                 confidence: scoringResult.confidence,

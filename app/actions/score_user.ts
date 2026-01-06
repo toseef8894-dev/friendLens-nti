@@ -20,8 +20,8 @@ export async function scoreUser(input: ScoreUserInput) {
     try {
         const result = runNTIScoring(QUESTIONS, NTI_TYPES, input.responses, BEHAVIORAL_RULES)
 
-        const primaryArchetype = ARCHETYPES[result.primary_archetype_6]
-        const secondaryArchetype = ARCHETYPES[result.secondary_archetype_6]
+        const primaryArchetype = ARCHETYPES[result.primary_archetype]
+        const secondaryArchetype = ARCHETYPES[result.secondary_archetype]
 
         const { data: responseData, error: responseError } = await supabase
             .from('responses')
@@ -43,11 +43,11 @@ export async function scoreUser(input: ScoreUserInput) {
             .insert({
                 user_id: user.id,
                 response_id: responseData.id,
-                archetype_id: result.primary_type_16.id,
-                microtype_id: result.primary_archetype_6,
+                archetype_id: result.nti_type.id,
+                microtype_id: result.primary_archetype,
                 user_vector: result.normalized_scores,
-                microtype_tags: [result.primary_archetype_6, result.secondary_archetype_6],
-                distance_score: result.primary_type_16.distance,
+                microtype_tags: [result.primary_archetype, result.secondary_archetype],
+                distance_score: result.nti_type.distance,
             })
 
         if (resultError) {
@@ -60,9 +60,9 @@ export async function scoreUser(input: ScoreUserInput) {
         return {
             success: true,
             result: {
-                primary_type_16: result.primary_type_16,
-                primary_archetype_6: primaryArchetype,
-                secondary_archetype_6: secondaryArchetype,
+                nti_type: result.nti_type,
+                primary_archetype: primaryArchetype,
+                secondary_archetype: secondaryArchetype,
                 raw_scores: result.raw_scores,
                 normalized_scores: result.normalized_scores,
                 confidence: result.confidence,

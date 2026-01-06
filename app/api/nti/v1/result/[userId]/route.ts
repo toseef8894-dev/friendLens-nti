@@ -68,15 +68,15 @@ export async function GET(
             success: true,
             result: {
                 id: result.id,
-                primary_type_16: {
+                nti_type: {
                     id: ntiType.id,
                     name: ntiType.name,
                     short_label: ntiType.short_label,
                     description: ntiType.description,
                     distance: result.distance_score
                 },
-                primary_archetype_6: primaryArchetype || null,
-                secondary_archetype_6: secondaryArchetype || null,
+                primary_archetype: primaryArchetype || null,
+                secondary_archetype: secondaryArchetype || null,
                 normalized_scores: result.user_vector,
                 confidence: result.distance_score ? Math.max(0, 1 - (result.distance_score / 100)) : 0.5,
                 created_at: result.created_at,
