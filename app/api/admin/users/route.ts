@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/rbac'
-import { NTI_TYPES, ARCHETYPES } from '@/lib/nti-config'
+import { ARCHETYPES, getNTITypeById } from '@/lib/nti-config'
 
 export async function GET() {
     try {
@@ -49,7 +49,7 @@ export async function GET() {
 
         const users = profiles?.map(profile => {
             const result = resultMap.get(profile.id)
-            const ntiType = result ? NTI_TYPES.find(t => t.id === result.archetype_id) : null
+            const ntiType = result ? getNTITypeById(result.archetype_id) : null
             const archetype = result ? ARCHETYPES[result.microtype_id as keyof typeof ARCHETYPES] : null
 
             return {

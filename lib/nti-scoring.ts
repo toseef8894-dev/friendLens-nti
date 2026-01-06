@@ -2,15 +2,15 @@ export type DimensionId = 'DA' | 'OX' | '5HT' | 'ACh' | 'EN' | 'GABA';
 
 export const DIMENSION_IDS: DimensionId[] = ['DA', 'OX', '5HT', 'ACh', 'EN', 'GABA'];
 
-export type ArchetypeId = 'Hunter' | 'Bonder' | 'Competitor' | 'Sage' | 'FlowMaker' | 'Anchor';
+export type ArchetypeId = 'Anchor' | 'Connector' | 'Hunter' | 'Bonder' | 'Sage' | 'FlowMaker' | 'Builder' | 'Explorer';
 
 export const DIMENSION_TO_ARCHETYPE: Record<DimensionId, ArchetypeId> = {
-    'DA': 'Hunter',     
-    'OX': 'Bonder',     
-    '5HT': 'Sage',      
-    'ACh': 'Competitor',
-    'EN': 'FlowMaker',  
-    'GABA': 'Anchor'    
+    'DA': 'Hunter',
+    'OX': 'Bonder',
+    '5HT': 'Sage',
+    'ACh': 'Builder',
+    'EN': 'FlowMaker',
+    'GABA': 'Anchor'
 };
 
 export interface DimensionWeight {
@@ -35,8 +35,8 @@ export interface NTITypeConfig {
     id: string;
     name: string;
     short_label: string;
-    description?: string;  
-    vector: Record<DimensionId, number>; 
+    description?: string;
+    vector: Record<DimensionId, number>;
     primary_archetype: ArchetypeId;
 }
 
@@ -49,20 +49,20 @@ export interface ArchetypeConfig {
 
 export interface UserResponse {
     question_id: string;
-    ranked_option_ids: string[]; 
+    ranked_option_ids: string[];
 }
 
 export interface ScoringResult {
     raw_scores: Record<DimensionId, number>;
     normalized_scores: Record<DimensionId, number>;
-    primary_type_16: {
+    nti_type: {
         id: string;
         name: string;
         short_label: string;
         distance: number;
     };
-    primary_archetype_6: ArchetypeId;
-    secondary_archetype_6: ArchetypeId;
+    primary_archetype: ArchetypeId;
+    secondary_archetype: ArchetypeId;
     confidence: number;
 }
 
@@ -72,7 +72,7 @@ export function getRankWeight(rank: number): number {
     if (rank === 2) return 4;
     if (rank === 3) return 3;
     if (rank === 4) return 2;
-    return 1; 
+    return 1;
 }
 
 export function computeRawScores(
@@ -102,7 +102,7 @@ export function computeRawScores(
             const option = optionMap.get(optionId);
             if (!option) return;
 
-            const rank = index + 1; 
+            const rank = index + 1;
             const rankWeight = getRankWeight(rank);
 
             if (option.behavioral_rule && behavioralRules && behavioralRules[option.behavioral_rule]) {
@@ -185,14 +185,14 @@ export function computeConfidence(
 
     const sortedDistances = [...distances].sort((a, b) => a - b);
     const avgDistance = distances.reduce((a, b) => a + b, 0) / distances.length;
-    
+
     if (avgDistance === 0) return 0.5;
-    
+
     const gap = sortedDistances[1] - sortedDistances[0];
     const gapRatio = gap / (avgDistance || 1);
-    
+
     const baseConfidence = Math.min(0.9, 0.5 + (gapRatio * 0.3));
-    
+
     return Math.max(0.3, Math.min(0.9, baseConfidence));
 }
 
@@ -209,7 +209,7 @@ export function getTop2Archetypes(
         });
 
     const primary = DIMENSION_TO_ARCHETYPE[sorted[0].dim];
-    const secondary = sorted[1].dim !== sorted[0].dim 
+    const secondary = sorted[1].dim !== sorted[0].dim
         ? DIMENSION_TO_ARCHETYPE[sorted[1].dim]
         : DIMENSION_TO_ARCHETYPE[sorted[2]?.dim || sorted[0].dim];
 
@@ -243,14 +243,14 @@ export function runNTIScoring(
     return {
         raw_scores,
         normalized_scores,
-        primary_type_16: {
+        nti_type: {
             id: nearestType.id,
             name: nearestType.name,
             short_label: nearestType.short_label,
             distance: bestDistance
         },
-        primary_archetype_6: primary,
-        secondary_archetype_6: secondary,
+        primary_archetype: primary,
+        secondary_archetype: secondary,
         confidence
     };
 }

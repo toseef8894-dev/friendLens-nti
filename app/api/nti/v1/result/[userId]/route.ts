@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { ARCHETYPES, NTI_TYPES } from '@/lib/nti-config'
+import { ARCHETYPES, getNTITypeById } from '@/lib/nti-config'
 import type { ArchetypeId } from '@/lib/nti-scoring'
 
 export async function GET(
@@ -49,7 +49,7 @@ export async function GET(
             )
         }
 
-        const ntiType = NTI_TYPES.find(t => t.id === result.archetype_id)
+        const ntiType = getNTITypeById(result.archetype_id)
 
         const primaryArchetypeId = result.microtype_id as ArchetypeId
         const secondaryArchetypeId = result.microtype_tags?.[1] as ArchetypeId
@@ -57,14 +57,22 @@ export async function GET(
         const primaryArchetype = primaryArchetypeId ? ARCHETYPES[primaryArchetypeId] : null
         const secondaryArchetype = secondaryArchetypeId ? ARCHETYPES[secondaryArchetypeId] : null
 
+        if (!ntiType) {
+            return NextResponse.json(
+                { error: 'NTI type not found for this result' },
+                { status: 404 }
+            )
+        }
+
         return NextResponse.json({
             success: true,
             result: {
                 id: result.id,
                 primary_type_16: {
-                    id: ntiType?.id || result.archetype_id,
-                    name: ntiType?.name || 'Unknown',
-                    short_label: ntiType?.short_label || '',
+                    id: ntiType.id,
+                    name: ntiType.name,
+                    short_label: ntiType.short_label,
+                    description: ntiType.description,
                     distance: result.distance_score
                 },
                 primary_archetype_6: primaryArchetype || null,

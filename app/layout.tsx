@@ -8,6 +8,10 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
   title: 'FriendLens',
   description: 'FriendLens — intake survey and friendship type result.',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
 }
 
 export default function RootLayout({

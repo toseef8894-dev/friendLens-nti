@@ -9,173 +9,197 @@ import {
 
 export { DIMENSION_IDS };
 
+export function getNTITypeById(archetypeId: string): NTITypeConfig | null {
+    return NTI_TYPES.find(t => t.id === archetypeId) || null
+}
+
 export const ARCHETYPES: Record<ArchetypeId, ArchetypeConfig> = {
+    Anchor: {
+        id: 'Anchor',
+        name: 'Anchor',
+        tagline: 'Stability and presence',
+        description: 'You bring reliability and calm to friendships.'
+    },
+    Connector: {
+        id: 'Connector',
+        name: 'Connector',
+        tagline: 'Bringing people together',
+        description: 'You thrive on linking people and social flow.'
+    },
     Hunter: {
         id: 'Hunter',
         name: 'Hunter',
         tagline: 'Momentum and pursuit',
-        description: "You're driven by goals, progress, and movement toward something meaningful. You energize plans and pull people into action. When unsupported, impatience with slow or vague dynamics can appear."
+        description: 'You energize friendships through initiative.'
     },
     Bonder: {
         id: 'Bonder',
         name: 'Bonder',
-        tagline: 'Connection and warmth',
-        description: "You build closeness through care, attention, and steady presence. People feel seen and included around you. Your edge case is over-giving or lingering in one-sided connections."
-    },
-    Competitor: {
-        id: 'Competitor',
-        name: 'Competitor',
-        tagline: 'Edge and excellence',
-        description: "You bring intensity, standards, and a desire to level up. You raise performance and sharpen focus. In unhealthy fields, urgency can feel lonely or unreciprocated."
+        tagline: 'Depth and intimacy',
+        description: 'You create closeness and emotional safety.'
     },
     Sage: {
         id: 'Sage',
         name: 'Sage',
-        tagline: 'Clarity and sense-making',
-        description: "You're oriented toward insight, patterns, and understanding. You help people think and decide more clearly. At times, others may want comfort when you're offering clarity."
+        tagline: 'Perspective and meaning',
+        description: 'You orient friendships through insight.'
     },
     FlowMaker: {
         id: 'FlowMaker',
         name: 'FlowMaker',
-        tagline: 'Ease and play',
-        description: "You reduce friction and help social moments feel natural. Timing, humor, and vibe are your strengths. Because things feel easy around you, your contribution can be under-credited."
+        tagline: 'Ease and enjoyment',
+        description: 'You make social time feel light and natural.'
     },
-    Anchor: {
-        id: 'Anchor',
-        name: 'Anchor',
-        tagline: 'Stability and calm',
-        description: "You bring steadiness and grounding to groups over time. Others feel safer with you present. Your risk is being taken for granted or staying too quiet when direction is needed."
+    Builder: {
+        id: 'Builder',
+        name: 'Builder',
+        tagline: 'Structure and hosting',
+        description: 'You make friendships real through action.'
+    },
+    Explorer: {
+        id: 'Explorer',
+        name: 'Explorer',
+        tagline: 'Novelty and expansion',
+        description: 'You bring new experiences into the group.'
     }
 };
 
 export const NTI_TYPES: NTITypeConfig[] = [
+    // Anchor - A/B variants
     {
-        id: 'FL01',
+        id: 'Anchor_A',
         name: 'Anchor',
-        short_label: 'Steady',
-        description: 'Steady presence and calm continuity. Reliable and grounding. Can be overlooked or taken for granted.',
+        short_label: 'Stability and presence',
+        description: 'You bring reliability and calm to friendships.',
         vector: { DA: 0.2, OX: 0.4, '5HT': 0.6, ACh: 0.2, EN: 0.2, GABA: 0.9 },
         primary_archetype: 'Anchor'
     },
     {
-        id: 'FL02',
-        name: 'Catalyst',
-        short_label: 'Starter',
-        description: 'Initiates plans and creates momentum. Converts ideas into action. Can burn out if initiation isn\'t shared.',
+        id: 'Anchor_B',
+        name: 'Anchor',
+        short_label: 'Stability and presence',
+        description: 'You bring reliability and calm to friendships.',
+        vector: { DA: 0.35, OX: 0.55, '5HT': 0.65, ACh: 0.46, EN: 0.3, GABA: 0.6 },
+        primary_archetype: 'Anchor'
+    },
+    // Connector - A/B variants
+    {
+        id: 'Connector_A',
+        name: 'Connector',
+        short_label: 'Bringing people together',
+        description: 'You thrive on linking people and social flow.',
+        vector: { DA: 0.6, OX: 0.6, '5HT': 0.3, ACh: 0.4, EN: 0.4, GABA: 0.2 },
+        primary_archetype: 'Connector'
+    },
+    {
+        id: 'Connector_B',
+        name: 'Connector',
+        short_label: 'Bringing people together',
+        description: 'You thrive on linking people and social flow.',
+        vector: { DA: 0.4, OX: 0.7, '5HT': 0.4, ACh: 0.4, EN: 0.3, GABA: 0.4 },
+        primary_archetype: 'Connector'
+    },
+    // Hunter - A/B variants
+    {
+        id: 'Hunter_A',
+        name: 'Hunter',
+        short_label: 'Momentum and pursuit',
+        description: 'You energize friendships through initiative.',
         vector: { DA: 0.8, OX: 0.2, '5HT': 0.2, ACh: 0.4, EN: 0.7, GABA: 0.2 },
         primary_archetype: 'Hunter'
     },
     {
-        id: 'FL03',
-        name: 'Connector',
-        short_label: 'Bridge',
-        description: 'Links people and groups into networks. Expands social overlap. Risk is too much breadth, not enough depth.',
-        vector: { DA: 0.6, OX: 0.6, '5HT': 0.3, ACh: 0.4, EN: 0.4, GABA: 0.2 },
-        primary_archetype: 'Bonder'
-    },
-    {
-        id: 'FL04',
-        name: 'Builder',
-        short_label: 'Structure',
-        description: 'Creates durable structure and recurring continuity. Thinks in systems. Can feel over-responsible.',
-        vector: { DA: 0.5, OX: 0.4, '5HT': 0.5, ACh: 0.5, EN: 0.4, GABA: 0.4 },
+        id: 'Hunter_B',
+        name: 'Hunter',
+        short_label: 'Momentum and pursuit',
+        description: 'You energize friendships through initiative.',
+        vector: { DA: 0.7, OX: 0.3, '5HT': 0.2, ACh: 0.5, EN: 0.6, GABA: 0.2 },
         primary_archetype: 'Hunter'
     },
+    // Bonder - A/B variants
     {
-        id: 'FL05',
-        name: 'Companion',
-        short_label: 'Depth',
-        description: 'One-on-one loyalty and sustained depth. Values fewer, stronger ties. Can over-invest when reciprocity fades.',
+        id: 'Bonder_A',
+        name: 'Bonder',
+        short_label: 'Depth and intimacy',
+        description: 'You create closeness and emotional safety.',
         vector: { DA: 0.3, OX: 0.9, '5HT': 0.7, ACh: 0.2, EN: 0.2, GABA: 0.4 },
         primary_archetype: 'Bonder'
     },
     {
-        id: 'FL06',
-        name: 'Explorer',
-        short_label: 'Novelty',
-        description: 'Brings discovery and new experiences. Keeps things fresh. Continuity can suffer after novelty fades.',
-        vector: { DA: 0.7, OX: 0.3, '5HT': 0.2, ACh: 0.7, EN: 0.5, GABA: 0.2 },
-        primary_archetype: 'Hunter'
-    },
-    {
-        id: 'FL07',
-        name: 'Steward',
-        short_label: 'Guardian',
-        description: 'Notices imbalance early and restores tone and fairness. Prevents fractures. Emotional labor can go unseen.',
-        vector: { DA: 0.35, OX: 0.55, '5HT': 0.65, ACh: 0.46, EN: 0.3, GABA: 0.6 },
-        primary_archetype: 'Anchor'
-    },
-    {
-        id: 'FL08',
-        name: 'Host',
-        short_label: 'Welcome',
-        description: 'Creates welcoming space and inclusion. Turns strangers into participants. Can give more than they receive.',
-        vector: { DA: 0.4, OX: 0.7, '5HT': 0.4, ACh: 0.4, EN: 0.3, GABA: 0.4 },
+        id: 'Bonder_B',
+        name: 'Bonder',
+        short_label: 'Depth and intimacy',
+        description: 'You create closeness and emotional safety.',
+        vector: { DA: 0.3, OX: 0.7, '5HT': 0.5, ACh: 0.2, EN: 0.2, GABA: 0.4 },
         primary_archetype: 'Bonder'
     },
+    // Sage - A/B variants
     {
-        id: 'FL09',
-        name: 'Spark',
-        short_label: 'Lift',
-        description: 'Brings humor and emotional lift. Makes groups feel alive. Risk of being valued only as entertainment.',
-        vector: { DA: 0.7, OX: 0.4, '5HT': 0.3, ACh: 0.65, EN: 0.9, GABA: 0.2 },
-        primary_archetype: 'FlowMaker'
-    },
-    {
-        id: 'FL10',
-        name: 'Anchorite',
-        short_label: 'Autonomy',
-        description: 'Independent and low-maintenance. Engages deeply but intermittently. Can be misread as distant.',
-        vector: { DA: 0.3, OX: 0.2, '5HT': 0.6, ACh: 0.3, EN: 0.2, GABA: 0.8 },
-        primary_archetype: 'Anchor'
-    },
-    {
-        id: 'FL11',
-        name: 'Advocate',
-        short_label: 'Defender',
-        description: 'Stands up for people and voices hard truths. Loyal in high-stakes moments. Can burn bridges alone.',
-        vector: { DA: 0.35, OX: 0.55, '5HT': 0.3, ACh: 0.25, EN: 0.8, GABA: 0.2 },
-        primary_archetype: 'Competitor'
-    },
-    {
-        id: 'FL12',
-        name: 'Mirror',
-        short_label: 'Reflect',
-        description: 'Creates clarity through insight and reflection. Conversations feel clean. May feel analytical to others.',
+        id: 'Sage_A',
+        name: 'Sage',
+        short_label: 'Perspective and meaning',
+        description: 'You orient friendships through insight.',
         vector: { DA: 0.2, OX: 0.4, '5HT': 0.7, ACh: 0.7, EN: 0.2, GABA: 0.4 },
         primary_archetype: 'Sage'
     },
     {
-        id: 'FL13',
-        name: 'Stabilizer',
-        short_label: 'Balance',
-        description: 'Keeps systems from tipping into volatility. Essential for long-running groups. Can slow needed change.',
-        vector: { DA: 0.2, OX: 0.4, '5HT': 0.7, ACh: 0.3, EN: 0.2, GABA: 0.9 },
-        primary_archetype: 'Anchor'
-    },
-    {
-        id: 'FL14',
-        name: 'Giver',
-        short_label: 'Generous',
-        description: 'Contributes time, help, and resources freely. Dependable and kind. Vulnerable to extraction.',
-        vector: { DA: 0.3, OX: 0.7, '5HT': 0.5, ACh: 0.2, EN: 0.2, GABA: 0.4 },
-        primary_archetype: 'Bonder'
-    },
-    {
-        id: 'FL15',
-        name: 'Pathfinder',
-        short_label: 'Future',
-        description: 'Sees future possibilities and guides evolution. Helps systems adapt. Frustration arises with resistance.',
+        id: 'Sage_B',
+        name: 'Sage',
+        short_label: 'Perspective and meaning',
+        description: 'You orient friendships through insight.',
         vector: { DA: 0.6, OX: 0.3, '5HT': 0.3, ACh: 0.7, EN: 0.5, GABA: 0.2 },
         primary_archetype: 'Sage'
     },
+    // FlowMaker - A/B variants
     {
-        id: 'FL16',
-        name: 'Resonator',
-        short_label: 'Attuned',
-        description: 'Highly attuned to group dynamics and mood. Amplifies coherence. Can absorb stress that isn\'t theirs.',
+        id: 'FlowMaker_A',
+        name: 'FlowMaker',
+        short_label: 'Ease and enjoyment',
+        description: 'You make social time feel light and natural.',
+        vector: { DA: 0.7, OX: 0.4, '5HT': 0.3, ACh: 0.65, EN: 0.9, GABA: 0.2 },
+        primary_archetype: 'FlowMaker'
+    },
+    {
+        id: 'FlowMaker_B',
+        name: 'FlowMaker',
+        short_label: 'Ease and enjoyment',
+        description: 'You make social time feel light and natural.',
         vector: { DA: 0.3, OX: 0.6, '5HT': 0.4, ACh: 0.4, EN: 0.3, GABA: 0.5 },
         primary_archetype: 'FlowMaker'
+    },
+    // Builder - A/B variants
+    {
+        id: 'Builder_A',
+        name: 'Builder',
+        short_label: 'Structure and hosting',
+        description: 'You make friendships real through action.',
+        vector: { DA: 0.5, OX: 0.4, '5HT': 0.5, ACh: 0.5, EN: 0.4, GABA: 0.4 },
+        primary_archetype: 'Builder'
+    },
+    {
+        id: 'Builder_B',
+        name: 'Builder',
+        short_label: 'Structure and hosting',
+        description: 'You make friendships real through action.',
+        vector: { DA: 0.4, OX: 0.5, '5HT': 0.6, ACh: 0.5, EN: 0.3, GABA: 0.4 },
+        primary_archetype: 'Builder'
+    },
+    // Explorer - A/B variants
+    {
+        id: 'Explorer_A',
+        name: 'Explorer',
+        short_label: 'Novelty and expansion',
+        description: 'You bring new experiences into the group.',
+        vector: { DA: 0.7, OX: 0.3, '5HT': 0.2, ACh: 0.7, EN: 0.5, GABA: 0.2 },
+        primary_archetype: 'Explorer'
+    },
+    {
+        id: 'Explorer_B',
+        name: 'Explorer',
+        short_label: 'Novelty and expansion',
+        description: 'You bring new experiences into the group.',
+        vector: { DA: 0.6, OX: 0.4, '5HT': 0.2, ACh: 0.8, EN: 0.4, GABA: 0.2 },
+        primary_archetype: 'Explorer'
     }
 ];
 

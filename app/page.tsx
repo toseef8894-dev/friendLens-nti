@@ -6,17 +6,17 @@ import { useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 function CodeHandler() {
-    const searchParams = useSearchParams()
+  const searchParams = useSearchParams()
 
-    useEffect(() => {
-        const code = searchParams.get('code')
-        if (code) {
-            const next = searchParams.get('next') || '/reset-password'
-            window.location.href = `/auth/callback?code=${code}&next=${encodeURIComponent(next)}`
-        }
-    }, [searchParams])
+  useEffect(() => {
+    const code = searchParams.get('code')
+    if (code) {
+      const next = searchParams.get('next') || '/reset-password'
+      window.location.href = `/auth/callback?code=${code}&next=${encodeURIComponent(next)}`
+    }
+  }, [searchParams])
 
-    return null
+  return null
 }
 
 export default function Home() {
@@ -43,7 +43,7 @@ export default function Home() {
               </p>
               <div className="mt-10">
                 <CTAButton
-                  text="Add more better humans to your life with FriendLens.ai"
+                  text="Add better people to your life with FriendLens.ai"
                   variant="primary"
                 />
               </div>
@@ -72,7 +72,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Discover Your Archetype</h3>
                 <p className="text-gray-600">
-                  Our algorithm maps you to one of 16 Friendship Archetypes based on 18 social dimensions.
+                  Our algorithm maps you to one of 8 Friendship Archetypes based on 18 social dimensions.
                 </p>
               </div>
               <div className="text-center p-6">
@@ -92,34 +92,31 @@ export default function Home() {
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-              16 Friendship Archetypes
+              8 Friendship Archetypes
             </h2>
             <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-              From The Organizer to The Nurturer, discover which archetype matches your social style.
+              Discover which archetype matches your social style and how you connect with others.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { name: "The Organizer", group: "Energetic Connectors", color: "bg-orange-100 text-orange-700" },
-                { name: "The Welcomer", group: "Energetic Connectors", color: "bg-yellow-100 text-yellow-700" },
-                { name: "The Adventurer", group: "Energetic Connectors", color: "bg-red-100 text-red-700" },
-                { name: "The Listener", group: "Steady Supporters", color: "bg-green-100 text-green-700" },
-                { name: "The Rock", group: "Steady Supporters", color: "bg-teal-100 text-teal-700" },
-                { name: "The Nurturer", group: "Warm Supporters", color: "bg-pink-100 text-pink-700" },
-                { name: "The Team Player", group: "Everyday Connectors", color: "bg-blue-100 text-blue-700" },
-                { name: "The Explorer", group: "Steady Supporters", color: "bg-indigo-100 text-indigo-700" },
+                { name: "Anchor", tagline: "Stability and presence", color: "bg-indigo-100 text-indigo-700" },
+                { name: "Connector", tagline: "Bringing people together", color: "bg-purple-100 text-purple-700" },
+                { name: "Hunter", tagline: "Momentum and pursuit", color: "bg-orange-100 text-orange-700" },
+                { name: "Bonder", tagline: "Depth and intimacy", color: "bg-pink-100 text-pink-700" },
+                { name: "Sage", tagline: "Perspective and meaning", color: "bg-blue-100 text-blue-700" },
+                { name: "FlowMaker", tagline: "Ease and enjoyment", color: "bg-green-100 text-green-700" },
+                { name: "Builder", tagline: "Structure and hosting", color: "bg-teal-100 text-teal-700" },
+                { name: "Explorer", tagline: "Novelty and expansion", color: "bg-yellow-100 text-yellow-700" },
               ].map((archetype) => (
                 <div
                   key={archetype.name}
                   className={`${archetype.color} rounded-xl p-4 text-center transition-transform hover:scale-105`}
                 >
                   <p className="font-semibold text-sm">{archetype.name}</p>
-                  <p className="text-xs opacity-75 mt-1">{archetype.group}</p>
+                  <p className="text-xs opacity-75 mt-1">{archetype.tagline}</p>
                 </div>
               ))}
             </div>
-            <p className="text-center text-gray-500 mt-6 text-sm">
-              + 8 more archetypes to discover
-            </p>
           </div>
         </section>
 

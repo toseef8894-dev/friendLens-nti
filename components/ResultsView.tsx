@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ARCHETYPES, NTI_TYPES } from '@/lib/nti-config'
+import { ARCHETYPES, getNTITypeById } from '@/lib/nti-config'
 import { DimensionId, DIMENSION_IDS, ArchetypeId } from '@/lib/nti-scoring'
 import Link from 'next/link'
 
@@ -36,7 +36,7 @@ const DIMENSION_COLORS: Record<DimensionId, string> = {
 
 export default function ResultsView({ userId, initialData }: { userId: string, initialData: ResultData | null }) {
     const [result, setResult] = useState<ResultData | null>(initialData)
-    const [loading, setLoading] = useState(false) 
+    const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
@@ -77,12 +77,28 @@ export default function ResultsView({ userId, initialData }: { userId: string, i
         )
     }
 
-    const ntiType = NTI_TYPES.find(t => t.id === result.archetype_id)
+    const ntiType = getNTITypeById(result.archetype_id)
     const primaryArchetypeId = result.microtype_id as ArchetypeId
     const secondaryArchetypeId = result.microtype_tags?.[1] as ArchetypeId
     const primaryArchetype = ARCHETYPES[primaryArchetypeId]
     const secondaryArchetype = secondaryArchetypeId ? ARCHETYPES[secondaryArchetypeId] : null
     const scores = result.user_vector || {}
+
+    if (!ntiType) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center px-4">
+                <div className="text-center max-w-md">
+                    <p className="text-gray-600 mb-4">Unable to load your results. Please try again.</p>
+                    <Link
+                        href="/assessment"
+                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg transition-shadow"
+                    >
+                        Take Assessment
+                    </Link>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-12 px-4">
@@ -92,18 +108,23 @@ export default function ResultsView({ userId, initialData }: { userId: string, i
                         Your NTI Type
                     </p>
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                        {ntiType?.name || 'Unknown Type'}
+                        {ntiType.name}
                     </h1>
-                    <p className="text-lg text-purple-600 font-medium">
-                        {ntiType?.short_label || ''}
+                    <p className="text-lg text-purple-600 font-medium mb-4">
+                        {ntiType.short_label}
                     </p>
+                    {ntiType.description && (
+                        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                            {ntiType.description}
+                        </p>
+                    )}
                 </div>
 
                 {primaryArchetype && (
                     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
                         <div className="flex items-center gap-2 mb-3">
                             <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">
-                                PRIMARY
+                                PRIMARY ARCHETYPE
                             </span>
                             <span className="text-white/80">{primaryArchetype.tagline}</span>
                         </div>
