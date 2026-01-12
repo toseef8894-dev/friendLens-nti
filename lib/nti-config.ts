@@ -6,199 +6,129 @@ import {
     QuestionConfig,
     DIMENSION_IDS
 } from './nti-scoring';
+import { NTI_PRIMARY_COPY, toPrimaryType, NTIPrimary } from './nti-utils';
 
 export { DIMENSION_IDS };
 
 export function getNTITypeById(archetypeId: string): NTITypeConfig | null {
-    return NTI_TYPES.find(t => t.id === archetypeId) || null
+    const primaryId = toPrimaryType(archetypeId as any) as NTIPrimary;
+    return NTI_TYPES.find(t => t.id === primaryId) || null
 }
 
 export const ARCHETYPES: Record<ArchetypeId, ArchetypeConfig> = {
     Anchor: {
         id: 'Anchor',
         name: 'Anchor',
-        tagline: 'Stability and presence',
-        description: 'You bring reliability and calm to friendships.'
+        tagline: NTI_PRIMARY_COPY.Anchor.tagline,
+        description: NTI_PRIMARY_COPY.Anchor.body
     },
     Connector: {
         id: 'Connector',
         name: 'Connector',
-        tagline: 'Bringing people together',
-        description: 'You thrive on linking people and social flow.'
+        tagline: NTI_PRIMARY_COPY.Connector.tagline,
+        description: NTI_PRIMARY_COPY.Connector.body
     },
     Hunter: {
         id: 'Hunter',
         name: 'Hunter',
-        tagline: 'Momentum and pursuit',
-        description: 'You energize friendships through initiative.'
+        tagline: NTI_PRIMARY_COPY.Hunter.tagline,
+        description: NTI_PRIMARY_COPY.Hunter.body
     },
     Bonder: {
         id: 'Bonder',
         name: 'Bonder',
-        tagline: 'Depth and intimacy',
-        description: 'You create closeness and emotional safety.'
+        tagline: NTI_PRIMARY_COPY.Bonder.tagline,
+        description: NTI_PRIMARY_COPY.Bonder.body
     },
     Sage: {
         id: 'Sage',
         name: 'Sage',
-        tagline: 'Perspective and meaning',
-        description: 'You orient friendships through insight.'
+        tagline: NTI_PRIMARY_COPY.Sage.tagline,
+        description: NTI_PRIMARY_COPY.Sage.body
     },
     FlowMaker: {
         id: 'FlowMaker',
         name: 'FlowMaker',
-        tagline: 'Ease and enjoyment',
-        description: 'You make social time feel light and natural.'
+        tagline: NTI_PRIMARY_COPY.FlowMaker.tagline,
+        description: NTI_PRIMARY_COPY.FlowMaker.body
     },
     Builder: {
         id: 'Builder',
         name: 'Builder',
-        tagline: 'Structure and hosting',
-        description: 'You make friendships real through action.'
+        tagline: NTI_PRIMARY_COPY.Builder.tagline,
+        description: NTI_PRIMARY_COPY.Builder.body
     },
     Explorer: {
         id: 'Explorer',
         name: 'Explorer',
-        tagline: 'Novelty and expansion',
-        description: 'You bring new experiences into the group.'
+        tagline: NTI_PRIMARY_COPY.Explorer.tagline,
+        description: NTI_PRIMARY_COPY.Explorer.body
     }
 };
 
 export const NTI_TYPES: NTITypeConfig[] = [
-    // Anchor - A/B variants
     {
-        id: 'Anchor_A',
-        name: 'Anchor',
-        short_label: 'Stability and presence',
-        description: 'You bring reliability and calm to friendships.',
-        vector: { DA: 0.2, OX: 0.4, '5HT': 0.6, ACh: 0.2, EN: 0.2, GABA: 0.9 },
+        id: 'Anchor',
+        name: NTI_PRIMARY_COPY.Anchor.title,
+        short_label: NTI_PRIMARY_COPY.Anchor.tagline,
+        description: NTI_PRIMARY_COPY.Anchor.body,
+        vector: { DA: 0.275, OX: 0.475, '5HT': 0.625, ACh: 0.33, EN: 0.25, GABA: 0.75 },
         primary_archetype: 'Anchor'
     },
     {
-        id: 'Anchor_B',
-        name: 'Anchor',
-        short_label: 'Stability and presence',
-        description: 'You bring reliability and calm to friendships.',
-        vector: { DA: 0.35, OX: 0.55, '5HT': 0.65, ACh: 0.46, EN: 0.3, GABA: 0.6 },
-        primary_archetype: 'Anchor'
-    },
-    // Connector - A/B variants
-    {
-        id: 'Connector_A',
-        name: 'Connector',
-        short_label: 'Bringing people together',
-        description: 'You thrive on linking people and social flow.',
-        vector: { DA: 0.6, OX: 0.6, '5HT': 0.3, ACh: 0.4, EN: 0.4, GABA: 0.2 },
+        id: 'Connector',
+        name: NTI_PRIMARY_COPY.Connector.title,
+        short_label: NTI_PRIMARY_COPY.Connector.tagline,
+        description: NTI_PRIMARY_COPY.Connector.body,
+        vector: { DA: 0.5, OX: 0.65, '5HT': 0.35, ACh: 0.4, EN: 0.35, GABA: 0.3 },
         primary_archetype: 'Connector'
     },
     {
-        id: 'Connector_B',
-        name: 'Connector',
-        short_label: 'Bringing people together',
-        description: 'You thrive on linking people and social flow.',
-        vector: { DA: 0.4, OX: 0.7, '5HT': 0.4, ACh: 0.4, EN: 0.3, GABA: 0.4 },
-        primary_archetype: 'Connector'
-    },
-    // Hunter - A/B variants
-    {
-        id: 'Hunter_A',
-        name: 'Hunter',
-        short_label: 'Momentum and pursuit',
-        description: 'You energize friendships through initiative.',
-        vector: { DA: 0.8, OX: 0.2, '5HT': 0.2, ACh: 0.4, EN: 0.7, GABA: 0.2 },
+        id: 'Hunter',
+        name: NTI_PRIMARY_COPY.Hunter.title,
+        short_label: NTI_PRIMARY_COPY.Hunter.tagline,
+        description: NTI_PRIMARY_COPY.Hunter.body,
+        vector: { DA: 0.75, OX: 0.25, '5HT': 0.2, ACh: 0.45, EN: 0.65, GABA: 0.2 },
         primary_archetype: 'Hunter'
     },
     {
-        id: 'Hunter_B',
-        name: 'Hunter',
-        short_label: 'Momentum and pursuit',
-        description: 'You energize friendships through initiative.',
-        vector: { DA: 0.7, OX: 0.3, '5HT': 0.2, ACh: 0.5, EN: 0.6, GABA: 0.2 },
-        primary_archetype: 'Hunter'
-    },
-    // Bonder - A/B variants
-    {
-        id: 'Bonder_A',
-        name: 'Bonder',
-        short_label: 'Depth and intimacy',
-        description: 'You create closeness and emotional safety.',
-        vector: { DA: 0.3, OX: 0.9, '5HT': 0.7, ACh: 0.2, EN: 0.2, GABA: 0.4 },
+        id: 'Bonder',
+        name: NTI_PRIMARY_COPY.Bonder.title,
+        short_label: NTI_PRIMARY_COPY.Bonder.tagline,
+        description: NTI_PRIMARY_COPY.Bonder.body,
+        vector: { DA: 0.3, OX: 0.8, '5HT': 0.6, ACh: 0.2, EN: 0.2, GABA: 0.4 },
         primary_archetype: 'Bonder'
     },
     {
-        id: 'Bonder_B',
-        name: 'Bonder',
-        short_label: 'Depth and intimacy',
-        description: 'You create closeness and emotional safety.',
-        vector: { DA: 0.3, OX: 0.7, '5HT': 0.5, ACh: 0.2, EN: 0.2, GABA: 0.4 },
-        primary_archetype: 'Bonder'
-    },
-    // Sage - A/B variants
-    {
-        id: 'Sage_A',
-        name: 'Sage',
-        short_label: 'Perspective and meaning',
-        description: 'You orient friendships through insight.',
-        vector: { DA: 0.2, OX: 0.4, '5HT': 0.7, ACh: 0.7, EN: 0.2, GABA: 0.4 },
+        id: 'Sage',
+        name: NTI_PRIMARY_COPY.Sage.title,
+        short_label: NTI_PRIMARY_COPY.Sage.tagline,
+        description: NTI_PRIMARY_COPY.Sage.body,
+        vector: { DA: 0.4, OX: 0.35, '5HT': 0.5, ACh: 0.7, EN: 0.35, GABA: 0.3 },
         primary_archetype: 'Sage'
     },
     {
-        id: 'Sage_B',
-        name: 'Sage',
-        short_label: 'Perspective and meaning',
-        description: 'You orient friendships through insight.',
-        vector: { DA: 0.6, OX: 0.3, '5HT': 0.3, ACh: 0.7, EN: 0.5, GABA: 0.2 },
-        primary_archetype: 'Sage'
-    },
-    // FlowMaker - A/B variants
-    {
-        id: 'FlowMaker_A',
-        name: 'FlowMaker',
-        short_label: 'Ease and enjoyment',
-        description: 'You make social time feel light and natural.',
-        vector: { DA: 0.7, OX: 0.4, '5HT': 0.3, ACh: 0.65, EN: 0.9, GABA: 0.2 },
+        id: 'FlowMaker',
+        name: NTI_PRIMARY_COPY.FlowMaker.title,
+        short_label: NTI_PRIMARY_COPY.FlowMaker.tagline,
+        description: NTI_PRIMARY_COPY.FlowMaker.body,
+        vector: { DA: 0.5, OX: 0.5, '5HT': 0.35, ACh: 0.525, EN: 0.6, GABA: 0.35 },
         primary_archetype: 'FlowMaker'
     },
     {
-        id: 'FlowMaker_B',
-        name: 'FlowMaker',
-        short_label: 'Ease and enjoyment',
-        description: 'You make social time feel light and natural.',
-        vector: { DA: 0.3, OX: 0.6, '5HT': 0.4, ACh: 0.4, EN: 0.3, GABA: 0.5 },
-        primary_archetype: 'FlowMaker'
-    },
-    // Builder - A/B variants
-    {
-        id: 'Builder_A',
-        name: 'Builder',
-        short_label: 'Structure and hosting',
-        description: 'You make friendships real through action.',
-        vector: { DA: 0.5, OX: 0.4, '5HT': 0.5, ACh: 0.5, EN: 0.4, GABA: 0.4 },
+        id: 'Builder',
+        name: NTI_PRIMARY_COPY.Builder.title,
+        short_label: NTI_PRIMARY_COPY.Builder.tagline,
+        description: NTI_PRIMARY_COPY.Builder.body,
+        vector: { DA: 0.45, OX: 0.45, '5HT': 0.55, ACh: 0.5, EN: 0.35, GABA: 0.4 },
         primary_archetype: 'Builder'
     },
     {
-        id: 'Builder_B',
-        name: 'Builder',
-        short_label: 'Structure and hosting',
-        description: 'You make friendships real through action.',
-        vector: { DA: 0.4, OX: 0.5, '5HT': 0.6, ACh: 0.5, EN: 0.3, GABA: 0.4 },
-        primary_archetype: 'Builder'
-    },
-    // Explorer - A/B variants
-    {
-        id: 'Explorer_A',
-        name: 'Explorer',
-        short_label: 'Novelty and expansion',
-        description: 'You bring new experiences into the group.',
-        vector: { DA: 0.7, OX: 0.3, '5HT': 0.2, ACh: 0.7, EN: 0.5, GABA: 0.2 },
-        primary_archetype: 'Explorer'
-    },
-    {
-        id: 'Explorer_B',
-        name: 'Explorer',
-        short_label: 'Novelty and expansion',
-        description: 'You bring new experiences into the group.',
-        vector: { DA: 0.6, OX: 0.4, '5HT': 0.2, ACh: 0.8, EN: 0.4, GABA: 0.2 },
+        id: 'Explorer',
+        name: NTI_PRIMARY_COPY.Explorer.title,
+        short_label: NTI_PRIMARY_COPY.Explorer.tagline,
+        description: NTI_PRIMARY_COPY.Explorer.body,
+        vector: { DA: 0.65, OX: 0.35, '5HT': 0.2, ACh: 0.75, EN: 0.45, GABA: 0.2 },
         primary_archetype: 'Explorer'
     }
 ];

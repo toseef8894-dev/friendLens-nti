@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runNTIScoring, UserResponse } from '@/lib/nti-scoring'
 import { QUESTIONS, NTI_TYPES, BEHAVIORAL_RULES } from '@/lib/nti-config'
+import { toPrimaryType } from '@/lib/nti-utils'
 
 export async function POST(request: NextRequest) {
     try {
@@ -53,6 +54,8 @@ export async function POST(request: NextRequest) {
 
         const scoringResult = runNTIScoring(QUESTIONS, NTI_TYPES, responses, BEHAVIORAL_RULES)
 
+        const normalizedArchetypeId = toPrimaryType(scoringResult.nti_type.id as any)
+
         const { data: responseData, error: responseError } = await supabase
             .from('responses')
             .insert({
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
             .insert({
                 user_id: user.id,
                 response_id: responseData.id,
-                archetype_id: scoringResult.nti_type.id,
+                archetype_id: normalizedArchetypeId,
                 microtype_id: scoringResult.primary_archetype,
                 user_vector: scoringResult.normalized_scores,
                 microtype_tags: [scoringResult.primary_archetype, scoringResult.secondary_archetype],

@@ -1,9 +1,13 @@
 'use client'
 
 import Link from "next/link"
-import CTAButton from "@/components/CTAButton"
+import dynamic from 'next/dynamic'
 import { useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+
+const CTAButton = dynamic(() => import('@/components/CTAButton'), {
+  ssr: false,
+})
 
 function CodeHandler() {
   const searchParams = useSearchParams()

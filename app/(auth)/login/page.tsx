@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { setAuthToken, setAuthUser, clearAuthToken } from '@/lib/auth-storage'
+import { getPendingAnonymousResults, setPendingAnonymousResults } from '@/lib/storage-utils'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -20,6 +21,15 @@ export default function LoginPage() {
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
     const errorParam = searchParams?.get('error')
     const confirmedParam = searchParams?.get('confirmed')
+    const signupParam = searchParams?.get('signup')
+    const verifiedParam = searchParams?.get('verified')
+    const messageParam = searchParams?.get('message')
+
+    useEffect(() => {
+        if (signupParam === 'true') {
+            setIsSignUp(true)
+        }
+    }, [signupParam])
 
     useEffect(() => {
         const checkAndClearStaleAuth = async () => {
@@ -31,16 +41,38 @@ export default function LoginPage() {
                     await supabase.auth.signOut()
                     clearAuthToken()
                     if (typeof window !== 'undefined') {
+                        const pendingResults = getPendingAnonymousResults()
                         localStorage.clear()
                         sessionStorage.clear()
+                        if (pendingResults) {
+                            try {
+                                const parsed = JSON.parse(pendingResults)
+                                setPendingAnonymousResults(parsed)
+                            } catch (e) {
+                                if (typeof window !== 'undefined') {
+                                    localStorage.setItem('pending_anonymous_results', pendingResults)
+                                }
+                            }
+                        }
                     }
                 }
             } catch (err) {
                 console.error('Error clearing stale auth:', err)
                 clearAuthToken()
                 if (typeof window !== 'undefined') {
+                    const pendingResults = getPendingAnonymousResults()
                     localStorage.clear()
                     sessionStorage.clear()
+                    if (pendingResults) {
+                        try {
+                            const parsed = JSON.parse(pendingResults)
+                            setPendingAnonymousResults(parsed)
+                        } catch (e) {
+                            if (typeof window !== 'undefined') {
+                                localStorage.setItem('pending_anonymous_results', pendingResults)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -60,8 +92,17 @@ export default function LoginPage() {
         if (confirmedParam === 'true') {
             toast.success('Email confirmed successfully! You can now sign in.')
         }
+
+        if (verifiedParam === 'true') {
+            const message = messageParam || 'Verification complete. Redirecting to login screen.'
+            toast.success(message)
+            const hasPendingResults = !!getPendingAnonymousResults()
+            if (hasPendingResults) {
+                console.log('Pending anonymous results detected - will be saved after login')
+            }
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [errorParam, confirmedParam])
+    }, [errorParam, confirmedParam, verifiedParam, messageParam])
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -77,11 +118,18 @@ export default function LoginPage() {
                     return
                 }
 
+                const hasPendingResults = !!getPendingAnonymousResults()
+                
+                const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+                const redirectTo = hasPendingResults 
+                    ? `${baseUrl}/auth/callback?next=/&save_results=true`
+                    : `${baseUrl}/auth/callback`
+
                 const { data: signupData, error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${location.origin}/auth/callback`,
+                        emailRedirectTo: redirectTo,
                         data: {
                             first_name: firstName.trim(),
                             last_name: lastName.trim(),
@@ -108,6 +156,9 @@ export default function LoginPage() {
                     setEmail('')
                     setPassword('')
                     setIsSignUp(false)
+                    if (typeof window !== 'undefined') {
+                        window.history.replaceState({}, '', '/login?signup=true')
+                    }
                     setTimeout(() => {
                         toast.info('Didn\'t receive the email? You can resend it from the login page.', {
                             duration: 5000,
@@ -154,10 +205,12 @@ export default function LoginPage() {
                 await fetch('/api/auth/clear-reset-cookies', {
                     method: 'POST'
                 }).catch(() => {
-                    // Ignore errors
                 })
 
                 toast.success('Signed in successfully')
+                if (typeof window !== 'undefined') {
+                    window.history.replaceState({}, '', window.location.pathname)
+                }
                 router.push('/')
                 router.refresh()
             }

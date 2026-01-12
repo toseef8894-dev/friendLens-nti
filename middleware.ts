@@ -69,20 +69,45 @@ export async function middleware(request: NextRequest) {
     
     const isResetSession = request.cookies.get('reset_session')?.value === 'true'
 
-    if (request.nextUrl.pathname.startsWith('/assessment') ||
-        request.nextUrl.pathname.startsWith('/results') ||
-        request.nextUrl.pathname.startsWith('/admin')) {
+    if (request.nextUrl.pathname.startsWith('/results')) {
+        const isAnonymous = request.nextUrl.searchParams.get('anonymous') === 'true'
+        
+        if (!user && !isAnonymous) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+        
+        if (isResetSession && user) {
+            return NextResponse.redirect(new URL('/reset-password', request.url))
+        }
+    } else if (request.nextUrl.pathname.startsWith('/admin')) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
-        // Block access if this is a reset session (security: prevent navigation during reset)
         if (isResetSession) {
             return NextResponse.redirect(new URL('/reset-password', request.url))
         }
     }
+    
+    if (request.nextUrl.pathname.startsWith('/assessment')) {
+        if (isResetSession && user) {
+            return NextResponse.redirect(new URL('/reset-password', request.url))
+        }
+        if (user) {
+            const { data: result } = await supabase
+                .from('results')
+                .select('id')
+                .eq('user_id', user.id)
+                .limit(1)
+                .maybeSingle()
+            
+            if (result) {
+                const redirectUrl = new URL('/results', request.url)
+                redirectUrl.searchParams.set('redirected', 'true')
+                return NextResponse.redirect(redirectUrl)
+            }
+        }
+    }
 
-    // Auth routes (redirect to landing page if already logged in)
-    // BUT: Allow reset-password even if logged in (for password reset flow)
     if (request.nextUrl.pathname.startsWith('/login')) {
         if (user) {
             return NextResponse.redirect(new URL('/', request.url))
@@ -95,6 +120,8 @@ export async function middleware(request: NextRequest) {
     }
     
     if (request.nextUrl.pathname.startsWith('/results')) {
+        const isAnonymous = request.nextUrl.searchParams.get('anonymous') === 'true'
+        
         if (user) {
             const { data: result } = await supabase
                 .from('results')
@@ -103,7 +130,7 @@ export async function middleware(request: NextRequest) {
                 .limit(1)
                 .maybeSingle()
             
-            if (!result) {
+            if (!result && !isAnonymous) {
                 return NextResponse.redirect(new URL('/assessment', request.url))
             }
         }

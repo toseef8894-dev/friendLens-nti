@@ -1,9 +1,24 @@
 import { Inter } from 'next/font/google'
 import "./globals.css";
-import Header from '@/components/Header'
-import { Toaster } from 'sonner'
+import dynamic from 'next/dynamic'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+})
+
+const Header = dynamic(() => import('@/components/Header'), {
+  ssr: true,
+})
+
+const Toaster = dynamic(() => import('sonner').then(mod => ({ default: mod.Toaster })), {
+  ssr: false,
+})
+
+const SaveAnonymousResults = dynamic(() => import('@/components/SaveAnonymousResults'), {
+  ssr: false,
+})
 
 export const metadata = {
   title: 'FriendLens',
@@ -25,6 +40,7 @@ export default function RootLayout({
         <Header />
         <main>{children}</main>
         <Toaster position="top-center" richColors />
+        <SaveAnonymousResults />
       </body>
     </html>
   );

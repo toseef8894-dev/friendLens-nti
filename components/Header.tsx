@@ -3,123 +3,32 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
-import { User } from '@supabase/supabase-js'
+import { useState, useRef, useEffect } from 'react'
 import { LogOut, User as UserIcon, Shield } from 'lucide-react'
 import { toast } from 'sonner'
-import { clearAuthToken, setAuthToken, setAuthUser, getAuthToken } from '@/lib/auth-storage'
+import { clearAuthToken } from '@/lib/auth-storage'
+import { useAuth } from '@/hooks/useAuth'
+import { useAdminStatus } from '@/hooks/useAdminStatus'
+import { useClickOutside } from '@/hooks/useClickOutside'
 
 export default function Header() {
-    const [user, setUser] = useState<User | null>(null)
-    const [isAdmin, setIsAdmin] = useState(false)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
     const router = useRouter()
     const supabase = createClient()
+    
+    const { user } = useAuth({ clearStorageOnSignOut: true })
+    const { isAdmin } = useAdminStatus({ userId: user?.id })
 
-
-    async function checkAdminStatus(userId: string) {
-        try {
-            const { data: userRoles, error: userRolesError } = await supabase
-                .from('user_roles')
-                .select('role_id')
-                .eq('user_id', userId)
-
-            if (userRolesError) {
-                return
-            }
-
-            if (userRoles && userRoles.length > 0) {
-                const { data: roles, error: rolesError } = await supabase
-                    .from('roles')
-                    .select('id, name')
-
-                if (roles && !rolesError) {
-                    const adminRole = roles.find(r => r.name === 'admin')
-                    if (adminRole) {
-                        const hasAdmin = userRoles.some(ur => ur.role_id === adminRole.id)
-                        setIsAdmin(hasAdmin)
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('Error checking admin status:', err)
-        }
-    }
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsMenuOpen(false)
-            }
-        }
-
+    useClickOutside(menuRef, () => {
         if (isMenuOpen) {
-            document.addEventListener('mousedown', handleClickOutside)
+            setIsMenuOpen(false)
         }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside)
-        }
-    }, [isMenuOpen])
+    })
 
     useEffect(() => {
-        const getUser = async () => {
-            try {
-                const { data: { user }, error } = await supabase.auth.getUser()
-                const { data: { session } } = await supabase.auth.getSession()
-
-                if (error || !user || !session) {
-                    clearAuthToken()
-                    setUser(null)
-                    setIsAdmin(false)
-                    if (typeof window !== 'undefined') {
-                        localStorage.clear()
-                        sessionStorage.clear()
-                    }
-                    return
-                }
-
-                setUser(user)
-
-                if (session?.access_token) {
-                    setAuthToken(session.access_token)
-                    setAuthUser(user)
-                    await checkAdminStatus(user.id)
-                } else {
-                    clearAuthToken()
-                    setUser(null)
-                    setIsAdmin(false)
-                }
-            } catch (err) {
-                clearAuthToken()
-                setUser(null)
-                setIsAdmin(false)
-            }
-        }
-        getUser()
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            setUser(session?.user ?? null)
-            setIsMenuOpen(false)
-
-            if (session?.user && session?.access_token) {
-                setAuthToken(session.access_token)
-                setAuthUser(session.user)
-                await checkAdminStatus(session.user.id)
-            } else {
-                clearAuthToken()
-                setIsAdmin(false)
-                if (typeof window !== 'undefined') {
-                    if (event === 'SIGNED_OUT' || !session) {
-                        localStorage.clear()
-                        sessionStorage.clear()
-                    }
-                }
-            }
-        })
-
-        return () => subscription.unsubscribe()
-    }, [])
+        setIsMenuOpen(false)
+    }, [user])
 
     const handleLogout = async () => {
         setIsMenuOpen(false)
@@ -129,24 +38,28 @@ export default function Header() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             }).catch(() => {
-                // Ignore API errors, continue with client-side cleanup
             })
 
             const { data: { session } } = await supabase.auth.getSession()
             if (session) {
                 await supabase.auth.signOut().catch(() => {
-                    // Ignore errors, continue with cleanup
                 })
             }
         } catch (err) {
+            console.error('Logout error:', err)
         } finally {
             clearAuthToken()
-            setUser(null)
-            setIsAdmin(false)
-            
+
             if (typeof window !== 'undefined') {
                 localStorage.clear()
+
                 sessionStorage.clear()
+
+                document.cookie.split(";").forEach((c) => {
+                    const cookieName = c.trim().split("=")[0]
+                    document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+                    document.cookie = `${cookieName}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+                })
             }
 
             await new Promise(resolve => setTimeout(resolve, 100))
@@ -197,13 +110,22 @@ export default function Header() {
                                                 <p className="text-xs text-purple-600 font-medium">Admin</p>
                                             )}
                                         </div>
-                                        <Link
-                                            href="/results"
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                            onClick={() => setIsMenuOpen(false)}
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault()
+                                                setIsMenuOpen(false)
+
+                                                toast.info(
+                                                    'Redirecting you to your results page. If you want to retake the survey, see the link at the bottom of the page.',
+                                                    { duration: 3000 }
+                                                )
+
+                                                router.push('/results?my_results=true')
+                                            }}
+                                            className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                         >
                                             My Results
-                                        </Link>
+                                        </button>
                                         <button
                                             onClick={handleLogout}
                                             className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"

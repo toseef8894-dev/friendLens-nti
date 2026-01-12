@@ -1,14 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import type { DimensionId } from "@/lib/nti-scoring";
+
+interface ResultData {
+  archetype_id: string;
+  microtype_id: string;
+  microtype_tags: string[];
+  user_vector: Record<DimensionId, number>;
+  nti_type?: {
+    name: string;
+    short_label: string;
+    description?: string;
+  };
+}
 
 interface EmailCaptureFormProps {
-  assessmentId: string;
+  resultData: ResultData | null;
   existingEmail?: string;
 }
 
 export function EmailCaptureForm({
-  assessmentId,
+  resultData,
   existingEmail = ""
 }: EmailCaptureFormProps) {
   const [email, setEmail] = useState(existingEmail);
@@ -26,22 +39,34 @@ export function EmailCaptureForm({
       return;
     }
 
+    if (!resultData) {
+      setError("No results available to send.");
+      return;
+    }
+
     setStatus("saving");
 
     try {
-      const res = await fetch(`/api/assessment/${assessmentId}/email`, {
+      const res = await fetch("/api/email/send-results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ 
+          email,
+          resultData 
+        })
       });
 
-      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send email");
+      }
 
       setStatus("saved");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setStatus("error");
-      setError("Something went wrong. Please try again.");
+      setError(err.message || "Something went wrong. Please try again.");
     }
   }
 

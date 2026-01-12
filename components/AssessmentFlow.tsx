@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { QUESTIONS } from '@/lib/nti-config'
 import { UserResponse } from '@/lib/nti-scoring'
 import { toast } from 'sonner'
+import { createClient } from '@/lib/supabase/client'
 
 type AnswerMap = Record<string, string[]> // question_id -> ranked option_ids
 
@@ -13,6 +14,22 @@ export default function AssessmentFlow() {
     const [currentIndex, setCurrentIndex] = useState(0)
     const [answers, setAnswers] = useState<AnswerMap>({})
     const [submitting, setSubmitting] = useState(false)
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+    const supabase = createClient()
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            setIsAuthenticated(!!user)
+        }
+        checkAuth()
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            setIsAuthenticated(!!session?.user)
+        })
+
+        return () => subscription.unsubscribe()
+    }, [supabase])
 
     const questions = QUESTIONS
     const total = questions.length
@@ -26,13 +43,11 @@ export default function AssessmentFlow() {
         const currentList = answers[currentQuestion.id] || []
 
         if (currentList.includes(optionId)) {
-            // Remove from list
             setAnswers({
                 ...answers,
                 [currentQuestion.id]: currentList.filter(id => id !== optionId)
             })
         } else {
-            // Add to list (ranked by order of selection)
             setAnswers({
                 ...answers,
                 [currentQuestion.id]: [...currentList, optionId]
@@ -65,7 +80,6 @@ export default function AssessmentFlow() {
         setSubmitting(true)
 
         try {
-            // Convert answers to UserResponse format
             const responses: UserResponse[] = Object.entries(answers).map(
                 ([question_id, ranked_option_ids]) => ({
                     question_id,
@@ -73,8 +87,11 @@ export default function AssessmentFlow() {
                 })
             )
 
-            // Call the API endpoint
-            const res = await fetch('/api/nti/v1/submit', {
+            const { data: { user } } = await supabase.auth.getUser()
+            const isAuth = !!user
+
+            const endpoint = isAuth ? '/api/nti/v1/submit' : '/api/nti/v1/submit-anonymous'
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ responses })
@@ -88,8 +105,17 @@ export default function AssessmentFlow() {
                 return
             }
 
-            toast.success('Assessment complete!')
-            router.push('/results')
+            if (isAuth) {
+                toast.success('Assessment complete!')
+                router.push('/results?redirected=true')
+            } else {
+                const anonymousData = {
+                    result: data.result,
+                    responses: responses 
+                }
+                sessionStorage.setItem('anonymousResults', JSON.stringify(anonymousData))
+                router.push('/results?anonymous=true')
+            }
         } catch (err: any) {
             toast.error('Something went wrong. Please try again.')
             setSubmitting(false)
@@ -112,7 +138,6 @@ export default function AssessmentFlow() {
                     </p>
                 </div>
 
-                {/* Question */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <h1 className="text-xl font-semibold text-gray-900 mb-4">
                         {currentQuestion.text}
@@ -159,7 +184,6 @@ export default function AssessmentFlow() {
                     )}
                 </div>
 
-                {/* Navigation */}
                 <div className="flex justify-between items-center pt-4">
                     <button
                         type="button"
