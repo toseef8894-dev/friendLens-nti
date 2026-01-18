@@ -52,7 +52,7 @@ const DIMENSION_COLORS: Record<DimensionId, string> = {
     GABA: '#6366F1'
 }
 
-function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogin }: { userId?: string, initialData: ResultData | null, showRedirectMessage?: boolean, fromLogin?: boolean }) {
+function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogin, onPrimaryArchetypeChange }: { userId?: string, initialData: ResultData | null, showRedirectMessage?: boolean, fromLogin?: boolean, onPrimaryArchetypeChange?: (id: ArchetypeId | null) => void }) {
     const [result, setResult] = useState<ResultData | null>(initialData)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -116,6 +116,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
                         user_vector: resultData.normalized_scores,
                         distance_score: resultData.nti_type.distance
                     })
+                    onPrimaryArchetypeChange?.(resultData.primary_archetype)
                     setLoading(false)
                     return
                 } catch (e) {
@@ -132,6 +133,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
         }
 
         if (initialData) {
+            onPrimaryArchetypeChange?.(initialData.microtype_id as ArchetypeId)
             setLoading(false)
             return
         }
@@ -167,7 +169,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
             setError('No results found. Please complete the assessment first.')
             setLoading(false)
         }
-    }, [userId, initialData, searchParams, supabase])
+    }, [userId, initialData, searchParams, supabase, onPrimaryArchetypeChange])
 
     if (loading) {
         return (
@@ -400,6 +402,28 @@ export default function ResultsView({
     showRedirectMessage?: boolean
     fromLogin?: boolean
 }) {
+    const [primaryArchetypeId, setPrimaryArchetypeId] = useState<ArchetypeId | null>(
+        initialData?.microtype_id as ArchetypeId | null
+    )
+
+    // Also check for anonymous results
+    useEffect(() => {
+        if (!primaryArchetypeId) {
+            const stored = sessionStorage.getItem('anonymousResults')
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored)
+                    const resultData = parsed.result || parsed
+                    if (resultData.primary_archetype) {
+                        setPrimaryArchetypeId(resultData.primary_archetype)
+                    }
+                } catch (e) {
+                    // Ignore parsing errors
+                }
+            }
+        }
+    }, [primaryArchetypeId])
+
     return (
         <Suspense
             fallback={
@@ -420,12 +444,13 @@ export default function ResultsView({
                                 initialData={initialData}
                                 showRedirectMessage={showRedirectMessage}
                                 fromLogin={fromLogin}
+                                onPrimaryArchetypeChange={setPrimaryArchetypeId}
                             />
                         </div>
 
                         <aside className="lg:col-span-3">
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-                                <Insights />
+                                <Insights primaryArchetypeId={primaryArchetypeId} />
                             </div>
                         </aside>
                     </div>

@@ -3,5 +3,20 @@
 @tailwind utilities;
 
 body {
-  @apply bg-white text-gray-900;
+  @apply bg-white text-gray-900 font-sans;
+}
+
+* {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.nti-scroll-hidden {
+  -ms-overflow-style: none; 
+  scrollbar-width: none;    
+}
+
+.nti-scroll-hidden::-webkit-scrollbar {
+  display: none;            
+  width: 0;
+  height: 0;
 }
