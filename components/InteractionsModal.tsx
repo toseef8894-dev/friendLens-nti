@@ -40,8 +40,7 @@ export function InteractionsModal({ primaryArchetypeId, onClose }: InteractionsM
                                 How Types Interact
                             </h2>
                             <p className="text-sm opacity-90">
-                                Friendships are shaped by how orientations interact over time. Some pairings flow naturally; others need adjustment. Seeing the pattern helps connections deepen instead of stall.
-                            </p>
+                                Friendships are shaped by how types interact. Understand the patterns between types and improve relationships.                             </p>
                             {primaryArchetype && (
                                 <div className="mt-3 text-sm font-semibold opacity-95">
                                     Based on your type: {primaryArchetype.name}

@@ -54,7 +54,7 @@ function OtherTypesContent() {
     const anonymousParam = searchParams.get('anonymous')
 
     const allArchetypeIds: ArchetypeId[] = ['Anchor', 'Connector', 'Hunter', 'Bonder', 'Sage', 'FlowMaker', 'Builder', 'Explorer']
-    const otherArchetypes = primaryArchetypeId 
+    const otherArchetypes = primaryArchetypeId
         ? allArchetypeIds.filter(id => id !== primaryArchetypeId)
         : allArchetypeIds
 
@@ -66,7 +66,7 @@ function OtherTypesContent() {
                         The Other Seven Types
                     </h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Explore the other friendship archetypes to understand how different orientations contribute to friendships.
+                        Explore the other friendship types to understand how they influence friendship.
                     </p>
                 </div>
 
@@ -86,7 +86,7 @@ function OtherTypesContent() {
                 />
 
                 <div className="text-center pt-4">
-                    <Link 
+                    <Link
                         href={`/results${anonymousParam === 'true' ? '?anonymous=true' : ''}`}
                         className="text-indigo-600 hover:text-indigo-500 font-medium"
                     >

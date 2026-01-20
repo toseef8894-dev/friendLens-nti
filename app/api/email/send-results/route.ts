@@ -35,13 +35,13 @@ async function sendEmailViaService(to: string, html: string, text: string, subje
                 console.error('Failed to import resend package:', importError)
                 throw new Error('Resend package not available. Please ensure "resend" is installed: npm install resend')
             })
-            
+
             if (!Resend) {
                 throw new Error('Resend class not found. Please check your resend package installation.')
             }
-            
+
             const resend = new Resend(process.env.RESEND_API_KEY)
-            
+
             const { data, error } = await resend.emails.send({
                 from: process.env.EMAIL_FROM || 'FriendLens <results@friendlens.ai>',
                 to: [to],
@@ -125,7 +125,7 @@ async function sendEmailViaService(to: string, html: string, text: string, subje
     console.log('Subject:', subject)
     console.log('HTML:', html)
     console.log('='.repeat(60))
-    
+
     return { success: true, development: true }
 }
 
@@ -176,7 +176,7 @@ function generateEmailHTML(resultData: EmailRequest['resultData']): { html: stri
                     <!-- NTI Type -->
                     <tr>
                         <td style="padding: 40px 30px; text-align: center; border-bottom: 1px solid #e5e7eb;">
-                            <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #6366f1; text-transform: uppercase; letter-spacing: 1px;">Your NTI Type</p>
+                            <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #6366f1; text-transform: uppercase; letter-spacing: 1px;">Your Friend Type</p>
                             <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 700; color: #111827;">${ntiType.name}</h2>
                             <p style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #7c3aed;">${ntiType.short_label}</p>
                             ${ntiType.description ? `<p style="margin: 0; font-size: 16px; color: #4b5563; line-height: 1.6;">${ntiType.description}</p>` : ''}
@@ -242,7 +242,7 @@ function generateEmailHTML(resultData: EmailRequest['resultData']): { html: stri
     const text = `
 Your Friendship Archetype Results
 
-Your NTI Type: ${ntiType.name}
+Your Friend Type: ${ntiType.name}
 ${ntiType.short_label}
 ${ntiType.description || ''}
 

@@ -38,12 +38,12 @@ export default function Home() {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 leading-tight">
                 Understand your{" "}
                 <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  friendship wiring
+                  friendship patterns
                 </span>
               </h1>
               <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                Discover your unique Friendship Archetype and learn how you connect, bond, and grow relationships.
-                Get novel clarity of self in just 5 minutes.
+                Discover your friendship type and learn how you connect and grow relationships.
+                Takes less than 5 minutes
               </p>
               <div className="mt-10">
                 <CTAButton
@@ -58,7 +58,7 @@ export default function Home() {
         <section className="py-20 bg-white/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              How FriendLens Works
+              How FriendLens works
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center p-6">
@@ -67,7 +67,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Take the Assessment</h3>
                 <p className="text-gray-600">
-                  Answer quick questions using our unique ranked-choice format to reveal your social patterns.
+                  Answer quick questions about how you socialize
                 </p>
               </div>
               <div className="text-center p-6">
@@ -76,7 +76,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Discover Your Archetype</h3>
                 <p className="text-gray-600">
-                  Our algorithm maps you to one of 8 Friendship Archetypes based on 18 social dimensions.
+                  We will map to one of 8 primary friendship types
                 </p>
               </div>
               <div className="text-center p-6">
@@ -85,7 +85,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Grow Better Friendships</h3>
                 <p className="text-gray-600">
-                  Use your insights to understand how you bond, handle conflict, and find your ideal connections.
+                  Use your insights to understand how you find and maintain better connections
                 </p>
               </div>
             </div>
@@ -96,10 +96,10 @@ export default function Home() {
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-              8 Friendship Archetypes
+              8 Friend Types
             </h2>
             <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-              Discover which archetype matches your social style and how you connect with others.
+              Discover which type matches your social style and how you connect with others.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
@@ -128,7 +128,7 @@ export default function Home() {
         <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-              Ready to understand your friendship wiring?
+              Ready to Understand your friendship patterns?
             </h2>
             <p className="text-indigo-100 text-lg mb-8 max-w-2xl mx-auto">
               Take the free 5-minute assessment and discover insights that will transform how you build and maintain friendships.

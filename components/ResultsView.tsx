@@ -229,7 +229,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
                     <div className="lg:col-span-2 space-y-8">
                         <div className="text-center">
                             <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-2">
-                                Your NTI Type
+                                Your Friend Type
                             </p>
                             <h1 className="text-4xl font-bold text-gray-900 mb-2">
                                 {ntiType.name}
@@ -337,14 +337,14 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
                                                     microtype_tags: result.microtype_tags,
                                                     user_vector: result.user_vector,
                                                     distance_score: result.distance_score,
-                                                    responses, 
+                                                    responses,
                                                     nti_type: ntiType ? {
                                                         name: ntiType.name,
                                                         short_label: ntiType.short_label,
                                                         description: ntiType.description
                                                     } : undefined
                                                 }
-                                                
+
                                                 setPendingAnonymousResults(anonymousResults)
                                                 console.log('Anonymous results and responses stored for account creation')
                                             }
