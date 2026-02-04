@@ -86,6 +86,13 @@ export async function middleware(request: NextRequest) {
         if (isResetSession) {
             return NextResponse.redirect(new URL('/reset-password', request.url))
         }
+    } else if (request.nextUrl.pathname.startsWith('/friendlens')) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+        if (isResetSession) {
+            return NextResponse.redirect(new URL('/reset-password', request.url))
+        }
     }
     
     if (request.nextUrl.pathname.startsWith('/assessment')) {

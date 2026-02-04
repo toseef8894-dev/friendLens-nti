@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
@@ -15,10 +16,13 @@ export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
     const router = useRouter()
+    const pathname = usePathname()
     const supabase = createClient()
-    
+
     const { user } = useAuth({ clearStorageOnSignOut: true })
     const { isAdmin } = useAdminStatus({ userId: user?.id })
+
+    const isActive = (path: string) => pathname === path || pathname?.startsWith(path + '/')
 
     useClickOutside(menuRef, () => {
         if (isMenuOpen) {
@@ -70,82 +74,99 @@ export default function Header() {
     }
 
     return (
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
-                    <div className="flex items-center">
-                        <Link href="/" className="flex-shrink-0 flex items-center">
-                            <span className="text-2xl font-bold text-indigo-600 tracking-tight">FriendLens</span>
+        <header className="w-full h-20 px-4 sm:px-20 flex items-center justify-between border-b border-black/5 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+            {/* Logo */}
+            <Link href="/" className="flex items-center">
+                <h1 className="text-brand-blue text-xl font-bold leading-7" style={{ letterSpacing: '-0.449px' }}>
+                    FriendLens
+                </h1>
+            </Link>
+
+            {/* Navigation */}
+            <nav className="hidden sm:flex items-center gap-4 md:gap-8">
+                <Link
+                    href=""
+                    className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/survey') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                    style={{ letterSpacing: '-0.312px' }}
+                >
+                    Your Style
+                </Link>
+                <Link
+                    href="/friendlens/your-people"
+                    className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/friendlens/your-people') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                    style={{ letterSpacing: '-0.312px' }}
+                >
+                    Your People
+                </Link>
+            </nav>
+
+            {/* User Menu */}
+            <div className='flex gap-5'>
+                {
+                    isAdmin && (
+                        <Link
+                            href="/admin"
+                            className={`flex items-center gap-1.5 text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/admin') ? 'text-purple-700' : 'text-purple-600 hover:text-purple-700'
+                                }`}
+                            style={{ letterSpacing: '-0.312px' }}
+                        >
+                            <Shield size={16} />
+                            Admin
                         </Link>
-                    </div>
+                    )}
+                {user ? (
+                    <div className="relative" ref={menuRef}>
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center hover:bg-brand-blue/20 transition-colors"
+                        >
+                            <UserIcon className="w-5 h-5 text-brand-blue" strokeWidth={1.67} />
+                        </button>
 
-                    <div className="flex items-center gap-4">
-                        {isAdmin && (
-                            <Link
-                                href="/admin"
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
-                            >
-                                <Shield size={16} />
-                                Admin
-                            </Link>
-                        )}
-
-                        {user ? (
-                            <div className="relative" ref={menuRef}>
+                        {isMenuOpen && (
+                            <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <div className="px-4 py-2 border-b border-gray-100">
+                                    <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                                    {isAdmin && (
+                                        <p className="text-xs text-purple-600 font-medium">Admin</p>
+                                    )}
+                                </div>
                                 <button
-                                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                    className="flex items-center max-w-xs bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 p-1 hover:bg-gray-50 transition-colors"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        setIsMenuOpen(false)
+
+                                        toast.info(
+                                            'Redirecting you to your results page. If you want to retake the survey, see the link at the bottom of the page.',
+                                            { duration: 3000 }
+                                        )
+
+                                        router.push('/results?my_results=true')
+                                    }}
+                                    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
-                                    <span className="sr-only">Open user menu</span>
-                                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                        <UserIcon size={20} />
-                                    </div>
+                                    My Results
                                 </button>
-
-                                {isMenuOpen && (
-                                    <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <div className="px-4 py-2 border-b border-gray-100">
-                                            <p className="text-sm text-gray-500 truncate">{user.email}</p>
-                                            {isAdmin && (
-                                                <p className="text-xs text-purple-600 font-medium">Admin</p>
-                                            )}
-                                        </div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.preventDefault()
-                                                setIsMenuOpen(false)
-
-                                                toast.info(
-                                                    'Redirecting you to your results page. If you want to retake the survey, see the link at the bottom of the page.',
-                                                    { duration: 3000 }
-                                                )
-
-                                                router.push('/results?my_results=true')
-                                            }}
-                                            className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                        >
-                                            My Results
-                                        </button>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                        >
-                                            <LogOut size={16} />
-                                            Sign out
-                                        </button>
-                                    </div>
-                                )}
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                >
+                                    <LogOut size={16} />
+                                    Sign out
+                                </button>
                             </div>
-                        ) : (
-                            <Link
-                                href="/login"
-                                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                            >
-                                Sign in
-                            </Link>
                         )}
                     </div>
-                </div>
+                ) : (
+                    <Link
+                        href="/login"
+                        className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center hover:bg-brand-blue/20 transition-colors"
+                    >
+                        <UserIcon className="w-5 h-5 text-brand-blue" strokeWidth={1.67} />
+                    </Link>
+                )}
             </div>
         </header>
     )
