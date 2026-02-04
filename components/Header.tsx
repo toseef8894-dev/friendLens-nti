@@ -82,25 +82,27 @@ export default function Header() {
                 </h1>
             </Link>
 
-            {/* Navigation */}
-            <nav className="hidden sm:flex items-center gap-4 md:gap-8">
-                <Link
-                    href=""
-                    className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/survey') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
-                        }`}
-                    style={{ letterSpacing: '-0.312px' }}
-                >
-                    Your Style
-                </Link>
-                <Link
-                    href="/friendlens/your-people"
-                    className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/friendlens/your-people') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
-                        }`}
-                    style={{ letterSpacing: '-0.312px' }}
-                >
-                    Your People
-                </Link>
-            </nav>
+            {/* Navigation - Only show when logged in */}
+            {user && (
+                <nav className="hidden sm:flex items-center gap-4 md:gap-8">
+                    <Link
+                        href=""
+                        className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/survey') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                            }`}
+                        style={{ letterSpacing: '-0.312px' }}
+                    >
+                        Your Style
+                    </Link>
+                    <Link
+                        href="/friendlens/your-people"
+                        className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/friendlens/your-people') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                            }`}
+                        style={{ letterSpacing: '-0.312px' }}
+                    >
+                        Your People
+                    </Link>
+                </nav>
+            )}
 
             {/* User Menu */}
             <div className='flex gap-5'>
