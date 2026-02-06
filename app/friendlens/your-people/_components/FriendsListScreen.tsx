@@ -67,7 +67,7 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
               style={{ letterSpacing: '-0.15px' }}
             >
               <Plus className="w-4 h-4" strokeWidth={1.33} />
-              Add Friend
+              Add Person
             </button>
             <button
               onClick={() => router.push('?step=table')}
@@ -202,6 +202,7 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
           friend={editFriend}
           onClose={() => setEditFriend(null)}
           onSaved={() => router.refresh()}
+          onDeleted={() => router.refresh()}
         />
       )}
     </>

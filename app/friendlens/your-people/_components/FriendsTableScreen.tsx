@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronUp, ChevronDown, Plus, List, ArrowUpDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, Plus, ArrowUpDown, ArrowLeft } from 'lucide-react'
 import type { Friend } from '../types'
 
 interface Column {
@@ -27,15 +27,6 @@ const COLUMNS: Column[] = [
     ),
   },
   {
-    key: 'category',
-    label: 'Category',
-    render: () => (
-      <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-[#45556C] bg-bg-muted rounded-full border border-border-light">
-        Friend
-      </span>
-    ),
-  },
-  {
     key: 'relationship',
     label: 'Relationship',
     sortable: true,
@@ -45,7 +36,7 @@ const COLUMNS: Column[] = [
         className={'text-text-secondary'}
         style={{ letterSpacing: '-0.15px' }}
       >
-        {f.relationship_type ?? 'Friend'}
+        {f.relationship_type || '—'}
       </span>
     ),
   },
@@ -89,6 +80,8 @@ const COLUMNS: Column[] = [
     key: 'contacted_you',
     label: 'Contacted You',
     align: 'center',
+    sortable: true,
+    getValue: (f) => f.did_they_contact_you === true ? 1 : 0,
     render: (f) => {
       const isYes = !!f.did_they_contact_you
 
@@ -110,6 +103,8 @@ const COLUMNS: Column[] = [
     key: 'invited_you',
     label: 'Invited You',
     align: 'center',
+    sortable: true,
+    getValue: (f) => f.did_they_invite_you === true ? 1 : 0,
     render: (f) => {
       const isYes = !!f.did_they_invite_you
 
@@ -131,6 +126,8 @@ const COLUMNS: Column[] = [
     key: 'made_happy',
     label: 'Made Happy',
     align: 'center',
+    sortable: true,
+    getValue: (f) => f.made_you_happier === true ? 1 : 0,
     render: (f) => {
       const isYes = !!f.made_you_happier
 
@@ -152,6 +149,8 @@ const COLUMNS: Column[] = [
     key: 'miss_them',
     label: 'Miss Them',
     align: 'center',
+    sortable: true,
+    getValue: (f) => f.do_you_miss_them === true ? 1 : 0,
     render: (f) => {
       const isYes = !!f.do_you_miss_them
 
@@ -168,7 +167,6 @@ const COLUMNS: Column[] = [
         </span>
       )
     },
-
   },
 ]
 
@@ -251,14 +249,23 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
           >
             Your List
           </h2>
-          <button
-            onClick={() => router.push('?step=add')}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-purple/10 text-brand-purple text-sm font-semibold leading-5 hover:bg-brand-purple/20 transition-colors"
-            style={{ letterSpacing: '-0.15px' }}
-          >
-            <Plus className="w-4 h-4" strokeWidth={1.33} />
-            Add Friend
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('?step=add&single=true')}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-purple/10 text-brand-purple text-sm font-semibold leading-5 hover:bg-brand-purple/20 transition-colors"
+              style={{ letterSpacing: '-0.15px' }}
+            >
+              <Plus className="w-4 h-4" strokeWidth={1.33} />
+              Add Person
+            </button>
+            <button
+              onClick={() => router.push('?step=list')}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gray-100 text-[#62748E] text-sm font-medium hover:bg-gray-200 transition-colors"
+              title="Back to Your List"
+            >
+              <ArrowLeft className="w-4 h-4" strokeWidth={1.67} />
+            </button>
+          </div>
         </div>
 
         {/* Table Container */}

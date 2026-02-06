@@ -9,7 +9,7 @@ import FriendsTableContent from './_components/FriendsTableScreen'
 type Step = 'add' | 'list' | 'table'
 
 interface PageProps {
-  searchParams: { step?: string }
+  searchParams: { step?: string; single?: string }
 }
 
 export default async function YourPeoplePage({ searchParams }: PageProps) {
@@ -50,7 +50,7 @@ export default async function YourPeoplePage({ searchParams }: PageProps) {
     >
       <main className="flex flex-col items-center pt-[40px] px-4 pb-20">
         <HeroSection />
-        {step === 'add' && <AddFriendsContent />}
+        {step === 'add' && <AddFriendsContent single={searchParams.single === 'true'} />}
         {step === 'list' && <FriendsListContent friends={friendsList} />}
         {step === 'table' && <FriendsTableContent friends={friendsList} />}
       </main>

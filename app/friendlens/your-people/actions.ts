@@ -8,6 +8,7 @@ const PATH = '/friendlens/your-people'
 
 type UpdatePayload = Pick<
   Friend,
+  | 'name'
   | 'relationship_type'
   | 'distance_miles'
   | 'visits_per_year'
@@ -116,6 +117,7 @@ export async function updateFriend(
 
   // Build a sanitised update object — only allow known columns
   const allowed: (keyof UpdatePayload)[] = [
+    'name',
     'relationship_type',
     'distance_miles',
     'visits_per_year',
@@ -131,6 +133,15 @@ export async function updateFriend(
   for (const key of allowed) {
     if (key in payload) {
       const value = payload[key]
+
+      if (key === 'name') {
+        if (typeof value !== 'string' || value.trim().length === 0) {
+          return { error: 'Name cannot be empty.' }
+        }
+        if (value.length > 100) {
+          return { error: 'Name is too long (max 100 characters).' }
+        }
+      }
 
       // Type-check numbers
       if (

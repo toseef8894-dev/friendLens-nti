@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { X, ChevronDown, ChevronUp } from 'lucide-react'
-import { updateFriend } from '../actions'
+import { updateFriend, deleteFriend } from '../actions'
 import type { Friend } from '../types'
 import FriendTypesModal from './FriendTypesModal'
 
 const FRIEND_TYPES = [
-  { label: 'Best Friend', value: 'Best Friend' },
   { label: 'Close Friend', value: 'Close Friend' },
   { label: 'Friend', value: 'Friend' },
   { label: 'Buddy', value: 'Buddy' },
@@ -17,6 +16,7 @@ const FRIEND_TYPES = [
   { label: 'Remote Friend', value: 'Remote Friend' },
   { label: 'Activity Friend', value: 'Activity Friend' },
   { label: 'Work Friend', value: 'Work Friend' },
+  { label: 'Best Friend', value: 'Best Friend' },
 ]
 
 interface EditFriendModalProps {
@@ -24,6 +24,7 @@ interface EditFriendModalProps {
   onClose: () => void
   friend: Friend
   onSaved?: (updated: Friend) => void
+  onDeleted?: () => void
 }
 
 function ReflectionToggle({
@@ -86,8 +87,10 @@ export default function EditFriendModal({
   onClose,
   friend,
   onSaved,
+  onDeleted,
 }: EditFriendModalProps) {
-  const [selectedType, setSelectedType] = useState(friend.relationship_type ?? 'Friend')
+  const [editName, setEditName] = useState(friend.name)
+  const [selectedType, setSelectedType] = useState(friend.relationship_type ?? '')
   const [showDropdown, setShowDropdown] = useState(false)
   const [metrics, setMetrics] = useState({
     distance: friend.distance_miles?.toString() ?? '',
@@ -101,11 +104,13 @@ export default function EditFriendModal({
     missThem: friend.do_you_miss_them,
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [showFriendTypesModal, setShowFriendTypesModal] = useState(false)
 
   // Reset form when friend prop changes
   useEffect(() => {
-    setSelectedType(friend.relationship_type ?? 'Friend')
+    setEditName(friend.name)
+    setSelectedType(friend.relationship_type ?? '')
     setMetrics({
       distance: friend.distance_miles?.toString() ?? '',
       visits: friend.visits_per_year?.toString() ?? '',
@@ -128,9 +133,16 @@ export default function EditFriendModal({
   }
 
   async function handleSave() {
+    const trimmedName = editName.trim()
+    if (!trimmedName) {
+      toast.error('Name cannot be empty.')
+      return
+    }
+
     setIsSaving(true)
     try {
       const payload: Record<string, unknown> = {
+        name: trimmedName,
         relationship_type: selectedType || null,
         distance_miles: parseNum(metrics.distance),
         visits_per_year: parseNum(metrics.visits),
@@ -148,11 +160,12 @@ export default function EditFriendModal({
         return
       }
 
-      toast.success('Friend updated!')
+      toast.success('Details updated!')
 
       if (onSaved) {
         onSaved({
           ...friend,
+          name: trimmedName,
           relationship_type: selectedType || null,
           distance_miles: parseNum(metrics.distance),
           visits_per_year: parseNum(metrics.visits),
@@ -167,6 +180,26 @@ export default function EditFriendModal({
       onClose()
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm(`Remove ${friend.name} from your list?`)) return
+
+    setIsDeleting(true)
+    try {
+      const result = await deleteFriend(friend.id)
+
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+
+      toast.success(`${friend.name} removed from your list.`)
+      onClose()
+      if (onDeleted) onDeleted()
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -201,7 +234,7 @@ export default function EditFriendModal({
 
         {/* Form Content */}
         <div className="overflow-y-auto flex-1 p-8">
-          {/* Name Field */}
+          {/* Name Field (editable) */}
           <div className="mb-8">
             <label
               className="block text-sm font-semibold text-[#0F172B] mb-3"
@@ -211,16 +244,16 @@ export default function EditFriendModal({
             </label>
             <input
               type="text"
-              value={friend.name}
-              readOnly
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-[#0F172B] font-normal text-sm focus:outline-none capitalize"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-[#0F172B] font-normal text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-transparent capitalize"
               style={{ letterSpacing: '-0.312px' }}
             />
           </div>
 
           {/* Relationship Type Dropdown */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 mb-3">
               <label
                 className="block text-sm font-semibold text-[#314158]"
                 style={{ letterSpacing: '-0.15px' }}
@@ -243,8 +276,8 @@ export default function EditFriendModal({
                 className="w-full px-4 py-3 rounded-xl border border-purple-300 bg-white text-[#0F172B] font-medium text-sm text-left flex items-center justify-between hover:border-purple-400 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                 style={{ letterSpacing: '-0.312px' }}
               >
-                <span>
-                  {FRIEND_TYPES.find((t) => t.value === selectedType)?.label || 'Friend'}
+                <span className={!FRIEND_TYPES.find((t) => t.value === selectedType) ? 'text-gray-400' : ''}>
+                  {FRIEND_TYPES.find((t) => t.value === selectedType)?.label || 'Select Friend Type'}
                 </span>
                 {showDropdown ? (
                   <ChevronUp className="w-4 h-4 text-[#62748E]" strokeWidth={1.33} />
@@ -283,13 +316,7 @@ export default function EditFriendModal({
               className="text-sm font-bold uppercase text-[#0F172B] mb-1 flex items-center gap-3"
               style={{ letterSpacing: '0.2px' }}
             >
-              Interaction Metrics
-              <span
-                className="text-xs font-normal text-gray-400 normal-case"
-                style={{ letterSpacing: '0.467px' }}
-              >
-                (Est. per year)
-              </span>
+              INTERACTIONS PER YEAR
             </h3>
             <div className="grid grid-cols-3 gap-4 mt-4">
               <div>
@@ -349,7 +376,7 @@ export default function EditFriendModal({
               className="text-sm font-bold uppercase text-[#0F172B] mb-4"
               style={{ letterSpacing: '0.2px' }}
             >
-              Reflection
+              HOW IS IT WORKING?
             </h3>
             <div className="bg-white border-gray-200 shadow-sm space-y-4 overflow-hidden">
               <ReflectionToggle
@@ -374,27 +401,48 @@ export default function EditFriendModal({
               />
             </div>
           </div>
+
+          {/* Last Updated */}
+          {friend.updated_at && (
+            <p
+              className="text-xs font-normal text-[#90A1B9] mt-4"
+              style={{ letterSpacing: '-0.15px' }}
+            >
+              Last Updated: {new Date(friend.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+            </p>
+          )}
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-3 p-8 pt-4 border-t border-gray-100 bg-white">
+        <div className="flex items-center justify-between p-8 pt-4 border-t border-gray-100 bg-white">
           <button
             type="button"
-            onClick={onClose}
-            className="px-6 py-3 rounded-xl text-[#0F172B] font-semibold text-base hover:bg-gray-100 transition-colors"
-            style={{ letterSpacing: '-0.312px' }}
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="px-5 py-3 rounded-xl text-red-600 font-semibold text-sm border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ letterSpacing: '-0.15px' }}
           >
-            Cancel
+            {isDeleting ? 'Removing...' : 'Remove from List'}
           </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-base shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ letterSpacing: '-0.312px' }}
-          >
-            {isSaving ? 'Saving...' : 'Save Details'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 rounded-xl text-[#0F172B] font-semibold text-base hover:bg-gray-100 transition-colors"
+              style={{ letterSpacing: '-0.312px' }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-base shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ letterSpacing: '-0.312px' }}
+            >
+              {isSaving ? 'Saving...' : 'Save Details'}
+            </button>
+          </div>
         </div>
       </div>
 

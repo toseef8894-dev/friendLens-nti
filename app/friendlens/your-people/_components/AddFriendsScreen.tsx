@@ -8,9 +8,13 @@ import { createFriends } from '../actions'
 
 const MIN_ROWS = 3
 
-export default function AddFriendsScreen() {
+interface AddFriendsScreenProps {
+  single?: boolean
+}
+
+export default function AddFriendsScreen({ single = false }: AddFriendsScreenProps) {
   const router = useRouter()
-  const [friends, setFriends] = useState<string[]>(Array(MIN_ROWS).fill(''))
+  const [friends, setFriends] = useState<string[]>(Array(single ? 1 : MIN_ROWS).fill(''))
   const [isPending, setIsPending] = useState(false)
 
   const hasAnyFriend = friends.some((f) => f.trim() !== '')
