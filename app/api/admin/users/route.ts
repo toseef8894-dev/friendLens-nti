@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/rbac'
 import { ARCHETYPES, getNTITypeById } from '@/lib/nti-config'
 
@@ -7,7 +7,7 @@ export async function GET() {
     try {
         await requireAdmin()
 
-        const supabase = createClient()
+        const supabase = createAdminClient()
         const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
             .select('id, email, first_name, last_name, full_name, created_at')

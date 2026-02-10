@@ -28,13 +28,16 @@ export default function AdminUsersPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [changingRole, setChangingRole] = useState<string | null>(null)
+    const [deletingUser, setDeletingUser] = useState<string | null>(null)
     const [confirmDialog, setConfirmDialog] = useState<{
         isOpen: boolean
+        type: 'role' | 'delete'
         userId: string
         newRole: 'admin' | 'user'
         userName: string
     }>({
         isOpen: false,
+        type: 'role',
         userId: '',
         newRole: 'user',
         userName: ''
@@ -79,10 +82,39 @@ export default function AdminUsersPage() {
 
         setConfirmDialog({
             isOpen: true,
+            type: 'role',
             userId,
             newRole,
             userName
         })
+    }
+
+    function handleDeleteClick(userId: string, currentRole: 'admin' | 'user') {
+        if (currentRole === 'admin') {
+            toast.error('Cannot delete an admin user')
+            return
+        }
+
+        const user = users.find(u => u.id === userId)
+        const userName = user
+            ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email
+            : 'this user'
+
+        setConfirmDialog({
+            isOpen: true,
+            type: 'delete',
+            userId,
+            newRole: 'user',
+            userName
+        })
+    }
+
+    async function handleConfirm() {
+        if (confirmDialog.type === 'role') {
+            await confirmRoleChange()
+        } else {
+            await confirmDeleteUser()
+        }
     }
 
     async function confirmRoleChange() {
@@ -113,6 +145,32 @@ export default function AdminUsersPage() {
             toast.error(err.message)
         } finally {
             setChangingRole(null)
+        }
+    }
+
+    async function confirmDeleteUser() {
+        const { userId } = confirmDialog
+
+        setDeletingUser(userId)
+        setConfirmDialog({ ...confirmDialog, isOpen: false })
+
+        try {
+            const res = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE'
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to delete user')
+            }
+
+            toast.success('User deleted successfully')
+            setUsers(users.filter(u => u.id !== userId))
+        } catch (err: any) {
+            toast.error(err.message)
+        } finally {
+            setDeletingUser(null)
         }
     }
 
@@ -165,6 +223,9 @@ export default function AdminUsersPage() {
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Joined
+                                </th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Actions
                                 </th>
                             </tr>
                         </thead>
@@ -232,6 +293,22 @@ export default function AdminUsersPage() {
                                     <td className="px-6 py-4 text-sm text-gray-500">
                                         {new Date(user.created_at).toLocaleDateString()}
                                     </td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => handleDeleteClick(user.id, user.role)}
+                                            disabled={deletingUser === user.id || user.role === 'admin'}
+                                            className={`
+                                                px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors
+                                                text-red-600 border-red-200 bg-red-50 hover:bg-red-100
+                                                ${deletingUser === user.id || user.role === 'admin'
+                                                    ? 'opacity-50 cursor-not-allowed'
+                                                    : 'cursor-pointer'}
+                                            `}
+                                            title={user.role === 'admin' ? 'Cannot delete admin users' : 'Delete user'}
+                                        >
+                                            {deletingUser === user.id ? 'Deleting...' : 'Delete'}
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -248,12 +325,16 @@ export default function AdminUsersPage() {
             {/* Confirmation Dialog */}
             <ConfirmDialog
                 isOpen={confirmDialog.isOpen}
-                title="Change User Role"
-                message={`Are you sure you want to change ${confirmDialog.userName}'s role to ${confirmDialog.newRole}?`}
-                confirmText="Change Role"
+                title={confirmDialog.type === 'delete' ? 'Delete User' : 'Change User Role'}
+                message={
+                    confirmDialog.type === 'delete'
+                        ? `Are you sure you want to delete ${confirmDialog.userName}? This action cannot be undone and will remove all their data.`
+                        : `Are you sure you want to change ${confirmDialog.userName}'s role to ${confirmDialog.newRole}?`
+                }
+                confirmText={confirmDialog.type === 'delete' ? 'Delete' : 'Change Role'}
                 cancelText="Cancel"
-                variant="default"
-                onConfirm={confirmRoleChange}
+                variant={confirmDialog.type === 'delete' ? 'danger' : 'default'}
+                onConfirm={handleConfirm}
                 onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
             />
         </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { requireAdmin, setUserRole, Role } from '@/lib/rbac'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { requireAdmin, Role } from '@/lib/rbac'
 
 export async function PUT(
     request: NextRequest,
@@ -23,7 +23,9 @@ export async function PUT(
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
-        const { data: targetUserRoles } = await supabase
+        const adminClient = createAdminClient()
+
+        const { data: targetUserRoles } = await adminClient
             .from('user_roles')
             .select(`
                 role_id,
@@ -47,7 +49,29 @@ export async function PUT(
             )
         }
 
-        await setUserRole(userId, role)
+        // Update role using admin client
+        const { data: roleData, error: roleError } = await adminClient
+            .from('roles')
+            .select('id')
+            .eq('name', role)
+            .single()
+
+        if (roleError || !roleData) {
+            throw new Error(`Role '${role}' not found`)
+        }
+
+        await adminClient
+            .from('user_roles')
+            .delete()
+            .eq('user_id', userId)
+
+        const { error: insertError } = await adminClient
+            .from('user_roles')
+            .insert({ user_id: userId, role_id: roleData.id })
+
+        if (insertError) {
+            throw new Error(`Failed to assign role: ${insertError.message}`)
+        }
 
         return NextResponse.json({
             success: true,
