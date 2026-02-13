@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { clearAuthToken } from '@/lib/auth-storage'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdminStatus } from '@/hooks/useAdminStatus'
+import { useAssessmentStatus } from '@/hooks/useAssessmentStatus'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 export default function Header() {
@@ -21,6 +22,9 @@ export default function Header() {
 
     const { user } = useAuth({ clearStorageOnSignOut: true })
     const { isAdmin } = useAdminStatus({ userId: user?.id })
+    const { hasCompletedAssessment } = useAssessmentStatus({ userId: user?.id })
+
+    const yourStyleHref = hasCompletedAssessment ? '/results?my_results=true' : '/assessment'
 
     const isActive = (path: string) => pathname === path || pathname?.startsWith(path + '/')
 
@@ -86,8 +90,8 @@ export default function Header() {
             {user && (
                 <nav className="hidden sm:flex items-center gap-4 md:gap-8">
                     <Link
-                        href=""
-                        className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/survey') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                        href={yourStyleHref}
+                        className={`text-sm md:text-base font-medium leading-6 transition-colors ${(isActive('/results') || isActive('/assessment')) ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
                             }`}
                         style={{ letterSpacing: '-0.312px' }}
                     >
@@ -100,6 +104,14 @@ export default function Header() {
                         style={{ letterSpacing: '-0.312px' }}
                     >
                         Your People
+                    </Link>
+                    <Link
+                        href="/friendlens/your-sources"
+                        className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/friendlens/your-sources') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                            }`}
+                        style={{ letterSpacing: '-0.312px' }}
+                    >
+                        Your Sources
                     </Link>
                 </nav>
             )}

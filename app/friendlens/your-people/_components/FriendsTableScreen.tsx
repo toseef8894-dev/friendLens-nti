@@ -12,6 +12,7 @@ interface Column {
   align?: 'left' | 'center' | 'right'
   sortable?: boolean
   getValue?: (f: Friend) => string | number | boolean | null
+  width?: string
 }
 
 const COLUMNS: Column[] = [
@@ -20,11 +21,18 @@ const COLUMNS: Column[] = [
     label: 'Name',
     sortable: true,
     getValue: (f) => f.name,
-    render: (f) => (
-      <span className="font-medium text-text-primary" style={{ letterSpacing: '-0.15px', textTransform: 'capitalize' }}>
-        {f.name}
-      </span>
-    ),
+    render: (f) => {
+      const display = f.name.length > 30 ? f.name.slice(0, 30) + '…' : f.name
+      return (
+        <span
+          className="font-medium text-text-primary block truncate"
+          style={{ letterSpacing: '-0.15px', textTransform: 'capitalize' }}
+          title={f.name}
+        >
+          {display}
+        </span>
+      )
+    },
   },
   {
     key: 'relationship',
@@ -241,7 +249,7 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
   return (
     <>
       {/* Friend Table */}
-      <div className="w-full max-w-6xl">
+      <div className="w-full max-w-7xl">
         <div className="flex items-center justify-between mb-6">
           <h2
             className="text-2xl font-semibold leading-8 text-text-primary"
@@ -270,8 +278,8 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
 
         {/* Table Container */}
         <div className="w-full rounded-2xl border border-border-light bg-white shadow-xl overflow-hidden mb-12">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse min-w-[900px]">
+          <div className="w-full">
+            <table className="w-full border-collapse table-fixed">
               <thead>
                 <tr className="border-b border-border-light bg-bg-muted">
                   {COLUMNS.map((col) => (

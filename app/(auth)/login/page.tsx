@@ -15,6 +15,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isSignUp, setIsSignUp] = useState(false)
+    const [signupComplete, setSignupComplete] = useState(false)
     const router = useRouter()
     const supabase = createClient()
 
@@ -150,20 +151,7 @@ export default function LoginPage() {
                 }
 
                 if (signupData.user && !signupData.session) {
-                    toast.success('Account created! Please check your email to confirm your account before signing in.')
-                    setFirstName('')
-                    setLastName('')
-                    setEmail('')
-                    setPassword('')
-                    setIsSignUp(false)
-                    if (typeof window !== 'undefined') {
-                        window.history.replaceState({}, '', '/login?signup=true')
-                    }
-                    setTimeout(() => {
-                        toast.info('Didn\'t receive the email? You can resend it from the login page.', {
-                            duration: 5000,
-                        })
-                    }, 2000)
+                    setSignupComplete(true)
                 } else if (signupData.session) {
                     if (signupData.session.access_token) {
                         setAuthToken(signupData.session.access_token)
@@ -249,6 +237,36 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                {signupComplete ? (
+                    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
+                        <div className="mb-4">
+                            <svg className="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                            </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">Account Created!</h3>
+                        <p className="text-sm text-gray-700 mb-2">
+                            Please activate your account by clicking the link in the email we just sent.
+                        </p>
+                        <p className="text-sm text-gray-500 mb-6">
+                            If you do not see the email, please also check Other/Spam/Junk folders.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSignupComplete(false)
+                                setIsSignUp(false)
+                                setFirstName('')
+                                setLastName('')
+                                setEmail('')
+                                setPassword('')
+                            }}
+                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                        >
+                            Back to sign in
+                        </button>
+                    </div>
+                ) : (
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
                     <form className="space-y-6" onSubmit={handleAuth}>
                         {isSignUp && (
@@ -369,6 +387,7 @@ export default function LoginPage() {
                         </div>
                     </form>
                 </div>
+                )}
             </div>
         </div>
     )
