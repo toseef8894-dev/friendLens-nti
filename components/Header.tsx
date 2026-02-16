@@ -113,6 +113,14 @@ export default function Header() {
                     >
                         Your Sources
                     </Link>
+                    <Link
+                        href="/friendlens/your-time"
+                        className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/friendlens/your-time') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                            }`}
+                        style={{ letterSpacing: '-0.312px' }}
+                    >
+                        Your Time
+                    </Link>
                 </nav>
             )}
 
