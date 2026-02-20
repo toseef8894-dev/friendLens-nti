@@ -121,6 +121,14 @@ export default function Header() {
                     >
                         Your Time
                     </Link>
+                    <Link
+                        href="/friendlens/your-calendar"
+                        className={`text-sm md:text-base font-medium leading-6 transition-colors ${isActive('/friendlens/your-calendar') ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                            }`}
+                        style={{ letterSpacing: '-0.312px' }}
+                    >
+                        Your Events
+                    </Link>
                 </nav>
             )}
 
