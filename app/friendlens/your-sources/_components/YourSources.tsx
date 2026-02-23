@@ -37,18 +37,15 @@ const COLUMNS: Column[] = [
         label: 'Source or Potential Source',
         sortable: true,
         getValue: (s) => s.name.toLowerCase(),
-        render: (s) => {
-            const display = s.name.length > 30 ? s.name.slice(0, 30) + '…' : s.name
-            return (
-                <span
-                    className="font-medium text-[#0F172B] block truncate"
-                    style={{ letterSpacing: '-0.15px' }}
-                    title={s.name}
-                >
-                    {display}
-                </span>
-            )
-        },
+        render: (s) => (
+            <span
+                className="font-medium text-[#0F172B] block truncate max-w-[100px] sm:max-w-[180px]"
+                style={{ letterSpacing: '-0.15px' }}
+                title={s.name}
+            >
+                {s.name}
+            </span>
+        ),
     },
     {
         key: 'active_members',
@@ -275,10 +272,10 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
     }, [refreshSources])
 
     return (
-        <main className="max-w-[1053px] mx-auto px-4 py-12">
-            <div className="flex flex-col items-center gap-12">
+        <main className="max-w-[1053px] mx-auto px-4 py-6 sm:py-12">
+            <div className="flex flex-col items-center gap-6 sm:gap-12">
                 <div
-                    className="w-full rounded-2xl border border-[#E2E8F0] p-6 shadow-sm"
+                    className="w-full rounded-2xl border border-[#E2E8F0] p-4 sm:p-6 shadow-sm"
                     style={{
                         background: "linear-gradient(180deg, #FAF5FF 0%, #F8FAFC 100%)"
                     }}
@@ -343,31 +340,142 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
 
                 {/* Your Sources Section */}
                 <div className="w-full">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-[#0F172B] text-2xl font-bold">Your Sources</h2>
+                    <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
+                        <h2 className="text-xl sm:text-2xl text-[#0F172B] font-bold">Your Sources</h2>
                         <button
                             onClick={() => setShowAddRow(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-3xl bg-[#F8F4FF] hover:bg-[#F0E7FF] transition-colors border border-[#E9D5FF]"
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-3xl bg-[#F8F4FF] hover:bg-[#F0E7FF] transition-colors border border-[#E9D5FF] shrink-0"
                         >
                             <Plus className="w-4 h-4 text-[#9810FA]" strokeWidth={1.33} />
-                            <span className="text-[#9810FA] text-sm font-semibold leading-5 tracking-[-0.15px]">
+                            <span className="text-[#9810FA] text-xs sm:text-sm font-semibold leading-5 tracking-[-0.15px]">
                                 Add Source
                             </span>
                         </button>
                     </div>
 
-                    {/* Table */}
-                    <div className="w-full rounded-2xl bg-white overflow-hidden border border-[#E2E8F0] shadow-xl">
+                    {/* Mobile Card Layout */}
+                    <div className="sm:hidden flex flex-col gap-3">
+                        {sortedSources.map((source) => {
+                            const cfg = SIGNAL_CONFIG[source.signal]
+                            const stylesBySignal: Record<string, { bg: string; text: string; border: string }> = {
+                                medium: { bg: '#FFF4D6', text: '#8A5A00', border: '#FFE2A3' },
+                                lower: { bg: '#FAD6DA', text: '#D61F2C', border: '#F3B2B8' },
+                                higher: { bg: '#DDF4E3', text: '#118C3A', border: '#BDE9C9' },
+                            }
+                            const key = (source.signal || '').toLowerCase()
+                            const pill = stylesBySignal[key] ?? { bg: '#EEF2FF', text: '#3730A3', border: '#C7D2FE' }
+
+                            return (
+                                <div
+                                    key={source.id}
+                                    onClick={() => setEditSource(source)}
+                                    className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm cursor-pointer active:bg-[#F8FAFC] transition-colors"
+                                >
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="font-semibold text-[#0F172B] text-sm truncate max-w-[180px]">
+                                            {source.name}
+                                        </span>
+                                        <span
+                                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shrink-0"
+                                            style={{
+                                                backgroundColor: pill.bg,
+                                                color: pill.text,
+                                                border: `1px solid ${pill.border}`,
+                                            }}
+                                        >
+                                            {cfg?.label ?? source.signal}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 text-xs text-[#45556C]">
+                                        <div>
+                                            <span className="text-[#90A1B9] block">Members</span>
+                                            <span className="font-medium">{source.active_members ?? '—'}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[#90A1B9] block">Relevant</span>
+                                            <span className="font-medium">{source.relevant_pct != null ? `${source.relevant_pct}%` : '—'}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[#90A1B9] block">Type</span>
+                                            <span className="font-medium">{source.source_type || '—'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
+
+                        {/* Mobile Add Source Form */}
+                        {showAddRow && (
+                            <div className="rounded-xl border border-[#E2E8F0] bg-[#FAF5FF]/30 p-4 shadow-sm">
+                                <input
+                                    type="text"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    placeholder="Source name"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleAddSource()
+                                        if (e.key === 'Escape') {
+                                            setShowAddRow(false)
+                                            setNewName('')
+                                            setNewType('')
+                                        }
+                                    }}
+                                    className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[#9810FA]/20 focus:border-[#9810FA]"
+                                />
+                                <select
+                                    value={newType}
+                                    onChange={(e) => setNewType(e.target.value)}
+                                    className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm mb-3 text-[#45556C] focus:outline-none focus:ring-2 focus:ring-[#9810FA]/20 focus:border-[#9810FA]"
+                                >
+                                    <option value="">Select type</option>
+                                    {SOURCE_TYPES.map((t) => (
+                                        <option key={t} value={t}>{t}</option>
+                                    ))}
+                                </select>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handleAddSource}
+                                        disabled={isAdding}
+                                        className="flex-1 py-2 rounded-lg bg-[#9810FA] text-white text-sm font-semibold hover:bg-[#7A0DD4] transition-colors disabled:opacity-50"
+                                    >
+                                        {isAdding ? 'Adding...' : 'Add Source'}
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowAddRow(false); setNewName(''); setNewType('') }}
+                                        className="flex-1 py-2 rounded-lg text-[#62748E] text-sm font-semibold border border-[#E2E8F0] hover:bg-gray-50 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Mobile Empty State */}
+                        {sources.length === 0 && !showAddRow && (
+                            <div className="rounded-xl border border-[#E2E8F0] bg-white p-8 text-center shadow-sm">
+                                <p className="text-[#62748E] text-sm mb-2">No sources added yet.</p>
+                                <button
+                                    onClick={() => setShowAddRow(true)}
+                                    className="text-[#9810FA] text-sm font-semibold hover:underline"
+                                >
+                                    Add your first source
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop Table */}
+                    <div className="hidden sm:block w-full rounded-2xl bg-white overflow-hidden border border-[#E2E8F0] shadow-xl">
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse table-fixed">
+                            <table className="w-full border-collapse">
                                 <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                                     <tr>
                                         {COLUMNS.map((col) => (
                                             <th
                                                 key={col.key}
                                                 onClick={() => col.sortable && handleSort(col.key)}
-                                                className={`px-4 py-3.5 text-sm font-semibold text-[#45556C] whitespace-nowrap ${alignClass(col.align)} ${col.sortable ? 'cursor-pointer hover:bg-[#F1F5F9] transition-colors' : ''
-                                                    }`}
+                                                className={`px-4 py-3.5 text-sm font-semibold text-[#45556C] whitespace-nowrap ${alignClass(col.align)} ${col.sortable ? 'cursor-pointer hover:bg-[#F1F5F9] transition-colors' : ''}`}
                                                 style={{ letterSpacing: '-0.15px' }}
                                             >
                                                 <div
@@ -408,7 +516,6 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                                     {/* Add Source inline row */}
                                     {showAddRow && (
                                         <tr className="border-b border-[#F1F5F9] bg-[#FAF5FF]/30">
-                                            {/* Source Name */}
                                             <td className="px-4 py-3">
                                                 <input
                                                     type="text"
@@ -427,11 +534,8 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                                                     className="w-full bg-transparent text-sm font-medium leading-5 tracking-[-0.15px] placeholder:text-[rgba(10,10,10,0.5)] focus:outline-none"
                                                 />
                                             </td>
-                                            {/* Active Members */}
                                             <td className="px-4 py-3" />
-                                            {/* Relevant % */}
                                             <td className="px-4 py-3" />
-                                            {/* Source Type */}
                                             <td className="px-4 py-3">
                                                 <select
                                                     value={newType}
@@ -440,13 +544,10 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                                                 >
                                                     <option value="">Select type</option>
                                                     {SOURCE_TYPES.map((t) => (
-                                                        <option key={t} value={t}>
-                                                            {t}
-                                                        </option>
+                                                        <option key={t} value={t}>{t}</option>
                                                     ))}
                                                 </select>
                                             </td>
-                                            {/* Signal (actions) */}
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
@@ -457,11 +558,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                                                         {isAdding ? '...' : 'Add'}
                                                     </button>
                                                     <button
-                                                        onClick={() => {
-                                                            setShowAddRow(false)
-                                                            setNewName('')
-                                                            setNewType('')
-                                                        }}
+                                                        onClick={() => { setShowAddRow(false); setNewName(''); setNewType('') }}
                                                         className="px-3 py-1 rounded-lg text-[#62748E] text-xs font-semibold hover:bg-gray-100 transition-colors"
                                                     >
                                                         Cancel
@@ -491,7 +588,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                     </div>
 
                     {/* Legend */}
-                    <div className="flex flex-wrap items-center justify-center gap-8 mt-4">
+                    <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-center gap-3 sm:gap-8 mt-4">
                         <LegendItem color="#17AA46" label="Higher Potential (3+ connections)" />
                         <LegendItem color="#FFC91B" label="Medium potential(1-2 connections)" />
                         <LegendItem color="#D53242" label="Lower Potential (0 connections)" />

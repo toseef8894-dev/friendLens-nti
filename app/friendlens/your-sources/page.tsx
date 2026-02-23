@@ -24,7 +24,7 @@ export default async function YourSourcesPage() {
             className="min-h-screen w-full bg-cover bg-center bg-fixed"
             style={{ backgroundImage: "url('/bgImage.png')" }}
         >
-            <main className="flex flex-col items-center pt-[40px] px-4 pb-20">
+            <main className="flex flex-col items-center pt-6 sm:pt-[40px] px-4 pb-12 sm:pb-20">
                 <HeroSection />
                 <YourSources
                     initialSources={sourcesResult.sources || []}

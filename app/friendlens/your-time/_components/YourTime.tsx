@@ -134,10 +134,10 @@ export default function YourTime({ initialData }: YourTimeProps) {
     }
 
     return (
-        <main className="max-w-[1053px] mx-auto px-4 py-12">
+        <main className="max-w-[1053px] mx-auto px-2 sm:px-4 py-6 sm:py-12">
             <div className="w-full rounded-2xl bg-white overflow-hidden border border-[#E2E8F0] shadow-xl">
-                {/* Table */}
-                <div className="overflow-x-auto">
+                {/* Desktop Table - hidden on mobile */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead className="bg-[#F8FAFC] border-y border-[#E2E8F0]">
                             <tr>
@@ -227,9 +227,74 @@ export default function YourTime({ initialData }: YourTimeProps) {
                     </table>
                 </div>
 
+                {/* Mobile Card Layout - visible only on mobile */}
+                <div className="md:hidden">
+                    <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-3">
+                        <span className="font-bold text-sm text-[#0F172B]">Time Allocation</span>
+                        <span className="font-normal text-sm text-[#62748E] ml-1">(hours)</span>
+                    </div>
+                    <div className="divide-y divide-[#F1F5F9]">
+                        {rows.map((row, index) => (
+                            <div key={row.category} className="px-4 py-3.5">
+                                <p
+                                    className="text-sm font-medium text-[#0F172B] mb-2.5"
+                                    style={{ letterSpacing: '-0.15px' }}
+                                >
+                                    {row.category}
+                                </p>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <label className="text-[10px] font-medium text-[#62748E] uppercase tracking-wide">
+                                            Weekday
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="24"
+                                            step="0.5"
+                                            value={row.weekday || ''}
+                                            onChange={(e) => updateRow(index, 'weekday', e.target.value)}
+                                            placeholder="0"
+                                            className="w-16 h-10 text-center rounded-lg border border-[#E2E8F0] bg-white text-sm font-medium text-[#0F172B] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 transition-colors"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <label className="text-[10px] font-medium text-[#62748E] uppercase tracking-wide">
+                                            Weekend
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="24"
+                                            step="0.5"
+                                            value={row.weekend || ''}
+                                            onChange={(e) => updateRow(index, 'weekend', e.target.value)}
+                                            placeholder="0"
+                                            className="w-16 h-10 text-center rounded-lg border border-[#E2E8F0] bg-white text-sm font-medium text-[#0F172B] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 transition-colors"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                        <label className="text-[10px] font-medium text-[#62748E] uppercase tracking-wide">
+                                            Notes
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={row.notes}
+                                            onChange={(e) => updateRow(index, 'notes', e.target.value)}
+                                            maxLength={30}
+                                            placeholder=""
+                                            className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-white text-sm font-medium text-[#0F172B] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 transition-colors"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Unallocated Time Bar */}
                 <div
-                    className="flex items-center justify-between px-8 py-3.5"
+                    className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 py-3 sm:py-3.5 gap-1 sm:gap-0"
                     style={{
                         background: 'linear-gradient(90deg, #9810FA 0%, #C800DE 100%)',
                     }}
@@ -238,7 +303,7 @@ export default function YourTime({ initialData }: YourTimeProps) {
                         Unallocated Time
                     </span>
                     <div className="flex items-center gap-3">
-                        <span className="text-white text-sm font-medium" style={{ letterSpacing: '-0.15px' }}>
+                        <span className="text-white text-xs sm:text-sm font-medium" style={{ letterSpacing: '-0.15px' }}>
                             Weekday: {unallocated.weekday} hr{unallocated.weekday !== 1 ? 's' : ''}
                             <span className="mx-2 opacity-60">|</span>
                             Weekend: {unallocated.weekend} hr{unallocated.weekend !== 1 ? 's' : ''}
@@ -254,7 +319,7 @@ export default function YourTime({ initialData }: YourTimeProps) {
 
                 {/* Warning */}
                 {isOverAllocated && (
-                    <div className="px-8 py-2 bg-[#FFF8F8] border-t border-[#FECDD3]">
+                    <div className="px-4 sm:px-8 py-2 bg-[#FFF8F8] border-t border-[#FECDD3]">
                         <p className="text-center text-xs text-red-500 font-medium" style={{ letterSpacing: '-0.15px' }}>
                             * Adjust time to 24 hours or less allocated
                         </p>

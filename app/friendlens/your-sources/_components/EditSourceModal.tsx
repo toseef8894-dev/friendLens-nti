@@ -112,12 +112,12 @@ export default function EditSourceModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col mx-2 sm:mx-4">
         {/* Header */}
-        <div className="flex items-start justify-between p-8 pb-4 border-b border-gray-100">
+        <div className="flex items-start justify-between p-4 sm:p-8 pb-3 sm:pb-4 border-b border-gray-100">
           <div>
             <h2
-              className="text-2xl font-bold text-[#0F172B] mb-1"
+              className="text-xl sm:text-2xl font-bold text-[#0F172B] mb-1"
               style={{ letterSpacing: '-0.439px' }}
             >
               Edit Source
@@ -138,7 +138,7 @@ export default function EditSourceModal({
         </div>
 
         {/* Form Content */}
-        <div className="overflow-y-auto flex-1 p-8">
+        <div className="overflow-y-auto flex-1 p-4 sm:p-8">
           {/* Name Field */}
           <div className="mb-6">
             <label
@@ -284,12 +284,12 @@ export default function EditSourceModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between p-8 pt-4 border-t border-gray-100 bg-white">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 sm:p-8 pt-3 sm:pt-4 border-t border-gray-100 bg-white">
           <button
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="px-5 py-3 rounded-xl text-red-600 font-semibold text-sm border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 sm:py-3 rounded-xl text-red-600 font-semibold text-sm border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ letterSpacing: '-0.15px' }}
           >
             {isDeleting ? 'Removing...' : 'Remove Source'}
@@ -298,7 +298,7 @@ export default function EditSourceModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 rounded-xl text-[#0F172B] font-semibold text-base hover:bg-gray-100 transition-colors"
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[#0F172B] font-semibold text-sm sm:text-base hover:bg-gray-100 transition-colors"
               style={{ letterSpacing: '-0.312px' }}
             >
               Cancel
@@ -307,7 +307,7 @@ export default function EditSourceModal({
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-base shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm sm:text-base shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ letterSpacing: '-0.312px' }}
             >
               {isSaving ? 'Saving...' : 'Save Details'}

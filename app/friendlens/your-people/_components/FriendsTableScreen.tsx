@@ -21,18 +21,15 @@ const COLUMNS: Column[] = [
     label: 'Name',
     sortable: true,
     getValue: (f) => f.name,
-    render: (f) => {
-      const display = f.name.length > 30 ? f.name.slice(0, 30) + '…' : f.name
-      return (
-        <span
-          className="font-medium text-text-primary block truncate"
-          style={{ letterSpacing: '-0.15px', textTransform: 'capitalize' }}
-          title={f.name}
-        >
-          {display}
-        </span>
-      )
-    },
+    render: (f) => (
+      <span
+        className="font-medium text-text-primary block truncate max-w-[100px] sm:max-w-[180px]"
+        style={{ letterSpacing: '-0.15px', textTransform: 'capitalize' }}
+        title={f.name}
+      >
+        {f.name}
+      </span>
+    ),
   },
   {
     key: 'relationship',
@@ -250,25 +247,26 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
     <>
       {/* Friend Table */}
       <div className="w-full max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
           <h2
-            className="text-2xl font-semibold leading-8 text-text-primary"
+            className="text-xl sm:text-2xl font-semibold leading-8 text-text-primary"
             style={{ letterSpacing: '-0.439px' }}
           >
             Your List
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => router.push('?step=add&single=true')}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-purple/10 text-brand-purple text-sm font-semibold leading-5 hover:bg-brand-purple/20 transition-colors"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-brand-purple/10 text-brand-purple text-xs sm:text-sm font-semibold leading-5 hover:bg-brand-purple/20 transition-colors"
               style={{ letterSpacing: '-0.15px' }}
             >
               <Plus className="w-4 h-4" strokeWidth={1.33} />
-              Add Person
+              <span className="hidden sm:inline">Add Person</span>
+              <span className="sm:hidden">Add</span>
             </button>
             <button
               onClick={() => router.push('?step=list')}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gray-100 text-[#62748E] text-sm font-medium hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 sm:py-2.5 rounded-xl bg-gray-100 text-[#62748E] text-sm font-medium hover:bg-gray-200 transition-colors"
               title="Back to Your List"
             >
               <ArrowLeft className="w-4 h-4" strokeWidth={1.67} />
@@ -278,19 +276,19 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
 
         {/* Table Container */}
         <div className="w-full rounded-2xl border border-border-light bg-white shadow-xl overflow-hidden mb-12">
-          <div className="w-full">
-            <table className="w-full border-collapse table-fixed">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full border-collapse min-w-[800px] sm:min-w-full">
               <thead>
                 <tr className="border-b border-border-light bg-bg-muted">
-                  {COLUMNS.map((col) => (
+                  {COLUMNS.map((col, i) => (
                     <th
                       key={col.key}
                       onClick={() => col.sortable && handleSort(col.key)}
-                      className={`px-4 py-3.5 text-sm font-semibold text-[#45556C] whitespace-nowrap ${alignClass(col.align)} ${col.sortable ? 'cursor-pointer hover:bg-bg-muted/80 transition-colors' : ''}`}
-                      style={{ letterSpacing: '-0.15px' }}
+                      className={`px-3 sm:px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-[#45556C] whitespace-nowrap ${alignClass(col.align)} ${col.sortable ? 'cursor-pointer hover:bg-bg-muted/80 transition-colors' : ''} ${i === 0 ? 'sticky left-0 z-10 bg-bg-muted' : ''}`}
+                      style={{ letterSpacing: '-0.15px', minWidth: i === 0 ? '120px' : i === 1 ? '110px' : undefined }}
                     >
                       <div
-                        className={`flex items-center gap-2 ${col.align === 'center' ? 'justify-center' : ''}`}
+                        className={`flex items-center gap-1.5 sm:gap-2 ${col.align === 'center' ? 'justify-center' : ''}`}
                       >
                         <span>{col.label}</span>
                         {col.sortable && (
@@ -311,10 +309,10 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
                     key={friend.id}
                     className="border-b border-border-lighter last:border-b-0 hover:bg-bg-muted/30 transition-colors"
                   >
-                    {COLUMNS.map((col) => (
+                    {COLUMNS.map((col, i) => (
                       <td
                         key={col.key}
-                        className={`px-4 py-4 text-sm whitespace-nowrap ${alignClass(col.align)}`}
+                        className={`px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm whitespace-nowrap ${alignClass(col.align)} ${i === 0 ? 'sticky left-0 z-10 bg-white' : ''}`}
                         style={{ letterSpacing: '-0.15px' }}
                       >
                         {col.render(friend)}

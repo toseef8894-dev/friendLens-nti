@@ -194,7 +194,7 @@ export default function YourCalendar({ initialEvents }: Props) {
 
     return (
         <>
-            <main className="w-full max-w-[1200px] mx-auto px-4 py-12 md:py-8">
+            <main className="w-full max-w-[1200px] mx-auto px-2 sm:px-4 py-6 sm:py-12 md:py-8">
                 {/* Calendar Card */}
                 <div className="relative">
                     <div
@@ -203,7 +203,7 @@ export default function YourCalendar({ initialEvents }: Props) {
                             background: 'linear-gradient(180deg, #FAF5FF 0%, #F8FAFC 100%)',
                         }}
                     >
-                        <div className="p-6">
+                        <div className="p-3 sm:p-6">
                             {/* Month Navigation */}
                             <div className="flex items-center justify-between mb-6">
                                 <button
@@ -236,7 +236,7 @@ export default function YourCalendar({ initialEvents }: Props) {
 
                             {/* Month Picker Dropdown */}
                             {showMonthPicker && (
-                                <div className="absolute top-32 left-1/2 transform -translate-x-1/2 z-20 bg-white border border-[#E2E8F0] rounded-lg shadow-lg p-4 min-w-[300px]">
+                                <div className="absolute top-32 left-1/2 transform -translate-x-1/2 z-20 bg-white border border-[#E2E8F0] rounded-lg shadow-lg p-4 w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[300px] max-w-[300px]">
                                     <div className="mb-4">
                                         <label className="block text-xs font-semibold text-[#0F172B] mb-2">Year</label>
                                         <input
@@ -291,7 +291,7 @@ export default function YourCalendar({ initialEvents }: Props) {
                                     return (
                                         <div
                                             key={idx}
-                                            className={`aspect-square p-1 sm:p-2 rounded-lg border bg-white transition-colors overflow-hidden ${
+                                            className={`min-h-[3rem] sm:min-h-0 sm:aspect-square p-1 sm:p-2 rounded-lg border bg-white transition-colors overflow-hidden ${
                                                 day && isToday(day)
                                                     ? 'border-[#9810FA] bg-[#FAF5FF]'
                                                     : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
@@ -311,7 +311,7 @@ export default function YourCalendar({ initialEvents }: Props) {
                                                             <button
                                                                 key={event.id}
                                                                 onClick={() => openEditEvent(event)}
-                                                                className="w-[90%] text-left text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded text-white font-medium truncate flex-shrink-0 hover:opacity-80 transition-opacity"
+                                                                className="w-full text-left text-[8px] sm:text-xs px-0.5 sm:px-1.5 py-0.5 rounded text-white font-medium truncate flex-shrink-0 hover:opacity-80 transition-opacity"
                                                                 style={{ backgroundColor: ROLE_COLORS[event.role] }}
                                                                 title={event.title}
                                                             >
@@ -341,12 +341,12 @@ export default function YourCalendar({ initialEvents }: Props) {
                     {/* FAB */}
                     <button
                         onClick={() => setShowAddEvent(true)}
-                        className="fixed bottom-8 right-8 w-16 h-16 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-110 z-20"
+                        className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-110 z-20"
                         style={{
                             background: 'linear-gradient(90deg, #9810FA 0%, #C800DE 100%)',
                         }}
                     >
-                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M14 6V22M6 14H22" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </button>

@@ -12,7 +12,7 @@ export default function HeroSection() {
             </h1>
 
             <p
-                className="text-2xl font-medium leading-7 text-center text-[#45556C] max-w-[640px]"
+                className="text-lg sm:text-2xl font-medium leading-6 sm:leading-7 text-center text-[#45556C] max-w-[640px] px-2"
                 style={{ letterSpacing: '1.3px' }}
             >
                 Estimate how you spend a typical weekday and weekend.
