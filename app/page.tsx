@@ -1,6 +1,5 @@
 'use client'
 
-import Link from "next/link"
 import dynamic from 'next/dynamic'
 import { useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -140,14 +139,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="py-8 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-gray-500 text-sm">
-              © 2026 FriendLens. All rights reserved.
-            </p>
-          </div>
-        </footer>
       </div>
     </>
   )
