@@ -93,6 +93,19 @@ export async function middleware(request: NextRequest) {
         if (isResetSession) {
             return NextResponse.redirect(new URL('/reset-password', request.url))
         }
+        // If a user who has already completed the assessment lands on the Your Style page,
+        // send them straight to their results (mirrors the /assessment guard below).
+        if (request.nextUrl.pathname === '/friendlens/your-style') {
+            const { data: result } = await supabase
+                .from('results')
+                .select('id')
+                .eq('user_id', user.id)
+                .limit(1)
+                .maybeSingle()
+            if (result) {
+                return NextResponse.redirect(new URL('/results?my_results=true', request.url))
+            }
+        }
     }
     
     if (request.nextUrl.pathname.startsWith('/assessment')) {

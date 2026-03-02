@@ -20,7 +20,7 @@ export default function CTAButton({ text, className = '', variant = 'primary' }:
 
     const getRedirectPath = () => {
         if (user && hasCompletedAssessment) {
-            return '/results'
+            return '/results?my_results=true'
         }
         return '/assessment'
     }

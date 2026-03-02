@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import ResultsView from '@/components/ResultsView'
 import { redirect } from 'next/navigation'
 import { getUserResult } from '@/lib/auth-utils'
+import HeroSection from '@/app/friendlens/your-style/_components/HeroSection'
 
 export default async function ResultsPage({ 
     searchParams 
@@ -30,13 +31,19 @@ export default async function ResultsPage({
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <ResultsView 
-                initialData={result} 
-                userId={user?.id} 
-                showRedirectMessage={showRedirectMessage}
-                fromLogin={fromLogin}
-            />
+        <div
+            className="min-h-screen w-full bg-cover bg-center bg-fixed"
+            style={{ backgroundImage: "url('/bgImage.png')" }}
+        >
+            <div className="flex flex-col items-center pt-6 sm:pt-[40px] px-4 pb-12 sm:pb-20">
+                <HeroSection />
+                <ResultsView
+                    initialData={result}
+                    userId={user?.id}
+                    showRedirectMessage={showRedirectMessage}
+                    fromLogin={fromLogin}
+                />
+            </div>
         </div>
     )
 }

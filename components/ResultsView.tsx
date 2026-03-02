@@ -173,7 +173,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+            <div className="flex items-center justify-center py-20">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
                     <p className="mt-4 text-gray-600">Loading your results...</p>
@@ -184,7 +184,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
 
     if (error || !result) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center px-4">
+            <div className="flex items-center justify-center py-20 px-4">
                 <div className="text-center max-w-md">
                     <p className="text-gray-600 mb-4">{error || 'No results found. Please complete the assessment first.'}</p>
                     <Link
@@ -207,7 +207,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
 
     if (!ntiType) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center px-4">
+            <div className="flex items-center justify-center py-20 px-4">
                 <div className="text-center max-w-md">
                     <p className="text-gray-600 mb-4">Unable to load your results. Please try again.</p>
                     <Link
@@ -222,15 +222,15 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-12 px-4">
+        <div className="w-full py-8 px-4">
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-8">
                         <div className="text-center">
-                            <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-2">
+                            {/* <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-2">
                                 Your Friend Type
-                            </p>
+                            </p> */}
                             <h1 className="text-4xl font-bold text-gray-900 mb-2">
                                 {ntiType.name}
                             </h1>
@@ -427,7 +427,7 @@ export default function ResultsView({
     return (
         <Suspense
             fallback={
-                <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+                <div className="flex items-center justify-center py-20">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
                         <p className="mt-4 text-gray-600">Loading your results...</p>
@@ -435,7 +435,7 @@ export default function ResultsView({
                 </div>
             }
         >
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+            <div className="w-full">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
                     <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
                         <div className="lg:col-span-7">

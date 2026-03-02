@@ -14,11 +14,11 @@ import { useAssessmentStatus } from '@/hooks/useAssessmentStatus'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 const NAV_ITEMS = [
-    { label: 'Your Style', hrefKey: 'yourStyle' as const, activePaths: ['/results', '/assessment'] },
     { label: 'Your People', href: '/friendlens/your-people', activePaths: ['/friendlens/your-people'] },
     { label: 'Your Sources', href: '/friendlens/your-sources', activePaths: ['/friendlens/your-sources'] },
     { label: 'Your Time', href: '/friendlens/your-time', activePaths: ['/friendlens/your-time'] },
     { label: 'Your Events', href: '/friendlens/your-calendar', activePaths: ['/friendlens/your-calendar'] },
+    { label: 'Your Style', hrefKey: 'yourStyle' as const, activePaths: ['/friendlens/your-style', '/results', '/assessment'] },
 ]
 
 export default function Header() {
@@ -34,7 +34,7 @@ export default function Header() {
     const { isAdmin } = useAdminStatus({ userId: user?.id })
     const { hasCompletedAssessment } = useAssessmentStatus({ userId: user?.id })
 
-    const yourStyleHref = hasCompletedAssessment ? '/results?my_results=true' : '/assessment'
+    const yourStyleHref = hasCompletedAssessment ? '/results?my_results=true' : '/friendlens/your-style'
 
     const isActive = (path: string) => pathname === path || pathname?.startsWith(path + '/')
 
