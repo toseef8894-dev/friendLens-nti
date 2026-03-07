@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { ChevronUp, ChevronDown, ArrowUpDown, Plus } from 'lucide-react'
 import { createSource, getSourcesWithSignal } from '../actions'
@@ -13,18 +14,26 @@ import LinkPeopleModal from './LinkPeopleModal'
 // ── Signal config ────────────────────────────────────────────
 
 const SIGNAL_CONFIG: Record<Signal, { color: string; label: string }> = {
-    high: { color: '#17AA46', label: 'Higher' },
-    medium: { color: '#FFC91B', label: 'Medium' },
-    low: { color: '#D53242', label: 'Lower' },
+    high: { color: '#22C55E', label: 'Higher' },
+    medium: { color: '#F59E0B', label: 'Medium' },
+    low: { color: '#FB7185', label: 'Lower' },
 }
 
 const SIGNAL_SORT_ORDER: Record<Signal, number> = { high: 3, medium: 2, low: 1 }
+
+const SIGNAL_PILL_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+    high: { bg: '#F0FDF4', text: '#166534', border: '#86EFAC' },
+    medium: { bg: '#FFFBEB', text: '#92400E', border: '#FDE68A' },
+    low: { bg: '#FFF1F2', text: '#BE123C', border: '#FECDD3' },
+}
+const SIGNAL_PILL_DEFAULT = { bg: '#EEF2FF', text: '#3730A3', border: '#C7D2FE' }
 
 // ── Column definition ────────────────────────────────────────
 
 interface Column {
     key: string
     label: string
+    tooltip?: string
     render: (s: SourceWithSignal) => React.ReactNode
     align?: 'left' | 'center'
     sortable?: boolean
@@ -35,6 +44,7 @@ const COLUMNS: Column[] = [
     {
         key: 'name',
         label: 'Source or Potential Source',
+        tooltip: 'Name a current or past source',
         sortable: true,
         getValue: (s) => s.name.toLowerCase(),
         render: (s) => (
@@ -50,6 +60,7 @@ const COLUMNS: Column[] = [
     {
         key: 'active_members',
         label: 'Active Members',
+        tooltip: 'Estimate total members in group',
         align: 'left',
         sortable: true,
         getValue: (s) => s.active_members ?? -1,
@@ -62,6 +73,7 @@ const COLUMNS: Column[] = [
     {
         key: 'relevant_pct',
         label: 'Relevant %',
+        tooltip: 'Estimate how many are relevant to you by gender and age',
         align: 'left',
         sortable: true,
         getValue: (s) => s.relevant_pct ?? -1,
@@ -74,6 +86,7 @@ const COLUMNS: Column[] = [
     {
         key: 'source_type',
         label: 'Source Type',
+        tooltip: 'Select a type or Other',
         sortable: true,
         getValue: (s) => s.source_type ?? '',
         render: (s) => (
@@ -85,19 +98,13 @@ const COLUMNS: Column[] = [
     {
         key: 'signal',
         label: 'Friend Potential',
+        tooltip: 'Indicates the richness of source',
         align: 'center',
         sortable: true,
         getValue: (s) => SIGNAL_SORT_ORDER[s.signal],
         render: (s) => {
             const cfg = SIGNAL_CONFIG[s.signal];
-            const stylesBySignal: Record<string, { bg: string; text: string; border: string }> = {
-                medium: { bg: '#FFF4D6', text: '#8A5A00', border: '#FFE2A3' },
-                lower: { bg: '#FAD6DA', text: '#D61F2C', border: '#F3B2B8' },
-                higher: { bg: '#DDF4E3', text: '#118C3A', border: '#BDE9C9' },
-            };
-
-            const key = (s.signal || '').toLowerCase();
-            const pill = stylesBySignal[key] ?? { bg: '#EEF2FF', text: '#3730A3', border: '#C7D2FE' };
+            const pill = SIGNAL_PILL_STYLES[s.signal] ?? SIGNAL_PILL_DEFAULT;
 
             return (
                 <span
@@ -130,6 +137,40 @@ const COLUMNS: Column[] = [
 ]
 
 // ── Helpers ──────────────────────────────────────────────────
+
+function InfoTooltip({ text }: { text: string }) {
+    const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+    const ref = useRef<HTMLSpanElement>(null)
+
+    function handleMouseEnter() {
+        if (ref.current) {
+            const rect = ref.current.getBoundingClientRect()
+            setPos({ top: rect.bottom + 6, left: rect.left + rect.width / 2 })
+        }
+    }
+
+    return (
+        <span
+            ref={ref}
+            className="inline-flex items-center ml-0.5"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={() => setPos(null)}
+        >
+            <span className="w-3.5 h-3.5 rounded-full bg-[#9810FA]/10 text-[#9810FA] text-[9px] font-bold flex items-center justify-center cursor-help leading-none select-none">
+                i
+            </span>
+            {pos !== null && createPortal(
+                <span
+                    className="fixed z-[9999] px-2.5 py-1.5 bg-[#0F172B] text-white text-xs rounded-lg whitespace-nowrap shadow-lg leading-4 pointer-events-none"
+                    style={{ top: pos.top, left: pos.left, transform: 'translateX(-50%)' }}
+                >
+                    {text}
+                </span>,
+                document.body
+            )}
+        </span>
+    )
+}
 
 function alignClass(align?: 'left' | 'center') {
     if (align === 'center') return 'text-center'
@@ -164,7 +205,7 @@ interface YourSourcesProps {
 
 export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) => {
     const [sources, setSources] = useState<SourceWithSignal[]>(initialSources)
-    const [sortColumn, setSortColumn] = useState<string>('signal')
+    const [sortColumn, setSortColumn] = useState<string>('created_at')
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
     // Add Source form state
@@ -184,11 +225,17 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
         } else {
             setSortColumn(column)
-            setSortDirection(column === 'signal' ? 'desc' : 'asc')
+            setSortDirection(column === 'signal' || column === 'created_at' ? 'desc' : 'asc')
         }
     }
 
     const sortedSources = [...sources].sort((a, b) => {
+        if (sortColumn === 'created_at') {
+            const aTime = new Date(a.created_at).getTime()
+            const bTime = new Date(b.created_at).getTime()
+            return sortDirection === 'asc' ? aTime - bTime : bTime - aTime
+        }
+
         const col = COLUMNS.find((c) => c.key === sortColumn)
         if (!col?.getValue) return 0
 
@@ -233,7 +280,8 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                     associated_people_count: 0,
                     signal: 'low',
                 }
-                setSources((prev) => [...prev, newSource])
+                setSources((prev) => [newSource, ...prev])
+                setEditSource(newSource)
             }
 
             setNewName('')
@@ -246,7 +294,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
     }
 
     function handleSourceSaved(updated: SourceWithSignal) {
-        setSources((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+        setSources((prev) => [updated, ...prev.filter((s) => s.id !== updated.id)])
     }
 
     function handleSourceDeleted(sourceId: string) {
@@ -357,13 +405,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                     <div className="sm:hidden flex flex-col gap-3">
                         {sortedSources.map((source) => {
                             const cfg = SIGNAL_CONFIG[source.signal]
-                            const stylesBySignal: Record<string, { bg: string; text: string; border: string }> = {
-                                medium: { bg: '#FFF4D6', text: '#8A5A00', border: '#FFE2A3' },
-                                lower: { bg: '#FAD6DA', text: '#D61F2C', border: '#F3B2B8' },
-                                higher: { bg: '#DDF4E3', text: '#118C3A', border: '#BDE9C9' },
-                            }
-                            const key = (source.signal || '').toLowerCase()
-                            const pill = stylesBySignal[key] ?? { bg: '#EEF2FF', text: '#3730A3', border: '#C7D2FE' }
+                            const pill = SIGNAL_PILL_STYLES[source.signal] ?? SIGNAL_PILL_DEFAULT
 
                             return (
                                 <div
@@ -467,7 +509,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
 
                     {/* Desktop Table */}
                     <div className="hidden sm:block w-full rounded-2xl bg-white overflow-hidden border border-[#E2E8F0] shadow-xl">
-                        <div className="overflow-x-auto">
+                        <div>
                             <table className="w-full border-collapse">
                                 <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                                     <tr>
@@ -479,9 +521,10 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                                                 style={{ letterSpacing: '-0.15px' }}
                                             >
                                                 <div
-                                                    className={`flex items-center gap-2 ${col.align === 'center' ? 'justify-center' : ''}`}
+                                                    className={`flex items-center gap-1.5 ${col.align === 'center' ? 'justify-center' : ''}`}
                                                 >
                                                     <span>{col.label}</span>
+                                                    {col.tooltip && <InfoTooltip text={col.tooltip} />}
                                                     {col.sortable && (
                                                         <SortIcon
                                                             column={col.key}
@@ -589,9 +632,9 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
 
                     {/* Legend */}
                     <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-center gap-3 sm:gap-8 mt-4">
-                        <LegendItem color="#17AA46" label="Higher Potential (3+ connections)" />
-                        <LegendItem color="#FFC91B" label="Medium potential(1-2 connections)" />
-                        <LegendItem color="#D53242" label="Lower Potential (0 connections)" />
+                        <LegendItem color="#22C55E" label="Higher Potential (3+ connections)" />
+                        <LegendItem color="#F59E0B" label="Medium Potential (1-2 connections)" />
+                        <LegendItem color="#FB7185" label="Lower Potential (0 connections)" />
                     </div>
                 </div>
             </div>
@@ -625,9 +668,8 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
     )
 }
 
-// ── Sub-components ──────────────────────────────────────────
 
-function InstructionStep({ title, description }: { title: string; description: string }) {
+export function InstructionStep({ title, description }: { title?: string; description: string }) {
     return (
         <div className="flex items-start gap-3">
             <div

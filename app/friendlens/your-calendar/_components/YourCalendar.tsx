@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
+import { Plus } from 'lucide-react'
 import type { CalendarEvent } from '../types'
 import {
     createCalendarEvent,
@@ -37,7 +38,6 @@ export default function YourCalendar({ initialEvents }: Props) {
         role: 'invited' as 'hosting' | 'invited',
     })
     const [isSaving, setIsSaving] = useState(false)
-    const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     // ── Edit Event form state ──
     const [editFormData, setEditFormData] = useState({
@@ -88,40 +88,36 @@ export default function YourCalendar({ initialEvents }: Props) {
         }
     }
 
-    // ── Autosave: Create Event ──
-    const autosaveNewEvent = useCallback(
-        (data: typeof formData) => {
-            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    // ── Day click: open Add modal with date pre-filled ──
+    const handleDayClick = (day: number) => {
+        const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        setFormData({ title: '', date: dateStr, time: '', role: 'invited' })
+        setShowAddEvent(true)
+    }
 
-            if (!data.title.trim() || !data.date) return
+    // ── Save Event (manual) ──
+    const handleSaveEvent = async () => {
+        if (!formData.title.trim() || !formData.date) {
+            toast.error('Please fill in title and date')
+            return
+        }
+        setIsSaving(true)
+        const result = await createCalendarEvent({
+            title: formData.title.trim(),
+            role: formData.role,
+            date: formData.date,
+            time: formData.time || null,
+        })
+        setIsSaving(false)
 
-            saveTimeoutRef.current = setTimeout(async () => {
-                setIsSaving(true)
-                const result = await createCalendarEvent({
-                    title: data.title.trim(),
-                    role: data.role,
-                    date: data.date,
-                    time: data.time || null,
-                })
-                setIsSaving(false)
-
-                if (result.error) {
-                    toast.error(result.error)
-                } else if (result.event) {
-                    setEvents((prev) => [...prev, result.event!])
-                    setFormData({ title: '', date: '', time: '', role: 'invited' })
-                    setShowAddEvent(false)
-                    toast.success('Event saved')
-                }
-            }, 800)
-        },
-        []
-    )
-
-    const updateFormField = (field: string, value: string) => {
-        const updated = { ...formData, [field]: value }
-        setFormData(updated)
-        autosaveNewEvent(updated)
+        if (result.error) {
+            toast.error(result.error)
+        } else if (result.event) {
+            setEvents((prev) => [...prev, result.event!])
+            setFormData({ title: '', date: '', time: '', role: 'invited' })
+            setShowAddEvent(false)
+            toast.success('Event saved')
+        }
     }
 
     // ── Autosave: Edit Event ──
@@ -195,6 +191,20 @@ export default function YourCalendar({ initialEvents }: Props) {
     return (
         <>
             <main className="w-full max-w-[1200px] mx-auto px-2 sm:px-4 py-6 sm:py-12 md:py-8">
+                {/* Add Event button above calendar */}
+                <div className="flex items-center justify-end mb-4">
+                    <button
+                        onClick={() => {
+                            setFormData({ title: '', date: '', time: '', role: 'invited' })
+                            setShowAddEvent(true)
+                        }}
+                        className="flex items-center gap-2 px-6 py-2 rounded-xl bg-purple-100 text-purple-600 text-sm font-semibold leading-5 hover:bg-purple-200 transition-colors"
+                    >
+                        <Plus className="w-4 h-4" strokeWidth={1.33} />
+                        Add Event
+                    </button>
+                </div>
+
                 {/* Calendar Card */}
                 <div className="relative">
                     <div
@@ -206,31 +216,37 @@ export default function YourCalendar({ initialEvents }: Props) {
                         <div className="p-3 sm:p-6">
                             {/* Month Navigation */}
                             <div className="flex items-center justify-between mb-6">
+                                {/* Left arrow — 4× bigger & fatter */}
                                 <button
                                     onClick={prevMonth}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg text-[#62748E] hover:text-[#0F172B] hover:bg-white/60 transition-colors text-xl"
+                                    className="flex items-center justify-center rounded-lg text-[#62748E] hover:text-[#0F172B] hover:bg-white/60 transition-colors p-1"
                                 >
-                                    &larr;
+                                    <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M34 8L18 26L34 44" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
                                 </button>
 
+                                {/* Month / Year — 3× bigger */}
                                 <div
-                                    className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+                                    className="flex items-center gap-3 cursor-pointer hover:opacity-70 transition-opacity"
                                     onClick={() => setShowMonthPicker(!showMonthPicker)}
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="32" height="32" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M5 2.5H15C15.663 2.5 16.2989 2.76339 16.7678 3.23223C17.2366 3.70107 17.5 4.33696 17.5 5V15C17.5 15.663 17.2366 16.2989 16.7678 16.7678C16.2989 17.2366 15.663 17.5 15 17.5H5C4.33696 17.5 3.70107 17.2366 3.23223 16.7678C2.76339 16.2989 2.5 15.663 2.5 15V5C2.5 4.33696 2.76339 3.70107 3.23223 3.23223C3.70107 2.76339 4.33696 2.5 5 2.5Z" stroke="#0F172B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                         <path d="M5 7.5H15" stroke="#0F172B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
-                                    <span className="font-semibold text-[#0F172B]">
+                                    <span className="font-bold text-[#0F172B] text-4xl leading-none">
                                         {monthName} {yearName}
                                     </span>
                                 </div>
 
                                 <button
                                     onClick={nextMonth}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg text-[#62748E] hover:text-[#0F172B] hover:bg-white/60 transition-colors text-xl"
+                                    className="flex items-center justify-center rounded-lg text-[#62748E] hover:text-[#0F172B] hover:bg-white/60 transition-colors p-1"
                                 >
-                                    &rarr;
+                                    <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M18 8L34 26L18 44" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
                                 </button>
                             </div>
 
@@ -254,11 +270,10 @@ export default function YourCalendar({ initialEvents }: Props) {
                                                     <button
                                                         key={month}
                                                         onClick={() => handleMonthSelect(idx)}
-                                                        className={`px-3 py-2 text-sm font-medium rounded transition-colors ${
-                                                            currentMonth.getMonth() === idx
-                                                                ? 'bg-[#9810FA] text-white'
-                                                                : 'bg-[#F8FAFC] text-[#0F172B] hover:bg-[#E2E8F0]'
-                                                        }`}
+                                                        className={`px-3 py-2 text-sm font-medium rounded transition-colors ${currentMonth.getMonth() === idx
+                                                            ? 'bg-[#9810FA] text-white'
+                                                            : 'bg-[#F8FAFC] text-[#0F172B] hover:bg-[#E2E8F0]'
+                                                            }`}
                                                     >
                                                         {month}
                                                     </button>
@@ -291,18 +306,18 @@ export default function YourCalendar({ initialEvents }: Props) {
                                     return (
                                         <div
                                             key={idx}
-                                            className={`min-h-[3rem] sm:min-h-0 sm:aspect-square p-1 sm:p-2 rounded-lg border bg-white transition-colors overflow-hidden ${
-                                                day && isToday(day)
+                                            onClick={() => day && handleDayClick(day)}
+                                            className={`min-h-[3rem] sm:min-h-0 sm:aspect-square p-1 sm:p-2 rounded-lg border bg-white transition-colors overflow-hidden ${day ? 'cursor-pointer' : ''
+                                                } ${day && isToday(day)
                                                     ? 'border-[#9810FA] bg-[#FAF5FF]'
                                                     : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
-                                            }`}
+                                                }`}
                                         >
                                             {day ? (
                                                 <div className="h-full flex flex-col">
                                                     <div
-                                                        className={`text-xs sm:text-sm font-medium mb-0.5 ${
-                                                            isToday(day) ? 'text-[#9810FA]' : 'text-[#0F172B]'
-                                                        }`}
+                                                        className={`text-xs sm:text-sm font-medium mb-0.5 ${isToday(day) ? 'text-[#9810FA]' : 'text-[#0F172B]'
+                                                            }`}
                                                     >
                                                         {day}
                                                     </div>
@@ -310,7 +325,7 @@ export default function YourCalendar({ initialEvents }: Props) {
                                                         {visibleEvents.map((event) => (
                                                             <button
                                                                 key={event.id}
-                                                                onClick={() => openEditEvent(event)}
+                                                                onClick={(e) => { e.stopPropagation(); openEditEvent(event) }}
                                                                 className="w-full text-left text-[8px] sm:text-xs px-0.5 sm:px-1.5 py-0.5 rounded text-white font-medium truncate flex-shrink-0 hover:opacity-80 transition-opacity"
                                                                 style={{ backgroundColor: ROLE_COLORS[event.role] }}
                                                                 title={event.title}
@@ -320,9 +335,10 @@ export default function YourCalendar({ initialEvents }: Props) {
                                                         ))}
                                                         {extraCount > 0 && (
                                                             <button
-                                                                onClick={() =>
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
                                                                     setDayEventsPopup({ day, events: dayEvents })
-                                                                }
+                                                                }}
                                                                 className="text-[10px] sm:text-xs text-[#9810FA] font-medium hover:underline text-left"
                                                             >
                                                                 +{extraCount} more
@@ -337,19 +353,6 @@ export default function YourCalendar({ initialEvents }: Props) {
                             </div>
                         </div>
                     </div>
-
-                    {/* FAB */}
-                    <button
-                        onClick={() => setShowAddEvent(true)}
-                        className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-110 z-20"
-                        style={{
-                            background: 'linear-gradient(90deg, #9810FA 0%, #C800DE 100%)',
-                        }}
-                    >
-                        <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 6V22M6 14H22" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </button>
                 </div>
             </main>
 
@@ -413,7 +416,6 @@ export default function YourCalendar({ initialEvents }: Props) {
                 <div
                     className="fixed inset-0 bg-black/50 z-30 flex items-center justify-center"
                     onClick={() => {
-                        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
                         setFormData({ title: '', date: '', time: '', role: 'invited' })
                         setShowAddEvent(false)
                     }}
@@ -425,9 +427,17 @@ export default function YourCalendar({ initialEvents }: Props) {
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-5">
                                 <h3 className="text-xl font-semibold text-[#0F172B]">Add an Event</h3>
-                                {isSaving && (
-                                    <span className="text-xs text-[#62748E]">Saving...</span>
-                                )}
+                                <button
+                                    onClick={() => {
+                                        setFormData({ title: '', date: '', time: '', role: 'invited' })
+                                        setShowAddEvent(false)
+                                    }}
+                                    className="text-[#62748E] hover:text-[#0F172B] transition-colors"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                    </svg>
+                                </button>
                             </div>
 
                             {/* Title */}
@@ -439,33 +449,36 @@ export default function YourCalendar({ initialEvents }: Props) {
                                     type="text"
                                     placeholder="Event name"
                                     value={formData.title}
-                                    onChange={(e) => updateFormField('title', e.target.value)}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#9810FA] bg-white text-[#0F172B]"
                                     maxLength={100}
                                 />
                             </div>
 
-                            {/* Role Toggle */}
+                            {/* Role — colored pills */}
                             <div className="mb-4">
                                 <label className="block text-xs font-semibold text-[#0F172B] mb-2">Role</label>
-                                <div className="flex bg-gray-100 rounded-xl p-1">
-                                    {(['hosting', 'invited'] as const).map((role) => (
-                                        <button
-                                            key={role}
-                                            onClick={() => updateFormField('role', role)}
-                                            className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                                                formData.role === role
-                                                    ? 'bg-white shadow-sm text-[#0F172B]'
-                                                    : 'text-[#62748E] hover:text-[#0F172B]'
-                                            }`}
-                                        >
-                                            <span
-                                                className="inline-block w-2 h-2 rounded-full mr-2"
-                                                style={{ backgroundColor: ROLE_COLORS[role] }}
-                                            />
-                                            {role === 'hosting' ? 'Hosting' : 'Invited'}
-                                        </button>
-                                    ))}
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setFormData({ ...formData, role: 'hosting' })}
+                                        className="flex-1 px-4 py-2 text-sm font-semibold rounded-full transition-all"
+                                        style={{
+                                            backgroundColor: formData.role === 'hosting' ? '#9810FA' : '#F3E8FF',
+                                            color: formData.role === 'hosting' ? '#fff' : '#9810FA',
+                                        }}
+                                    >
+                                        Hosting
+                                    </button>
+                                    <button
+                                        onClick={() => setFormData({ ...formData, role: 'invited' })}
+                                        className="flex-1 px-4 py-2 text-sm font-semibold rounded-full transition-all"
+                                        style={{
+                                            backgroundColor: formData.role === 'invited' ? '#17AA46' : '#DCFCE7',
+                                            color: formData.role === 'invited' ? '#fff' : '#17AA46',
+                                        }}
+                                    >
+                                        Invited
+                                    </button>
                                 </div>
                             </div>
 
@@ -477,27 +490,33 @@ export default function YourCalendar({ initialEvents }: Props) {
                                 <input
                                     type="date"
                                     value={formData.date}
-                                    onChange={(e) => updateFormField('date', e.target.value)}
+                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                     className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#9810FA] bg-white text-[#0F172B]"
                                 />
                             </div>
 
                             {/* Time (optional) */}
-                            <div className="mb-2">
+                            <div className="mb-6">
                                 <label className="block text-xs font-semibold text-[#0F172B] mb-2">
                                     Time <span className="text-[#62748E] font-normal">(optional)</span>
                                 </label>
                                 <input
                                     type="time"
                                     value={formData.time}
-                                    onChange={(e) => updateFormField('time', e.target.value)}
+                                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                                     className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#9810FA] bg-white text-[#0F172B]"
                                 />
                             </div>
 
-                            <p className="text-[10px] text-[#90A1B9] mt-1">
-                                Event saves automatically when title and date are filled.
-                            </p>
+                            {/* Save Button */}
+                            <button
+                                onClick={handleSaveEvent}
+                                disabled={isSaving}
+                                className="w-full px-4 py-2.5 font-semibold rounded-xl text-white transition-all disabled:opacity-50"
+                                style={{ background: 'linear-gradient(90deg, #9810FA 0%, #C800DE 100%)' }}
+                            >
+                                {isSaving ? 'Saving...' : 'Save Event'}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -547,27 +566,30 @@ export default function YourCalendar({ initialEvents }: Props) {
                                 />
                             </div>
 
-                            {/* Role Toggle */}
+                            {/* Role — colored pills */}
                             <div className="mb-4">
                                 <label className="block text-xs font-semibold text-[#0F172B] mb-2">Role</label>
-                                <div className="flex bg-gray-100 rounded-xl p-1">
-                                    {(['hosting', 'invited'] as const).map((role) => (
-                                        <button
-                                            key={role}
-                                            onClick={() => updateEditField('role', role)}
-                                            className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                                                editFormData.role === role
-                                                    ? 'bg-white shadow-sm text-[#0F172B]'
-                                                    : 'text-[#62748E] hover:text-[#0F172B]'
-                                            }`}
-                                        >
-                                            <span
-                                                className="inline-block w-2 h-2 rounded-full mr-2"
-                                                style={{ backgroundColor: ROLE_COLORS[role] }}
-                                            />
-                                            {role === 'hosting' ? 'Hosting' : 'Invited'}
-                                        </button>
-                                    ))}
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => updateEditField('role', 'hosting')}
+                                        className="flex-1 px-4 py-2 text-sm font-semibold rounded-full transition-all"
+                                        style={{
+                                            backgroundColor: editFormData.role === 'hosting' ? '#9810FA' : '#F3E8FF',
+                                            color: editFormData.role === 'hosting' ? '#fff' : '#9810FA',
+                                        }}
+                                    >
+                                        Hosting
+                                    </button>
+                                    <button
+                                        onClick={() => updateEditField('role', 'invited')}
+                                        className="flex-1 px-4 py-2 text-sm font-semibold rounded-full transition-all"
+                                        style={{
+                                            backgroundColor: editFormData.role === 'invited' ? '#17AA46' : '#DCFCE7',
+                                            color: editFormData.role === 'invited' ? '#fff' : '#17AA46',
+                                        }}
+                                    >
+                                        Invited
+                                    </button>
                                 </div>
                             </div>
 

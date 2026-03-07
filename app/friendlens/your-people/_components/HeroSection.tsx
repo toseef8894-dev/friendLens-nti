@@ -1,4 +1,16 @@
+'use client'
+
+import { useSearchParams } from 'next/navigation'
+
 export default function HeroSection() {
+  const searchParams = useSearchParams()
+  const step = searchParams.get('step') ?? 'add'
+
+  const subheading =
+    step === 'table'
+      ? 'A living picture of the people in your life right now'
+      : 'Identify and enter your friends'
+
   return (
     <div className="flex flex-col items-center mb-12 max-w-3xl">
       <h1
@@ -15,14 +27,7 @@ export default function HeroSection() {
         className="text-lg font-normal leading-7 text-center text-[#0F172B] max-w-[640px]"
         style={{ letterSpacing: '1.3px' }}
       >
-        A living picture of the people in your life right now
-      </p>
-
-      <p
-        className="text-base font-normal leading-6 text-center text-[#62748E] max-w-[430px]"
-        style={{ letterSpacing: '-0.312px', paddingTop: '8px' }}
-      >
-        Spot your strongest connections, notice which ones are changing, and focus your energy where it matters most.
+        {subheading}
       </p>
     </div>
   )

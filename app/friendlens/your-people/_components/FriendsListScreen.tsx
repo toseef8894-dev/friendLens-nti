@@ -37,6 +37,9 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
       setNewName('')
       setShowAddInput(false)
       router.refresh()
+      if (result.friend) {
+        setEditFriend(result.friend)
+      }
     } finally {
       setIsAdding(false)
     }

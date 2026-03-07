@@ -38,7 +38,8 @@ export default function EditSourceModal({
     setActiveMembers(source.active_members?.toString() ?? '')
     setRelevantPct(source.relevant_pct?.toString() ?? '')
     setShowDropdown(false)
-  }, [source])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source.id])
 
   function parseNum(v: string): number | null {
     const trimmed = v.trim()
@@ -52,6 +53,14 @@ export default function EditSourceModal({
     if (!trimmedName) {
       toast.error('Name cannot be empty.')
       return
+    }
+
+    if (relevantPct.trim() !== '') {
+      const pct = Number(relevantPct)
+      if (!Number.isFinite(pct) || pct < 1 || pct > 100) {
+        toast.error('Relevant % must be between 1 and 100.')
+        return
+      }
     }
 
     setIsSaving(true)
@@ -242,8 +251,8 @@ export default function EditSourceModal({
                   type="number"
                   value={relevantPct}
                   onChange={(e) => setRelevantPct(e.target.value)}
-                  placeholder="0"
-                  min="0"
+                  placeholder="1–100"
+                  min="1"
                   max="100"
                   className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-[#0F172B] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-transparent"
                   style={{ letterSpacing: '-0.312px' }}
@@ -259,7 +268,7 @@ export default function EditSourceModal({
                 className="text-sm font-bold uppercase text-[#0F172B]"
                 style={{ letterSpacing: '0.2px' }}
               >
-                Linked People
+                Friends Met
               </h3>
               <button
                 type="button"
@@ -272,12 +281,17 @@ export default function EditSourceModal({
             </div>
             <div className="px-4 py-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
               <p className="text-sm text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
-                {source.associated_people_count} {source.associated_people_count === 1 ? 'person' : 'people'} linked
-                {source.reciprocal_count > 0 && (
-                  <span className="text-[#17AA46] font-medium">
-                    {' '}({source.reciprocal_count} reciprocal)
-                  </span>
-                )}
+                {source.associated_people_count === 0
+                  ? 'Select Manage to add friends met or skip'
+                  : <>
+                      {source.associated_people_count} {source.associated_people_count === 1 ? 'person' : 'people'} linked
+                      {source.reciprocal_count > 0 && (
+                        <span className="text-[#17AA46] font-medium">
+                          {' '}({source.reciprocal_count} reciprocal)
+                        </span>
+                      )}
+                    </>
+                }
               </p>
             </div>
           </div>
