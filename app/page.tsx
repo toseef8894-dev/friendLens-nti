@@ -150,7 +150,7 @@ export default function Home() {
                 life more clearly and make grounded decisions about it.
               </p>
               <div className="mt-8">
-                <CTAButton text="Try FriendLens" variant="primary" />
+                <CTAButton text="Try FriendLens" variant="primary" href="/friendlens/your-people" />
               </div>
             </div>
           </section>

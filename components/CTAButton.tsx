@@ -9,16 +9,18 @@ interface CTAButtonProps {
     text: string
     className?: string
     variant?: 'primary' | 'secondary'
+    href?: string
 }
 
-export default function CTAButton({ text, className = '', variant = 'primary' }: CTAButtonProps) {
+export default function CTAButton({ text, className = '', variant = 'primary', href }: CTAButtonProps) {
     const router = useRouter()
     const { user, loading: authLoading } = useAuth({ deferInitialCheck: true })
     const { hasCompletedAssessment } = useAssessmentStatus({ userId: user?.id })
-    
+
     const isLoading = authLoading
 
     const getRedirectPath = () => {
+        if (href && user) return href
         if (user && hasCompletedAssessment) {
             return '/results?my_results=true'
         }
@@ -33,7 +35,7 @@ export default function CTAButton({ text, className = '', variant = 'primary' }:
 
         const redirectPath = getRedirectPath()
         e.preventDefault()
-        
+
         router.push(redirectPath)
     }
 
