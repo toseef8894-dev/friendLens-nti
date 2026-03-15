@@ -66,16 +66,16 @@ export async function middleware(request: NextRequest) {
     }
 
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     const isResetSession = request.cookies.get('reset_session')?.value === 'true'
 
     if (request.nextUrl.pathname.startsWith('/results')) {
         const isAnonymous = request.nextUrl.searchParams.get('anonymous') === 'true'
-        
+
         if (!user && !isAnonymous) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
-        
+
         if (isResetSession && user) {
             return NextResponse.redirect(new URL('/reset-password', request.url))
         }
@@ -96,18 +96,20 @@ export async function middleware(request: NextRequest) {
         // If a user who has already completed the assessment lands on the Your Style page,
         // send them straight to their results (mirrors the /assessment guard below).
         if (request.nextUrl.pathname === '/friendlens/your-style') {
-            const { data: result } = await supabase
-                .from('results')
-                .select('id')
-                .eq('user_id', user.id)
-                .limit(1)
-                .maybeSingle()
-            if (result) {
-                return NextResponse.redirect(new URL('/results?my_results=true', request.url))
+            if (user) {
+                const { data: result } = await supabase
+                    .from('results')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .limit(1)
+                    .maybeSingle()
+                if (result) {
+                    return NextResponse.redirect(new URL('/results?my_results=true', request.url))
+                }
             }
         }
     }
-    
+
     if (request.nextUrl.pathname.startsWith('/assessment')) {
         if (isResetSession && user) {
             return NextResponse.redirect(new URL('/reset-password', request.url))
@@ -119,7 +121,7 @@ export async function middleware(request: NextRequest) {
                 .eq('user_id', user.id)
                 .limit(1)
                 .maybeSingle()
-            
+
             if (result) {
                 const redirectUrl = new URL('/results', request.url)
                 redirectUrl.searchParams.set('redirected', 'true')
@@ -133,15 +135,15 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/', request.url))
         }
     }
-    
-    if (request.nextUrl.pathname.startsWith('/reset-password') || 
+
+    if (request.nextUrl.pathname.startsWith('/reset-password') ||
         request.nextUrl.pathname.startsWith('/forgot-password')) {
         return response
     }
-    
+
     if (request.nextUrl.pathname.startsWith('/results')) {
         const isAnonymous = request.nextUrl.searchParams.get('anonymous') === 'true'
-        
+
         if (user) {
             const { data: result } = await supabase
                 .from('results')
@@ -149,7 +151,7 @@ export async function middleware(request: NextRequest) {
                 .eq('user_id', user.id)
                 .limit(1)
                 .maybeSingle()
-            
+
             if (!result && !isAnonymous) {
                 return NextResponse.redirect(new URL('/assessment', request.url))
             }
