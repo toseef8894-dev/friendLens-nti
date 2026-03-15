@@ -14,6 +14,7 @@ import { useAssessmentStatus } from '@/hooks/useAssessmentStatus'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 const NAV_ITEMS = [
+    { label: 'Start Here', href: '/friendlens/start-here', activePaths: ['/friendlens/start-here'] },
     { label: 'Your People', href: '/friendlens/your-people', activePaths: ['/friendlens/your-people'] },
     { label: 'Your Sources', href: '/friendlens/your-sources', activePaths: ['/friendlens/your-sources'] },
     { label: 'Your Time', href: '/friendlens/your-time', activePaths: ['/friendlens/your-time'] },
@@ -101,7 +102,7 @@ export default function Header() {
     }
 
     const handleNavClick = (href: string) => {
-        if (user) {
+        if (user || href === '/friendlens/start-here') {
             router.push(href)
             setIsMobileNavOpen(false)
         } else {
@@ -136,7 +137,7 @@ export default function Header() {
                     {NAV_ITEMS.map((item) => {
                         const href = getHref(item)
                         const active = getIsActive(item)
-                        return user ? (
+                        return (user || href === '/friendlens/start-here') ? (
                             <Link
                                 key={item.label}
                                 href={href}

@@ -59,7 +59,7 @@ export default function Home() {
               Private and secure — a place to reflect on where to invest your energy.
             </p>
             <div className="mt-10">
-              <CTAButton text="Try FriendLens" variant="primary" />
+              <CTAButton text="Try FriendLens" variant="primary" href="/friendlens/start-here" />
             </div>
           </section>
 
@@ -150,7 +150,7 @@ export default function Home() {
                 life more clearly and make grounded decisions about it.
               </p>
               <div className="mt-8">
-                <CTAButton text="Try FriendLens" variant="primary" href="/friendlens/your-people" />
+                <CTAButton text="Try FriendLens" variant="primary" />
               </div>
             </div>
           </section>
