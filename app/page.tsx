@@ -47,8 +47,7 @@ export default function Home() {
               className="mt-6 text-lg sm:text-xl font-medium text-center text-[#45556C] max-w-xl mx-auto"
               style={{ letterSpacing: '-0.2px' }}
             >
-              Know who truly shows up, which groups create real connection, and where your time isn&apos;t coming back.
-            </p>
+              Get better, more reliable friends. Start by seeing who you already have.            </p>
             <div className="mt-10">
               <CTAButton text="Get your friendship snapshot" variant="primary" />
             </div>
