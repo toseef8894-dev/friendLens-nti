@@ -96,7 +96,8 @@ export async function middleware(request: NextRequest) {
         // If a user who has already completed the assessment lands on the Your Style page,
         // send them straight to their results (mirrors the /assessment guard below).
         if (request.nextUrl.pathname === '/friendlens/your-style') {
-            if (user) {
+            const isRetake = request.nextUrl.searchParams.get('retake') === 'true'
+            if (user && !isRetake) {
                 const { data: result } = await supabase
                     .from('results')
                     .select('id')
@@ -114,7 +115,8 @@ export async function middleware(request: NextRequest) {
         if (isResetSession && user) {
             return NextResponse.redirect(new URL('/reset-password', request.url))
         }
-        if (user) {
+        const isRetake = request.nextUrl.searchParams.get('retake') === 'true'
+        if (user && !isRetake) {
             const { data: result } = await supabase
                 .from('results')
                 .select('id')

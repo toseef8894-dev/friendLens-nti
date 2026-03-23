@@ -311,7 +311,7 @@ export default function EditFriendModal({
           </div>
 
           {/* Interaction Metrics */}
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <h3
               className="text-sm font-bold uppercase text-[#0F172B] mb-1 flex items-center gap-3"
               style={{ letterSpacing: '0.2px' }}
@@ -368,7 +368,7 @@ export default function EditFriendModal({
                 />
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Reflection Section */}
           <div className="mb-6">

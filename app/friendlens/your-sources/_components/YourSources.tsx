@@ -57,32 +57,32 @@ const COLUMNS: Column[] = [
             </span>
         ),
     },
-    {
-        key: 'active_members',
-        label: 'Active Members',
-        tooltip: 'Estimate total members in group',
-        align: 'left',
-        sortable: true,
-        getValue: (s) => s.active_members ?? -1,
-        render: (s) => (
-            <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
-                {s.active_members ?? '—'}
-            </span>
-        ),
-    },
-    {
-        key: 'relevant_pct',
-        label: 'Relevant %',
-        tooltip: 'Estimate how many are relevant to you by gender and age',
-        align: 'left',
-        sortable: true,
-        getValue: (s) => s.relevant_pct ?? -1,
-        render: (s) => (
-            <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
-                {s.relevant_pct != null ? `${s.relevant_pct}%` : '—'}
-            </span>
-        ),
-    },
+    // {
+    //     key: 'active_members',
+    //     label: 'Active Members',
+    //     tooltip: 'Estimate total members in group',
+    //     align: 'left',
+    //     sortable: true,
+    //     getValue: (s) => s.active_members ?? -1,
+    //     render: (s) => (
+    //         <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
+    //             {s.active_members ?? '—'}
+    //         </span>
+    //     ),
+    // },
+    // {
+    //     key: 'relevant_pct',
+    //     label: 'Relevant %',
+    //     tooltip: 'Estimate how many are relevant to you by gender and age',
+    //     align: 'left',
+    //     sortable: true,
+    //     getValue: (s) => s.relevant_pct ?? -1,
+    //     render: (s) => (
+    //         <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
+    //             {s.relevant_pct != null ? `${s.relevant_pct}%` : '—'}
+    //         </span>
+    //     ),
+    // },
     {
         key: 'source_type',
         label: 'Source Type',
@@ -429,14 +429,14 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-2 text-xs text-[#45556C]">
-                                        <div>
+                                        {/* <div>
                                             <span className="text-[#90A1B9] block">Members</span>
                                             <span className="font-medium">{source.active_members ?? '—'}</span>
                                         </div>
                                         <div>
                                             <span className="text-[#90A1B9] block">Relevant</span>
                                             <span className="font-medium">{source.relevant_pct != null ? `${source.relevant_pct}%` : '—'}</span>
-                                        </div>
+                                        </div> */}
                                         <div>
                                             <span className="text-[#90A1B9] block">Type</span>
                                             <span className="font-medium">{source.source_type || '—'}</span>

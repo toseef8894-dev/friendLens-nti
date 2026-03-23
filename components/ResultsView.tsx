@@ -380,7 +380,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
 
 
                         <div className="text-center pt-4">
-                            <Link href="/assessment" className="text-indigo-600 hover:text-indigo-500 font-medium">
+                            <Link href="/friendlens/your-style?retake=true" className="text-indigo-600 hover:text-indigo-500 font-medium">
                                 Retake Survey →
                             </Link>
                         </div>

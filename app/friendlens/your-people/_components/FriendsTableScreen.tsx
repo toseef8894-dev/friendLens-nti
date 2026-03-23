@@ -45,42 +45,42 @@ const COLUMNS: Column[] = [
       </span>
     ),
   },
-  {
-    key: 'distance',
-    label: 'Distance (mi)',
-    align: 'left',
-    sortable: true,
-    getValue: (f) => f.distance_miles ?? -1,
-    render: (f) => (
-      <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
-        {f.distance_miles ?? 0}
-      </span>
-    ),
-  },
-  {
-    key: 'visits',
-    label: 'Visits/Yr',
-    align: 'left',
-    sortable: true,
-    getValue: (f) => f.visits_per_year ?? -1,
-    render: (f) => (
-      <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
-        {f.visits_per_year ?? 0}
-      </span>
-    ),
-  },
-  {
-    key: 'contacts',
-    label: 'Contact/Yr',
-    align: 'left',
-    sortable: true,
-    getValue: (f) => f.contacts_per_year ?? -1,
-    render: (f) => (
-      <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
-        {f.contacts_per_year ?? 0}
-      </span>
-    )
-  },
+  // {
+  //   key: 'distance',
+  //   label: 'Distance (mi)',
+  //   align: 'left',
+  //   sortable: true,
+  //   getValue: (f) => f.distance_miles ?? -1,
+  //   render: (f) => (
+  //     <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
+  //       {f.distance_miles ?? 0}
+  //     </span>
+  //   ),
+  // },
+  // {
+  //   key: 'visits',
+  //   label: 'Visits/Yr',
+  //   align: 'left',
+  //   sortable: true,
+  //   getValue: (f) => f.visits_per_year ?? -1,
+  //   render: (f) => (
+  //     <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
+  //       {f.visits_per_year ?? 0}
+  //     </span>
+  //   ),
+  // },
+  // {
+  //   key: 'contacts',
+  //   label: 'Contact/Yr',
+  //   align: 'left',
+  //   sortable: true,
+  //   getValue: (f) => f.contacts_per_year ?? -1,
+  //   render: (f) => (
+  //     <span className="text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
+  //       {f.contacts_per_year ?? 0}
+  //     </span>
+  //   )
+  // },
   {
     key: 'contacted_you',
     label: 'Contacted You',

@@ -107,7 +107,7 @@ export default function AssessmentFlow() {
 
             if (isAuth) {
                 toast.success('Assessment complete!')
-                router.push('/results?redirected=true')
+                window.location.href = '/results?redirected=true'
             } else {
                 const anonymousData = {
                     result: data.result,
