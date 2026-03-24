@@ -41,25 +41,26 @@ export default function Home() {
               className="text-4xl sm:text-5xl md:text-[64px] font-semibold leading-tight md:leading-[78px] text-center text-[#0F172B]"
               style={{ letterSpacing: '-2px' }}
             >
-              See which friendships actually enrich your life
+              One more good friend
             </h1>
             <p
               className="mt-6 text-lg sm:text-xl font-medium text-center text-[#45556C] max-w-xl mx-auto"
               style={{ letterSpacing: '-0.2px' }}
             >
-              Get better, more reliable friends. Start by seeing who you already have.            </p>
+              Whether you have a few friends or many, one more good friend is always possible
+            </p>
             <div className="mt-10">
               <CTAButton text="Get your friendship snapshot" variant="primary" />
             </div>
             <p className="mt-4 text-sm text-[#62748E]">
-              Takes 2–3 minutes. No signup required to start.
+              Takes 2–3 minutes. Private and secure.
             </p>
-            <p
+            {/* <p
               className="mt-2 text-sm font-normal text-center text-[#62748E] max-w-[380px] mx-auto"
               style={{ letterSpacing: '-0.312px' }}
             >
               Private and secure — a place to reflect on where to invest your energy.
-            </p>
+            </p> */}
           </section>
 
           {/* What You'll See */}
@@ -69,14 +70,14 @@ export default function Home() {
                 className="text-xl sm:text-2xl font-semibold text-center text-[#0F172B] mb-8"
                 style={{ letterSpacing: '-0.5px' }}
               >
-                What you&apos;ll see
+                What you&apos;ll see with FriendLens
               </h2>
               <ul className="space-y-4 max-w-md mx-auto">
                 {[
-                  'Your most reciprocal friendships',
-                  'Where effort is uneven',
-                  'Which groups actually lead to connection',
-                  'Where your time is being diluted',
+                  'Where to meet one more good friend',
+                  'How much time you actually have',
+                  'How to develop one more good friend',
+                  'Which relationships aren’t working',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <span className="mt-1 w-5 h-5 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -102,21 +103,21 @@ export default function Home() {
                 {[
                   {
                     num: '1',
-                    title: 'Add a few people and recent interactions',
+                    title: 'Add a few people',
                     desc: 'Takes a minute. No need to be complete.',
                     color: 'text-indigo-600',
                     bg: 'bg-indigo-50',
                   },
                   {
                     num: '2',
-                    title: 'See patterns you normally miss',
+                    title: 'Add some groups and sources',
                     desc: 'Who initiates. What\'s reciprocal. Where things stall.',
                     color: 'text-purple-600',
                     bg: 'bg-purple-50',
                   },
                   {
                     num: '3',
-                    title: 'Get a clear picture of your social reality',
+                    title: 'See patterns and opportunities',
                     desc: 'So you can decide what to invest in—and what to let go.',
                     color: 'text-pink-600',
                     bg: 'bg-pink-50',
@@ -146,14 +147,13 @@ export default function Home() {
                 Why it matters
               </h2>
               <p className="text-base sm:text-lg text-[#45556C] leading-relaxed">
-                Friendship often gets harder in adulthood.
+                People move. Friends drift. Life gets busy.
                 <br />
-                Busy calendars. Uneven effort. Drift that never gets named.
+                If you don’t actively shape your social life, it slowly degrades.
               </p>
               <p className="mt-4 text-base sm:text-lg text-[#45556C] leading-relaxed">
-                FriendLens makes these patterns visible —
+                FriendLens helps you see what’s working, so you can make one more good friend.
                 <br />
-                so you can act with clarity instead of guesswork.
               </p>
             </div>
           </section>
@@ -168,12 +168,10 @@ export default function Home() {
                 Built from real-world experience
               </h2>
               <p className="text-base text-[#45556C] leading-relaxed mb-4">
-                FriendLens was created by Erik Newton, an entrepreneur and author who has spent years
-                studying why adult friendships drift—even when people care.
+                FriendLens was created by Erik Newton, an entrepreneur and author who has spent years studying how friendships actually work.
               </p>
               <p className="text-base text-[#45556C] leading-relaxed">
-                It&apos;s a private tool, not a network—designed to help you see your social life
-                clearly and make grounded decisions about it.
+                It&apos;s a private tool to help you see your social world clearly and invest your time where it works.
               </p>
               <div className="mt-8">
                 <CTAButton text="Get your friendship snapshot" variant="primary" />
