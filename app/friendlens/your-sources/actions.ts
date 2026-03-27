@@ -137,7 +137,7 @@ export async function createSource(name: string, sourceType?: string) {
 
 // ── updateSource ──────────────────────────────────────────────
 
-type UpdatePayload = Pick<Source, 'name' | 'source_type' | 'active_members' | 'relevant_pct'>
+type UpdatePayload = Pick<Source, 'name' | 'source_type' | 'active_members' | 'relevant_pct'> & { signal?: 'high' | 'medium' | 'low' }
 
 export async function updateSource(sourceId: string, payload: Partial<UpdatePayload>) {
   const { supabase, user } = await getAuthenticatedUser()
@@ -177,6 +177,13 @@ export async function updateSource(sourceId: string, payload: Partial<UpdatePayl
       return { error: 'relevant_pct must be a number or null.' }
     }
     update.relevant_pct = payload.relevant_pct
+  }
+
+  if ('signal' in payload) {
+    if (!['high', 'medium', 'low'].includes(payload.signal as string)) {
+      return { error: 'signal must be high, medium, or low.' }
+    }
+    update.signal = payload.signal
   }
 
   if (Object.keys(update).length === 0) {

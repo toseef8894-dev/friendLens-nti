@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronUp, ChevronDown, Plus, ArrowUpDown, ArrowLeft } from 'lucide-react'
+import { ChevronUp, ChevronDown, Plus, ArrowUpDown, ArrowLeft, Lightbulb } from 'lucide-react'
 import type { Friend } from '../types'
+import { computeRecommendations, type Recommendation } from './recommendationEngine'
 
 interface Column {
   key: string
@@ -210,6 +211,52 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
   const [sortColumn, setSortColumn] = useState<string>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
+  // Recommendation engine state
+  const [rankedRecommendations, setRankedRecommendations] = useState<Recommendation[] | null>(null)
+  const [recommendationIndex, setRecommendationIndex] = useState(0)
+
+  // Fingerprint of fields used by the engine — triggers recompute when data changes
+  const dataFingerprint = useMemo(
+    () =>
+      friends
+        .map((f) => `${f.id}:${f.did_they_invite_you}:${f.made_you_happier}:${f.relationship_type}`)
+        .join('|'),
+    [friends]
+  )
+
+  // Track previous fingerprint to detect changes
+  const prevFingerprint = useRef(dataFingerprint)
+
+  useEffect(() => {
+    if (prevFingerprint.current !== dataFingerprint) {
+      prevFingerprint.current = dataFingerprint
+      if (rankedRecommendations !== null) {
+        setRankedRecommendations(computeRecommendations(friends))
+        setRecommendationIndex(0)
+      }
+    }
+  }, [dataFingerprint, rankedRecommendations, friends])
+
+  const handleRecommendationPress = () => {
+    if (rankedRecommendations === null) {
+      // First press — compute fresh
+      setRankedRecommendations(computeRecommendations(friends))
+      setRecommendationIndex(0)
+    } else {
+      // Subsequent presses — advance index, stay on last
+      setRecommendationIndex((i) => Math.min(i + 1, rankedRecommendations.length - 1))
+    }
+  }
+
+  const currentRecommendation =
+    rankedRecommendations !== null ? rankedRecommendations[recommendationIndex] ?? null : null
+
+  const isAtLast =
+    rankedRecommendations !== null &&
+    recommendationIndex >= rankedRecommendations.length - 1
+
+  const hasStarted = rankedRecommendations !== null
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
@@ -326,6 +373,60 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
         </div>
       </div>
 
+      {/* Recommendation Engine */}
+      <div className="w-full max-w-7xl mb-8">
+        {/* Recommendation Card */}
+        {hasStarted && (
+          <div className="mb-4 rounded-2xl border border-border-light bg-white shadow-md px-5 py-4 flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center">
+                  <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
+                </div>
+                <div>
+                  <p
+                    className="text-xs font-semibold uppercase tracking-wide text-brand-purple mb-1"
+                    style={{ letterSpacing: '0.4px' }}
+                  >
+                    FriendLens Insight
+                  </p>
+                  <p
+                    className="text-sm text-text-primary leading-relaxed"
+                    style={{ letterSpacing: '-0.15px' }}
+                  >
+                    {currentRecommendation?.message ?? 'Your list looks good — no issues detected.'}
+                  </p>
+                </div>
+              </div>
+              {rankedRecommendations && rankedRecommendations.length > 1 && (
+                <span className="flex-shrink-0 text-xs text-text-secondary font-medium mt-1">
+                  {recommendationIndex + 1} / {rankedRecommendations.length}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Button */}
+        {/* <button
+          onClick={handleRecommendationPress}
+          disabled={isAtLast && rankedRecommendations !== null && rankedRecommendations.length <= 1}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors
+            ${isAtLast && hasStarted
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-brand-purple text-white hover:bg-brand-purple/90'
+            }`}
+          style={{ letterSpacing: '-0.15px' }}
+        >
+          <Lightbulb className="w-4 h-4" strokeWidth={1.67} />
+          {!hasStarted
+            ? 'Get Recommendation'
+            : isAtLast
+            ? 'No More Recommendations'
+            : 'Next Recommendation'}
+        </button> */}
+      </div>
+
       <div className="flex justify-center">
         <button
           onClick={() => router.push('?step=list')}
@@ -333,12 +434,12 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
           style={{ letterSpacing: '-0.312px' }}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7.5 2.5H3.33333C2.8731 2.5 2.5 2.8731 2.5 3.33333V7.5C2.5 7.96024 2.8731 8.33333 3.33333 8.33333H7.5C7.96024 8.33333 8.33333 7.96024 8.33333 7.5V3.33333C8.33333 2.8731 7.96024 2.5 7.5 2.5Z" stroke="#0F172B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M7.5 11.666H3.33333C2.8731 11.666 2.5 12.0391 2.5 12.4993V16.666C2.5 17.1263 2.8731 17.4993 3.33333 17.4993H7.5C7.96024 17.4993 8.33333 17.1263 8.33333 16.666V12.4993C8.33333 12.0391 7.96024 11.666 7.5 11.666Z" stroke="#0F172B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M11.667 3.33398H17.5003" stroke="#0F172B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M11.667 7.5H17.5003" stroke="#0F172B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M11.667 12.5H17.5003" stroke="#0F172B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M11.667 16.666H17.5003" stroke="#0F172B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M7.5 2.5H3.33333C2.8731 2.5 2.5 2.8731 2.5 3.33333V7.5C2.5 7.96024 2.8731 8.33333 3.33333 8.33333H7.5C7.96024 8.33333 8.33333 7.96024 8.33333 7.5V3.33333C8.33333 2.8731 7.96024 2.5 7.5 2.5Z" stroke="#0F172B" strokeWidth="1.66667" strokeLinecap="round" stroke-linejoin="round" />
+            <path d="M7.5 11.666H3.33333C2.8731 11.666 2.5 12.0391 2.5 12.4993V16.666C2.5 17.1263 2.8731 17.4993 3.33333 17.4993H7.5C7.96024 17.4993 8.33333 17.1263 8.33333 16.666V12.4993C8.33333 12.0391 7.96024 11.666 7.5 11.666Z" stroke="#0F172B" strokeWidth="1.66667" strokeLinecap="round" stroke-linejoin="round" />
+            <path d="M11.667 3.33398H17.5003" stroke="#0F172B" strokeWidth="1.66667" strokeLinecap="round" stroke-linejoin="round" />
+            <path d="M11.667 7.5H17.5003" stroke="#0F172B" strokeWidth="1.66667" strokeLinecap="round" stroke-linejoin="round" />
+            <path d="M11.667 12.5H17.5003" stroke="#0F172B" strokeWidth="1.66667" strokeLinecap="round" stroke-linejoin="round" />
+            <path d="M11.667 16.666H17.5003" stroke="#0F172B" strokeWidth="1.66667" strokeLinecap="round" stroke-linejoin="round" />
           </svg>
 
           Back to List

@@ -27,26 +27,28 @@ export default function EditSourceModal({
   const [editName, setEditName] = useState(source.name)
   const [selectedType, setSelectedType] = useState(source.source_type ?? '')
   const [showDropdown, setShowDropdown] = useState(false)
-  const [activeMembers, setActiveMembers] = useState(source.active_members?.toString() ?? '')
-  const [relevantPct, setRelevantPct] = useState(source.relevant_pct?.toString() ?? '')
+  const [selectedSignal, setSelectedSignal] = useState<'high' | 'medium' | 'low'>(source.signal ?? 'low')
+  // const [activeMembers, setActiveMembers] = useState(source.active_members?.toString() ?? '')
+  // const [relevantPct, setRelevantPct] = useState(source.relevant_pct?.toString() ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     setEditName(source.name)
     setSelectedType(source.source_type ?? '')
-    setActiveMembers(source.active_members?.toString() ?? '')
-    setRelevantPct(source.relevant_pct?.toString() ?? '')
+    setSelectedSignal(source.signal ?? 'low')
+    // setActiveMembers(source.active_members?.toString() ?? '')
+    // setRelevantPct(source.relevant_pct?.toString() ?? '')
     setShowDropdown(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source.id])
 
-  function parseNum(v: string): number | null {
-    const trimmed = v.trim()
-    if (trimmed === '') return null
-    const n = Number(trimmed)
-    return Number.isFinite(n) && n >= 0 ? n : null
-  }
+  // function parseNum(v: string): number | null {
+  //   const trimmed = v.trim()
+  //   if (trimmed === '') return null
+  //   const n = Number(trimmed)
+  //   return Number.isFinite(n) && n >= 0 ? n : null
+  // }
 
   async function handleSave() {
     const trimmedName = editName.trim()
@@ -55,21 +57,22 @@ export default function EditSourceModal({
       return
     }
 
-    if (relevantPct.trim() !== '') {
-      const pct = Number(relevantPct)
-      if (!Number.isFinite(pct) || pct < 1 || pct > 100) {
-        toast.error('Relevant % must be between 1 and 100.')
-        return
-      }
-    }
+    // if (relevantPct.trim() !== '') {
+    //   const pct = Number(relevantPct)
+    //   if (!Number.isFinite(pct) || pct < 1 || pct > 100) {
+    //     toast.error('Relevant % must be between 1 and 100.')
+    //     return
+    //   }
+    // }
 
     setIsSaving(true)
     try {
       const payload: Record<string, unknown> = {
         name: trimmedName,
         source_type: selectedType || null,
-        active_members: parseNum(activeMembers),
-        relevant_pct: parseNum(relevantPct),
+        signal: selectedSignal,
+        // active_members: parseNum(activeMembers),
+        // relevant_pct: parseNum(relevantPct),
       }
 
       const result = await updateSource(source.id, payload)
@@ -86,8 +89,9 @@ export default function EditSourceModal({
           ...source,
           name: trimmedName,
           source_type: selectedType || null,
-          active_members: parseNum(activeMembers),
-          relevant_pct: parseNum(relevantPct),
+          signal: selectedSignal,
+          // active_members: parseNum(activeMembers),
+          // relevant_pct: parseNum(relevantPct),
         })
       }
 
@@ -215,20 +219,45 @@ export default function EditSourceModal({
             </div>
           </div>
 
-          {/* Metrics */}
+          {/* Friend Potential */}
           <div className="mb-6">
-            <h3
-              className="text-sm font-bold uppercase text-[#0F172B] mb-4"
-              style={{ letterSpacing: '0.2px' }}
+            <label
+              className="block text-sm font-semibold text-[#314158] mb-3"
+              style={{ letterSpacing: '-0.15px' }}
             >
+              Friend Potential
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              {([
+                { value: 'high', label: 'Higher', bg: '#F0FDF4', text: '#166534', border: '#86EFAC' },
+                { value: 'medium', label: 'Medium', bg: '#FFFBEB', text: '#92400E', border: '#FDE68A' },
+                { value: 'low', label: 'Lower', bg: '#FFF1F2', text: '#BE123C', border: '#FECDD3' },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSelectedSignal(opt.value)}
+                  className="py-2.5 rounded-xl text-sm font-semibold transition-all border-2"
+                  style={{
+                    backgroundColor: selectedSignal === opt.value ? opt.bg : '#F8FAFC',
+                    color: selectedSignal === opt.value ? opt.text : '#90A1B9',
+                    borderColor: selectedSignal === opt.value ? opt.border : '#E2E8F0',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Commented out — Active Members & Relevant % (preserved for later use) */}
+          {/* <div className="mb-6">
+            <h3 className="text-sm font-bold uppercase text-[#0F172B] mb-4" style={{ letterSpacing: '0.2px' }}>
               Details
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label
-                  className="block text-xs font-normal text-[#62748E] mb-2"
-                  style={{ letterSpacing: '-0.15px' }}
-                >
+                <label className="block text-xs font-normal text-[#62748E] mb-2" style={{ letterSpacing: '-0.15px' }}>
                   Active Members
                 </label>
                 <input
@@ -241,10 +270,7 @@ export default function EditSourceModal({
                 />
               </div>
               <div>
-                <label
-                  className="block text-xs font-normal text-[#62748E] mb-2"
-                  style={{ letterSpacing: '-0.15px' }}
-                >
+                <label className="block text-xs font-normal text-[#62748E] mb-2" style={{ letterSpacing: '-0.15px' }}>
                   Relevant %
                 </label>
                 <input
@@ -259,7 +285,7 @@ export default function EditSourceModal({
                 />
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Linked People Summary */}
           <div className="mb-6">

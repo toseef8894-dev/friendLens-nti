@@ -9,6 +9,12 @@ export default function Footer() {
                 </p>
                 <nav className="flex items-center gap-6 order-1 sm:order-2">
                     <Link
+                        href="/friendlens/your-style"
+                        className="text-base text-gray-500 hover:text-gray-800 transition-colors"
+                    >
+                        Your Style
+                    </Link>
+                    <Link
                         href="/about"
                         className="text-base text-gray-500 hover:text-gray-800 transition-colors"
                     >

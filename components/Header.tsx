@@ -10,7 +10,6 @@ import { toast } from 'sonner'
 import { clearAuthToken } from '@/lib/auth-storage'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdminStatus } from '@/hooks/useAdminStatus'
-import { useAssessmentStatus } from '@/hooks/useAssessmentStatus'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 const NAV_ITEMS = [
@@ -19,7 +18,6 @@ const NAV_ITEMS = [
     { label: 'Your Sources', href: '/friendlens/your-sources', activePaths: ['/friendlens/your-sources'] },
     { label: 'Your Time', href: '/friendlens/your-time', activePaths: ['/friendlens/your-time'] },
     { label: 'Your Events', href: '/friendlens/your-calendar', activePaths: ['/friendlens/your-calendar'] },
-    { label: 'Your Style', hrefKey: 'yourStyle' as const, activePaths: ['/friendlens/your-style', '/results', '/assessment'] },
 ]
 
 export default function Header() {
@@ -33,9 +31,6 @@ export default function Header() {
 
     const { user } = useAuth({ clearStorageOnSignOut: true })
     const { isAdmin } = useAdminStatus({ userId: user?.id })
-    const { hasCompletedAssessment } = useAssessmentStatus({ userId: user?.id })
-
-    const yourStyleHref = hasCompletedAssessment ? '/results?my_results=true' : '/friendlens/your-style'
 
     const isActive = (path: string) => pathname === path || pathname?.startsWith(path + '/')
 
@@ -116,8 +111,7 @@ export default function Header() {
         }
     }
 
-    const getHref = (item: typeof NAV_ITEMS[number]) =>
-        item.hrefKey === 'yourStyle' ? yourStyleHref : item.href!
+    const getHref = (item: typeof NAV_ITEMS[number]) => item.href!
 
     const getIsActive = (item: typeof NAV_ITEMS[number]) =>
         item.activePaths.some(p => isActive(p))

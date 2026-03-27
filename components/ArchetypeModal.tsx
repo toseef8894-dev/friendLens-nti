@@ -98,7 +98,7 @@ export function ArchetypeModal({ archetypeId, onClose }: ArchetypeModalProps) {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M9.91658 0.583008L3.49992 6.99967L0.583252 4.08301" stroke="#009689" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M9.91658 0.583008L3.49992 6.99967L0.583252 4.08301" stroke="#009689" strokeWidth="1.16667" strokeLinecap="round" stroke-linejoin="round" />
                                         </svg>
 
                                         <div className="text-[12px] font-semibold tracking-[0.12em] text-[#009689]">
@@ -113,8 +113,8 @@ export function ArchetypeModal({ archetypeId, onClose }: ArchetypeModalProps) {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M10.5 3.5L3.5 10.5" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M3.5 3.5L10.5 10.5" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M10.5 3.5L3.5 10.5" stroke="#90A1B9" strokeWidth="1.16667" strokeLinecap="round" stroke-linejoin="round" />
+                                            <path d="M3.5 3.5L10.5 10.5" stroke="#90A1B9" strokeWidth="1.16667" strokeLinecap="round" stroke-linejoin="round" />
                                         </svg>
 
                                         <div className="text-[11px] font-semibold tracking-[0.12em] text-[#90A1B9]">
@@ -132,8 +132,8 @@ export function ArchetypeModal({ archetypeId, onClose }: ArchetypeModalProps) {
                             <div className="flex items-center justify-between">
                                 <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z" fill="#F3E8FF" />
-                                    <path d="M14.1667 20H25.8334" stroke="#9810FA" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M20 14.167L25.8333 20.0003L20 25.8337" stroke="#9810FA" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M14.1667 20H25.8334" stroke="#9810FA" strokeWidth="1.66667" strokeLinecap="round" stroke-linejoin="round" />
+                                    <path d="M20 14.167L25.8333 20.0003L20 25.8337" stroke="#9810FA" strokeWidth="1.66667" strokeLinecap="round" stroke-linejoin="round" />
                                 </svg>
 
                             </div>
