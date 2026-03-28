@@ -39,9 +39,6 @@ export default function HowToUseSection() {
             <InstructionStep
               description="Select the friend type from the dropdown"
             />
-            <InstructionStep
-              description="Note the Distance, Visits, and Contacts per year"
-            />
           </div>
           <div className="flex flex-col gap-4">
             <InstructionStep

@@ -38,16 +38,19 @@ export default function Home() {
           {/* Hero */}
           <section className="w-full max-w-3xl text-center pt-16 sm:pt-24 pb-12">
             <h1
-              className="text-4xl sm:text-5xl md:text-[64px] font-semibold leading-tight md:leading-[78px] text-center text-[#0F172B]"
+              className="text-4xl sm:text-5xl md:text-[64px] font-semibold leading-tight md:leading-[88px] text-center"
               style={{ letterSpacing: '-2px' }}
             >
-              One more good friend
+              <span className="text-[#0F172B]">One more </span>
+              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                good friend
+              </span>
             </h1>
             <p
               className="mt-6 text-lg sm:text-xl font-medium text-center text-[#45556C] max-w-xl mx-auto"
               style={{ letterSpacing: '-0.2px' }}
             >
-              Whether you have a few friends or many, one more good friend is always possible
+              Whether you have a few friends or many, <br /> one more good friend is always possible.
             </p>
             <div className="mt-10">
               <CTAButton text="Get your friendship snapshot" variant="primary" />
@@ -104,21 +107,21 @@ export default function Home() {
                   {
                     num: '1',
                     title: 'Add a few people',
-                    desc: 'Takes a minute. No need to be complete.',
+                    desc: 'Takes just a couple of minutes to get started',
                     color: 'text-indigo-600',
                     bg: 'bg-indigo-50',
                   },
                   {
                     num: '2',
                     title: 'Add some groups and sources',
-                    desc: 'Who initiates. What\'s reciprocal. Where things stall.',
+                    desc: 'Find which sources produce the people that fit best.',
                     color: 'text-purple-600',
                     bg: 'bg-purple-50',
                   },
                   {
                     num: '3',
                     title: 'See patterns and opportunities',
-                    desc: 'So you can decide what to invest in—and what to let go.',
+                    desc: 'Decide where to invest in and where to pull back.',
                     color: 'text-pink-600',
                     bg: 'bg-pink-50',
                   },

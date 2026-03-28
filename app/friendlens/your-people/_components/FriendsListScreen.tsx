@@ -148,7 +148,11 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <h3
-                      className="text-lg font-semibold leading-[22.5px] text-[#0F172B] capitalize"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditFriend(friend)
+                      }}
+                      className="text-lg font-semibold leading-[22.5px] text-[#0F172B] capitalize hover:text-purple-600 transition-colors cursor-pointer"
                       style={{ letterSpacing: '-0.439px' }}
                     >
                       {friend.name}
