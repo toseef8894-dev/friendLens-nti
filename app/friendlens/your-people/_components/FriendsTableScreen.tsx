@@ -292,6 +292,58 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
 
   return (
     <>
+      {/* Recommendation Engine */}
+      <div className="w-full max-w-7xl mb-8">
+        {/* Recommendation Card */}
+        {hasStarted && (
+          <div className="mb-4 rounded-2xl border border-border-light bg-white shadow-md px-5 py-4 flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center">
+                  <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
+                </div>
+                <div>
+                  <p
+                    className="text-xs font-semibold uppercase tracking-wide text-brand-purple mb-1"
+                    style={{ letterSpacing: '0.4px' }}
+                  >
+                    FriendLens Insight
+                  </p>
+                  <p
+                    className="text-sm text-text-primary leading-relaxed"
+                    style={{ letterSpacing: '-0.15px' }}
+                  >
+                    {currentRecommendation?.message ?? 'Your list looks good — no issues detected.'}
+                  </p>
+                </div>
+              </div>
+              {rankedRecommendations && rankedRecommendations.length > 1 && (
+                <span className="flex-shrink-0 text-xs text-text-secondary font-medium mt-1">
+                  {recommendationIndex + 1} / {rankedRecommendations.length}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={handleRecommendationPress}
+          disabled={isAtLast && rankedRecommendations !== null && rankedRecommendations.length <= 1}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors
+            ${isAtLast && hasStarted
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-brand-purple text-white hover:bg-brand-purple/90'
+            }`}
+          style={{ letterSpacing: '-0.15px' }}
+        >
+          <Lightbulb className="w-4 h-4" strokeWidth={1.67} />
+          {!hasStarted
+            ? 'Get Recommendation'
+            : isAtLast
+              ? 'No More Recommendations'
+              : 'Next Recommendation'}
+        </button>
+      </div>
       {/* Friend Table */}
       <div className="w-full max-w-7xl">
         <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
@@ -371,60 +423,6 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
             </table>
           </div>
         </div>
-      </div>
-
-      {/* Recommendation Engine */}
-      <div className="w-full max-w-7xl mb-8">
-        {/* Recommendation Card */}
-        {hasStarted && (
-          <div className="mb-4 rounded-2xl border border-border-light bg-white shadow-md px-5 py-4 flex flex-col gap-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center">
-                  <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
-                </div>
-                <div>
-                  <p
-                    className="text-xs font-semibold uppercase tracking-wide text-brand-purple mb-1"
-                    style={{ letterSpacing: '0.4px' }}
-                  >
-                    FriendLens Insight
-                  </p>
-                  <p
-                    className="text-sm text-text-primary leading-relaxed"
-                    style={{ letterSpacing: '-0.15px' }}
-                  >
-                    {currentRecommendation?.message ?? 'Your list looks good — no issues detected.'}
-                  </p>
-                </div>
-              </div>
-              {rankedRecommendations && rankedRecommendations.length > 1 && (
-                <span className="flex-shrink-0 text-xs text-text-secondary font-medium mt-1">
-                  {recommendationIndex + 1} / {rankedRecommendations.length}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Button */}
-        {/* <button
-          onClick={handleRecommendationPress}
-          disabled={isAtLast && rankedRecommendations !== null && rankedRecommendations.length <= 1}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors
-            ${isAtLast && hasStarted
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-brand-purple text-white hover:bg-brand-purple/90'
-            }`}
-          style={{ letterSpacing: '-0.15px' }}
-        >
-          <Lightbulb className="w-4 h-4" strokeWidth={1.67} />
-          {!hasStarted
-            ? 'Get Recommendation'
-            : isAtLast
-            ? 'No More Recommendations'
-            : 'Next Recommendation'}
-        </button> */}
       </div>
 
       <div className="flex justify-center">
