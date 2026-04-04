@@ -353,32 +353,32 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                         {/* Left Column */}
                         <div className="flex flex-col gap-4">
                             <InstructionStep
-                                title="List all your sources"
-                                description="Include groups you participate in now or have ever participated in"
+                                title="List all your sources of people"
+                                description="Include groups you participate in past and present, productive and not."
                             />
                             <InstructionStep
-                                title="Fill in member counts"
-                                description="Estimate if you don't know the exact numbers"
+                                title="Count connections made"
+                                description="People you've exchanged contact info with and met outside the group."
                             />
                             <InstructionStep
-                                title="Estimate relevant %"
-                                description="The percentage of members within your age and gender range"
+                                title="Map sources and friends"
+                                description="Select friends and map to sources"
                             />
                         </div>
 
                         {/* Right Column */}
                         <div className="flex flex-col gap-4">
                             <InstructionStep
-                                title="Count connections made"
-                                description="People you've exchanged contact info with and met outside the group"
+                                title="Rate the source"
+                                description="Higher, Medium, or Lower"
                             />
                             <InstructionStep
                                 title="Review your results"
-                                description="Manage breadth and diversity of exposure to quality people"
+                                description="Manage breadth and diversity of exposure to quality people."
                             />
                             <div className=" pt-6 border-t border-[#E2E8F0]/50">
                                 <p className="text-[#90A1B9] text-xs leading-4 italic">
-                                    💡 Tip: Focus on groups with higher "Friend Potential" to maximize your social ROI
+                                    💡 Tip: Focus on groups with higher "Friend Potential" to maximize your social ROI.
                                 </p>
                             </div>
                         </div>

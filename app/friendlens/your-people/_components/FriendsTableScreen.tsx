@@ -304,17 +304,40 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
                 </div>
                 <div>
                   <p
-                    className="text-xs font-semibold uppercase tracking-wide text-brand-purple mb-1"
+                    className="text-xs font-semibold uppercase tracking-wide text-brand-purple mb-2"
                     style={{ letterSpacing: '0.4px' }}
                   >
                     FriendLens Insight
                   </p>
-                  <p
-                    className="text-sm text-text-primary leading-relaxed"
-                    style={{ letterSpacing: '-0.15px' }}
-                  >
-                    {currentRecommendation?.message ?? 'Your list looks good — no issues detected.'}
-                  </p>
+                  {currentRecommendation ? (
+                    <div className="flex flex-col gap-1">
+                      <p
+                        className="text-sm font-medium text-text-primary leading-relaxed"
+                        style={{ letterSpacing: '-0.15px' }}
+                      >
+                        {currentRecommendation.observation}
+                      </p>
+                      <p
+                        className="text-sm text-text-secondary leading-relaxed"
+                        style={{ letterSpacing: '-0.15px' }}
+                      >
+                        {currentRecommendation.meaning}
+                      </p>
+                      <p
+                        className="text-sm text-brand-purple leading-relaxed"
+                        style={{ letterSpacing: '-0.15px' }}
+                      >
+                        {currentRecommendation.direction}
+                      </p>
+                    </div>
+                  ) : (
+                    <p
+                      className="text-sm text-text-primary leading-relaxed"
+                      style={{ letterSpacing: '-0.15px' }}
+                    >
+                      Your list looks good — no issues detected.
+                    </p>
+                  )}
                 </div>
               </div>
               {rankedRecommendations && rankedRecommendations.length > 1 && (
