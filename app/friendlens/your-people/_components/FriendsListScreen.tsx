@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ChevronRight, Plus, LayoutGrid } from 'lucide-react'
+import { ChevronRight, Plus, LayoutGrid, Lightbulb } from 'lucide-react'
 import { addFriend } from '../actions'
 import type { Friend } from '../types'
 import EditFriendModal from './EditFriendModal'
+import { computeRecommendations, type Recommendation } from './recommendationEngine'
 
 interface FriendsListScreenProps {
   friends: Friend[]
@@ -19,6 +20,21 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
   const [newName, setNewName] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const [editFriend, setEditFriend] = useState<Friend | null>(null)
+  const [rankedRecommendations, setRankedRecommendations] = useState<Recommendation[] | null>(null)
+  const [recommendationIndex, setRecommendationIndex] = useState(0)
+
+  const hasStarted = rankedRecommendations !== null
+  const currentRecommendation = hasStarted ? rankedRecommendations[recommendationIndex] ?? null : null
+  const isAtLast = hasStarted && recommendationIndex >= rankedRecommendations.length - 1
+
+  function handleRecommendationPress() {
+    if (!hasStarted) {
+      setRankedRecommendations(computeRecommendations(friends))
+      setRecommendationIndex(0)
+    } else {
+      setRecommendationIndex((i) => Math.min(i + 1, rankedRecommendations!.length - 1))
+    }
+  }
 
   async function handleAddFriend() {
     const trimmed = newName.trim()
@@ -56,7 +72,7 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
   return (
     <>
       <div className="w-full max-w-[768px]">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <h2
             className="text-2xl font-semibold leading-8 text-[#0F172B]"
             style={{ letterSpacing: '-0.439px' }}
@@ -64,6 +80,19 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
             Your List
           </h2>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleRecommendationPress}
+              disabled={isAtLast && hasStarted}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold leading-5 transition-colors ${
+                isAtLast && hasStarted
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'recommendation-pulse bg-brand-purple text-white hover:bg-brand-purple/90'
+              }`}
+              style={{ letterSpacing: '-0.15px' }}
+            >
+              <Lightbulb className="w-4 h-4" strokeWidth={1.67} />
+              {!hasStarted ? 'Get Recommendation' : isAtLast ? 'No More' : 'Next Recommendation'}
+            </button>
             <button
               onClick={() => setShowAddInput((v) => !v)}
               className="flex items-center gap-2 px-6 py-2 rounded-xl bg-purple-100 text-purple-600 text-sm font-semibold leading-5 hover:bg-purple-200 transition-colors"
@@ -81,6 +110,51 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
             </button>
           </div>
         </div>
+
+        {/* Recommendation insight card */}
+        {hasStarted && (
+          <div className="mb-4 rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4 flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center">
+                  <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-brand-purple mb-1" style={{ letterSpacing: '0.4px' }}>
+                    FriendLens Insight
+                  </p>
+                  {currentRecommendation?.type === 'fallback' && (
+                    <p className="text-xs text-[#62748E] mb-2" style={{ letterSpacing: '-0.1px' }}>
+                      {currentRecommendation.title}
+                    </p>
+                  )}
+                  {currentRecommendation ? (
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                        {currentRecommendation.observation}
+                      </p>
+                      <p className="text-sm text-[#62748E] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                        {currentRecommendation.meaning}
+                      </p>
+                      <p className="text-sm text-brand-purple leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                        {currentRecommendation.direction}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                      Your list looks good — no issues detected.
+                    </p>
+                  )}
+                </div>
+              </div>
+              {rankedRecommendations && rankedRecommendations.length > 1 && (
+                <span className="flex-shrink-0 text-xs text-[#62748E] font-medium mt-1">
+                  {recommendationIndex + 1} / {rankedRecommendations.length}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {showAddInput && (
           <div className="mb-4 flex gap-2">
@@ -123,7 +197,7 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
           </div>
         )}
 
-        <div className="flex flex-col gap-3 mb-12">
+        <div className="flex flex-col gap-3 mb-12 mt-2">
           {friends.map((friend) => {
             const isSelected = selectedId === friend.id
             const badge = friend.relationship_type || 'Friend'

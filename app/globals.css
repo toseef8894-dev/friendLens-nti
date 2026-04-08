@@ -16,7 +16,24 @@ body {
 }
 
 .nti-scroll-hidden::-webkit-scrollbar {
-  display: none;            
+  display: none;
   width: 0;
   height: 0;
+}
+
+@keyframes recommendation-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(152, 16, 250, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(152, 16, 250, 0);
+  }
+}
+
+.recommendation-pulse {
+  animation: recommendation-glow 2.2s ease-in-out infinite;
+}
+
+.recommendation-pulse:disabled {
+  animation: none;
 }

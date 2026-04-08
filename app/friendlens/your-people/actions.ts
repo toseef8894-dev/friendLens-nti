@@ -58,7 +58,7 @@ export async function createFriends(names: string[]) {
 
   const rows = trimmed.map((name) => ({ user_id: user.id, name }))
 
-  const { error: dbError } = await supabase.from('friends').insert(rows)
+  const { data, error: dbError } = await supabase.from('friends').insert(rows).select()
 
   if (dbError) {
     console.error('createFriends error:', dbError)
@@ -66,7 +66,7 @@ export async function createFriends(names: string[]) {
   }
 
   revalidatePath(PATH)
-  return { success: true }
+  return { success: true, friends: data as Friend[] }
 }
 
 // ── addFriend ──────────────────────────────────────────────────

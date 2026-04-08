@@ -25,6 +25,7 @@ interface EditFriendModalProps {
   friend: Friend
   onSaved?: (updated: Friend) => void
   onDeleted?: () => void
+  stackCount?: number
 }
 
 function ReflectionToggle({
@@ -88,6 +89,7 @@ export default function EditFriendModal({
   friend,
   onSaved,
   onDeleted,
+  stackCount = 1,
 }: EditFriendModalProps) {
   const [editName, setEditName] = useState(friend.name)
   const [selectedType, setSelectedType] = useState(friend.relationship_type ?? '')
@@ -207,7 +209,20 @@ export default function EditFriendModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-2xl">
+        {stackCount > 2 && (
+          <div
+            className="absolute inset-0 bg-white rounded-2xl shadow-xl"
+            style={{ transform: 'translate(12px, 12px)', zIndex: 48, pointerEvents: 'none' }}
+          />
+        )}
+        {stackCount > 1 && (
+          <div
+            className="absolute inset-0 bg-white rounded-2xl shadow-xl"
+            style={{ transform: 'translate(6px, 6px)', zIndex: 49, pointerEvents: 'none' }}
+          />
+        )}
+      <div className="relative z-50 bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between p-8 pb-4 border-b border-gray-100">
           <div>
@@ -456,6 +471,7 @@ export default function EditFriendModal({
         }}
         selectedType={selectedType}
       />
+      </div>
     </div>
   )
 }

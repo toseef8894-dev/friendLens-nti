@@ -354,11 +354,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                         <div className="flex flex-col gap-4">
                             <InstructionStep
                                 title="List all your sources of people"
-                                description="Include groups you participate in past and present, productive and not."
-                            />
-                            <InstructionStep
-                                title="Count connections made"
-                                description="People you've exchanged contact info with and met outside the group."
+                                description="Include groups you participated in past and present"
                             />
                             <InstructionStep
                                 title="Map sources and friends"
@@ -369,12 +365,12 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                         {/* Right Column */}
                         <div className="flex flex-col gap-4">
                             <InstructionStep
-                                title="Rate the source"
+                                title="Rate the source for potential of qualituy people"
                                 description="Higher, Medium, or Lower"
                             />
                             <InstructionStep
                                 title="Review your results"
-                                description="Manage breadth and diversity of exposure to quality people."
+                                description="Manage breadth and diversity of exposure to quality people"
                             />
                             <div className=" pt-6 border-t border-[#E2E8F0]/50">
                                 <p className="text-[#90A1B9] text-xs leading-4 italic">
