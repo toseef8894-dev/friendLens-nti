@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useMemo, useRef, useCallback } from 'react'
+import { Lightbulb } from 'lucide-react'
 import { upsertTimeAllocations } from '../actions'
 import type { TimeAllocation } from '../types'
+import { computeTimeRecommendations, type TimeRecommendation } from '../recommendationEngine'
 
 const TIME_CATEGORIES = [
     'Work',
@@ -73,6 +75,8 @@ interface YourTimeProps {
 export default function YourTime({ initialData }: YourTimeProps) {
     const [rows, setRows] = useState<TimeRow[]>(() => buildInitialRows(initialData))
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+    const [recommendations, setRecommendations] = useState<TimeRecommendation[] | null>(null)
+    const hasRecommendations = recommendations !== null
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const totals = useMemo(() => {
         const weekday = rows.reduce((sum, r) => sum + r.weekday, 0)
@@ -114,6 +118,20 @@ export default function YourTime({ initialData }: YourTimeProps) {
     )
 
 
+    function handleGetRecommendations() {
+        const allocations = rows.map((row) => ({
+            id: '',
+            user_id: '',
+            category: row.category,
+            weekday: row.weekday,
+            weekend: row.weekend,
+            notes: row.notes || null,
+            created_at: '',
+            updated_at: '',
+        }))
+        setRecommendations(computeTimeRecommendations(allocations))
+    }
+
     function updateRow(index: number, field: 'weekday' | 'weekend' | 'notes', value: string) {
         setRows((prev) => {
             const next = prev.map((row, i) => {
@@ -135,6 +153,18 @@ export default function YourTime({ initialData }: YourTimeProps) {
 
     return (
         <main className="max-w-[1053px] mx-auto px-2 sm:px-4 py-6 sm:py-12">
+            {/* Get Recommendation Button */}
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={handleGetRecommendations}
+                    className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold leading-5 transition-colors recommendation-pulse bg-brand-purple text-white hover:bg-brand-purple/90"
+                    style={{ letterSpacing: '-0.15px' }}
+                >
+                    <Lightbulb className="w-4 h-4" strokeWidth={1.67} />
+                    {hasRecommendations ? 'Refresh Recommendations' : 'Get Recommendation'}
+                </button>
+            </div>
+
             <div className="w-full rounded-2xl bg-white overflow-hidden border border-[#E2E8F0] shadow-xl">
                 {/* Desktop Table - hidden on mobile */}
                 <div className="hidden md:block overflow-x-auto">
@@ -326,6 +356,56 @@ export default function YourTime({ initialData }: YourTimeProps) {
                     </div>
                 )}
             </div>
+
+            {/* Recommendation Cards */}
+            {hasRecommendations && (
+                <div className="mt-6">
+                    {recommendations!.length === 0 ? (
+                        <div className="rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center flex-shrink-0">
+                                    <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
+                                </div>
+                                <p className="text-sm text-[#0F172B]" style={{ letterSpacing: '-0.15px' }}>
+                                    Your time allocation looks balanced — no changes needed right now.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-3">
+                            {recommendations!.map((reco) => (
+                                <div
+                                    key={reco.id}
+                                    className="rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4 flex flex-col gap-2"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center flex-shrink-0">
+                                            <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
+                                        </div>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-purple" style={{ letterSpacing: '0.4px' }}>
+                                            FriendLens Insight
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col gap-1 pl-11">
+                                        <p className="text-sm font-semibold text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                            {reco.title}
+                                        </p>
+                                        <p className="text-sm text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                            {reco.trade}
+                                        </p>
+                                        <p className="text-sm text-[#62748E] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                            {reco.reason}
+                                        </p>
+                                        <p className="text-sm text-brand-purple leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                            {reco.expectedImpact}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Guidance Text */}
             {/* <div className="mt-8 space-y-1 text-sm text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>

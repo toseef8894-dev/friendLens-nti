@@ -208,8 +208,8 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
     const [sortColumn, setSortColumn] = useState<string>('created_at')
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
-    // Add Source form state
-    const [showAddRow, setShowAddRow] = useState(false)
+    // Add Source modal state
+    const [showAddModal, setShowAddModal] = useState(false)
     const [newName, setNewName] = useState('')
     const [newType, setNewType] = useState('')
     const [isAdding, setIsAdding] = useState(false)
@@ -286,7 +286,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
 
             setNewName('')
             setNewType('')
-            setShowAddRow(false)
+            setShowAddModal(false)
             toast.success('Source added!')
         } finally {
             setIsAdding(false)
@@ -387,7 +387,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                     <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
                         <h2 className="text-xl sm:text-2xl text-[#0F172B] font-bold">Your Sources</h2>
                         <button
-                            onClick={() => setShowAddRow(true)}
+                            onClick={() => setShowAddModal(true)}
                             className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-3xl bg-[#F8F4FF] hover:bg-[#F0E7FF] transition-colors border border-[#E9D5FF] shrink-0"
                         >
                             <Plus className="w-4 h-4 text-[#9810FA]" strokeWidth={1.33} />
@@ -442,59 +442,12 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                             )
                         })}
 
-                        {/* Mobile Add Source Form */}
-                        {showAddRow && (
-                            <div className="rounded-xl border border-[#E2E8F0] bg-[#FAF5FF]/30 p-4 shadow-sm">
-                                <input
-                                    type="text"
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value)}
-                                    placeholder="Source name"
-                                    autoFocus
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleAddSource()
-                                        if (e.key === 'Escape') {
-                                            setShowAddRow(false)
-                                            setNewName('')
-                                            setNewType('')
-                                        }
-                                    }}
-                                    className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[#9810FA]/20 focus:border-[#9810FA]"
-                                />
-                                <select
-                                    value={newType}
-                                    onChange={(e) => setNewType(e.target.value)}
-                                    className="w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm mb-3 text-[#45556C] focus:outline-none focus:ring-2 focus:ring-[#9810FA]/20 focus:border-[#9810FA]"
-                                >
-                                    <option value="">Select type</option>
-                                    {SOURCE_TYPES.map((t) => (
-                                        <option key={t} value={t}>{t}</option>
-                                    ))}
-                                </select>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={handleAddSource}
-                                        disabled={isAdding}
-                                        className="flex-1 py-2 rounded-lg bg-[#9810FA] text-white text-sm font-semibold hover:bg-[#7A0DD4] transition-colors disabled:opacity-50"
-                                    >
-                                        {isAdding ? 'Adding...' : 'Add Source'}
-                                    </button>
-                                    <button
-                                        onClick={() => { setShowAddRow(false); setNewName(''); setNewType('') }}
-                                        className="flex-1 py-2 rounded-lg text-[#62748E] text-sm font-semibold border border-[#E2E8F0] hover:bg-gray-50 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Mobile Empty State */}
-                        {sources.length === 0 && !showAddRow && (
+                        {sources.length === 0 && (
                             <div className="rounded-xl border border-[#E2E8F0] bg-white p-8 text-center shadow-sm">
                                 <p className="text-[#62748E] text-sm mb-2">No sources added yet.</p>
                                 <button
-                                    onClick={() => setShowAddRow(true)}
+                                    onClick={() => setShowAddModal(true)}
                                     className="text-[#9810FA] text-sm font-semibold hover:underline"
                                 >
                                     Add your first source
@@ -552,68 +505,13 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                                         </tr>
                                     ))}
 
-                                    {/* Add Source inline row */}
-                                    {showAddRow && (
-                                        <tr className="border-b border-[#F1F5F9] bg-[#FAF5FF]/30">
-                                            <td className="px-4 py-3">
-                                                <input
-                                                    type="text"
-                                                    value={newName}
-                                                    onChange={(e) => setNewName(e.target.value)}
-                                                    placeholder="Source name"
-                                                    autoFocus
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') handleAddSource()
-                                                        if (e.key === 'Escape') {
-                                                            setShowAddRow(false)
-                                                            setNewName('')
-                                                            setNewType('')
-                                                        }
-                                                    }}
-                                                    className="w-full bg-transparent text-sm font-medium leading-5 tracking-[-0.15px] placeholder:text-[rgba(10,10,10,0.5)] focus:outline-none"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3" />
-                                            <td className="px-4 py-3" />
-                                            <td className="px-4 py-3">
-                                                <select
-                                                    value={newType}
-                                                    onChange={(e) => setNewType(e.target.value)}
-                                                    className="w-full bg-transparent text-sm font-medium leading-5 tracking-[-0.15px] text-[#45556C] focus:outline-none cursor-pointer"
-                                                >
-                                                    <option value="">Select type</option>
-                                                    {SOURCE_TYPES.map((t) => (
-                                                        <option key={t} value={t}>{t}</option>
-                                                    ))}
-                                                </select>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={handleAddSource}
-                                                        disabled={isAdding}
-                                                        className="px-3 py-1 rounded-lg bg-[#9810FA] text-white text-xs font-semibold hover:bg-[#7A0DD4] transition-colors disabled:opacity-50"
-                                                    >
-                                                        {isAdding ? '...' : 'Add'}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setShowAddRow(false); setNewName(''); setNewType('') }}
-                                                        className="px-3 py-1 rounded-lg text-[#62748E] text-xs font-semibold hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-
                                     {/* Empty state */}
-                                    {sources.length === 0 && !showAddRow && (
+                                    {sources.length === 0 && (
                                         <tr>
                                             <td colSpan={COLUMNS.length} className="px-4 py-12 text-center">
                                                 <p className="text-[#62748E] text-sm mb-2">No sources added yet.</p>
                                                 <button
-                                                    onClick={() => setShowAddRow(true)}
+                                                    onClick={() => setShowAddModal(true)}
                                                     className="text-[#9810FA] text-sm font-semibold hover:underline"
                                                 >
                                                     Add your first source
@@ -634,6 +532,19 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                     </div>
                 </div>
             </div>
+
+            {/* Add Source Modal */}
+            {showAddModal && (
+                <AddSourceModal
+                    newName={newName}
+                    newType={newType}
+                    isAdding={isAdding}
+                    onNameChange={setNewName}
+                    onTypeChange={setNewType}
+                    onAdd={handleAddSource}
+                    onClose={() => { setShowAddModal(false); setNewName(''); setNewType('') }}
+                />
+            )}
 
             {/* Edit Source Modal */}
             {editSource && (
@@ -664,6 +575,102 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
     )
 }
 
+
+interface AddSourceModalProps {
+    newName: string
+    newType: string
+    isAdding: boolean
+    onNameChange: (v: string) => void
+    onTypeChange: (v: string) => void
+    onAdd: () => void
+    onClose: () => void
+}
+
+function AddSourceModal({
+    newName,
+    newType,
+    isAdding,
+    onNameChange,
+    onTypeChange,
+    onAdd,
+    onClose,
+}: AddSourceModalProps) {
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+                <div className="mb-6">
+                    <h2
+                        className="text-xl font-bold text-[#0F172B] mb-1"
+                        style={{ letterSpacing: '-0.439px' }}
+                    >
+                        Add a Source
+                    </h2>
+                    <p className="text-sm text-[#62748E]" style={{ letterSpacing: '-0.15px' }}>
+                        Name a current or past source of people.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-4 mb-6">
+                    <div>
+                        <label className="block text-sm font-semibold text-[#0F172B] mb-2" style={{ letterSpacing: '-0.15px' }}>
+                            Source Name
+                        </label>
+                        <input
+                            type="text"
+                            value={newName}
+                            onChange={(e) => onNameChange(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') onAdd()
+                                if (e.key === 'Escape') onClose()
+                            }}
+                            placeholder="e.g. Work, Church, Gym..."
+                            autoFocus
+                            className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm text-[#0F172B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#9810FA]/20 focus:border-[#9810FA] transition-all"
+                            style={{ letterSpacing: '-0.15px' }}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-[#0F172B] mb-2" style={{ letterSpacing: '-0.15px' }}>
+                            Source Type <span className="font-normal text-[#90A1B9]">(optional)</span>
+                        </label>
+                        <select
+                            value={newType}
+                            onChange={(e) => onTypeChange(e.target.value)}
+                            className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm text-[#45556C] focus:outline-none focus:ring-2 focus:ring-[#9810FA]/20 focus:border-[#9810FA] transition-all cursor-pointer"
+                            style={{ letterSpacing: '-0.15px' }}
+                        >
+                            <option value="">Select type</option>
+                            {SOURCE_TYPES.map((t) => (
+                                <option key={t} value={t}>{t}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 h-12 rounded-xl text-[#0F172B] font-semibold text-sm hover:bg-gray-100 transition-colors"
+                        style={{ letterSpacing: '-0.15px' }}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onAdd}
+                        disabled={!newName.trim() || isAdding}
+                        className="flex-1 h-12 rounded-xl bg-[#9810FA] text-white font-bold text-sm hover:bg-[#7A0DD4] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ letterSpacing: '-0.15px' }}
+                    >
+                        {isAdding ? 'Adding...' : 'Add Source'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export function InstructionStep({ title, description }: { title?: string; description: string }) {
     return (
