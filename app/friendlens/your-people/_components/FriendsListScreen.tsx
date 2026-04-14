@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ChevronRight, Plus, LayoutGrid, Lightbulb } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, LayoutGrid, Lightbulb } from 'lucide-react'
 import { addFriend } from '../actions'
 import type { Friend } from '../types'
 import EditFriendModal from './EditFriendModal'
@@ -25,15 +25,10 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
 
   const hasStarted = rankedRecommendations !== null
   const currentRecommendation = hasStarted ? rankedRecommendations[recommendationIndex] ?? null : null
-  const isAtLast = hasStarted && recommendationIndex >= rankedRecommendations.length - 1
 
   function handleRecommendationPress() {
-    if (!hasStarted) {
-      setRankedRecommendations(computeRecommendations(friends))
-      setRecommendationIndex(0)
-    } else {
-      setRecommendationIndex((i) => Math.min(i + 1, rankedRecommendations!.length - 1))
-    }
+    setRankedRecommendations(computeRecommendations(friends))
+    setRecommendationIndex(0)
   }
 
   async function handleAddFriend() {
@@ -82,16 +77,11 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={handleRecommendationPress}
-              disabled={isAtLast && hasStarted}
-              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold leading-5 transition-colors ${
-                isAtLast && hasStarted
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'recommendation-pulse bg-brand-purple text-white hover:bg-brand-purple/90'
-              }`}
+              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold leading-5 transition-colors recommendation-pulse bg-brand-purple text-white hover:bg-brand-purple/90"
               style={{ letterSpacing: '-0.15px' }}
             >
               <Lightbulb className="w-4 h-4" strokeWidth={1.67} />
-              {!hasStarted ? 'Get Recommendation' : isAtLast ? 'No More' : 'Next Recommendation'}
+              {!hasStarted ? 'Get Recommendation' : 'Refresh Recommendations'}
             </button>
             <button
               onClick={() => setShowAddInput((v) => !v)}
@@ -123,11 +113,6 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
                   <p className="text-xs font-semibold uppercase tracking-wide text-brand-purple mb-1" style={{ letterSpacing: '0.4px' }}>
                     FriendLens Insight
                   </p>
-                  {currentRecommendation?.type === 'fallback' && (
-                    <p className="text-xs text-[#62748E] mb-2" style={{ letterSpacing: '-0.1px' }}>
-                      {currentRecommendation.title}
-                    </p>
-                  )}
                   {currentRecommendation ? (
                     <div className="flex flex-col gap-1">
                       <p className="text-sm font-medium text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
@@ -148,9 +133,25 @@ export default function FriendsListScreen({ friends }: FriendsListScreenProps) {
                 </div>
               </div>
               {rankedRecommendations && rankedRecommendations.length > 1 && (
-                <span className="flex-shrink-0 text-xs text-[#62748E] font-medium mt-1">
-                  {recommendationIndex + 1} / {rankedRecommendations.length}
-                </span>
+                <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+                  <button
+                    onClick={() => setRecommendationIndex((i) => Math.max(i - 1, 0))}
+                    disabled={recommendationIndex === 0}
+                    className="p-1 rounded-lg text-[#62748E] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-xs text-[#62748E] font-medium w-8 text-center">
+                    {recommendationIndex + 1} / {rankedRecommendations.length}
+                  </span>
+                  <button
+                    onClick={() => setRecommendationIndex((i) => Math.min(i + 1, rankedRecommendations.length - 1))}
+                    disabled={recommendationIndex === rankedRecommendations.length - 1}
+                    className="p-1 rounded-lg text-[#62748E] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               )}
             </div>
           </div>

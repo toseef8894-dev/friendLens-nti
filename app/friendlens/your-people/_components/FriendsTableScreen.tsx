@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronUp, ChevronDown, Plus, ArrowUpDown, ArrowLeft, Lightbulb } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, ArrowUpDown, ArrowLeft, Lightbulb } from 'lucide-react'
 import type { Friend } from '../types'
 import { computeRecommendations, type Recommendation } from './recommendationEngine'
 import EditFriendModal from './EditFriendModal'
@@ -240,22 +240,12 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
   }, [dataFingerprint, rankedRecommendations, friends])
 
   const handleRecommendationPress = () => {
-    if (rankedRecommendations === null) {
-      // First press — compute fresh
-      setRankedRecommendations(computeRecommendations(friends))
-      setRecommendationIndex(0)
-    } else {
-      // Subsequent presses — advance index, stay on last
-      setRecommendationIndex((i) => Math.min(i + 1, rankedRecommendations.length - 1))
-    }
+    setRankedRecommendations(computeRecommendations(friends))
+    setRecommendationIndex(0)
   }
 
   const currentRecommendation =
     rankedRecommendations !== null ? rankedRecommendations[recommendationIndex] ?? null : null
-
-  const isAtLast =
-    rankedRecommendations !== null &&
-    recommendationIndex >= rankedRecommendations.length - 1
 
   const hasStarted = rankedRecommendations !== null
 
@@ -306,20 +296,15 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleRecommendationPress}
-              disabled={isAtLast && hasStarted}
-              className={`flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors
-                ${isAtLast && hasStarted
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'recommendation-pulse bg-brand-purple text-white hover:bg-brand-purple/90'
-                }`}
+              className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors recommendation-pulse bg-brand-purple text-white hover:bg-brand-purple/90"
               style={{ letterSpacing: '-0.15px' }}
             >
               <Lightbulb className="w-4 h-4" strokeWidth={1.67} />
               <span className="hidden sm:inline">
-                {!hasStarted ? 'Get Recommendation' : isAtLast ? 'No More' : 'Next Recommendation'}
+                {!hasStarted ? 'Get Recommendation' : 'Refresh Recommendations'}
               </span>
               <span className="sm:hidden">
-                {!hasStarted ? 'Recommend' : isAtLast ? 'Done' : 'Next'}
+                {!hasStarted ? 'Recommend' : 'Refresh'}
               </span>
             </button>
             <button
@@ -356,11 +341,6 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
                   >
                     FriendLens Insight
                   </p>
-                  {currentRecommendation?.type === 'fallback' && (
-                    <p className="text-xs text-text-secondary mb-2" style={{ letterSpacing: '-0.1px' }}>
-                      {currentRecommendation.title}
-                    </p>
-                  )}
                   {currentRecommendation ? (
                     <div className="flex flex-col gap-1">
                       <p
@@ -393,9 +373,25 @@ export default function FriendsTableScreen({ friends }: FriendsTableScreenProps)
                 </div>
               </div>
               {rankedRecommendations && rankedRecommendations.length > 1 && (
-                <span className="flex-shrink-0 text-xs text-text-secondary font-medium mt-1">
-                  {recommendationIndex + 1} / {rankedRecommendations.length}
-                </span>
+                <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+                  <button
+                    onClick={() => setRecommendationIndex((i) => Math.max(i - 1, 0))}
+                    disabled={recommendationIndex === 0}
+                    className="p-1 rounded-lg text-text-secondary hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-xs text-text-secondary font-medium w-8 text-center">
+                    {recommendationIndex + 1} / {rankedRecommendations.length}
+                  </span>
+                  <button
+                    onClick={() => setRecommendationIndex((i) => Math.min(i + 1, rankedRecommendations.length - 1))}
+                    disabled={recommendationIndex === rankedRecommendations.length - 1}
+                    className="p-1 rounded-lg text-text-secondary hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               )}
             </div>
           </div>

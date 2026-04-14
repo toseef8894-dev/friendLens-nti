@@ -6,6 +6,7 @@ export type TimeCategory =
   | 'Work'
   | 'Commuting'
   | 'Shopping, Cooking'
+  | 'Hobbies'
   | 'Exercise, Self-Maintenance'
   | 'Socializing w/ Friends'
   | 'Family Care, Spouse Time'
@@ -101,6 +102,7 @@ export function computeTimeRecommendations(
   const sleep = getHours(allocations, 'Sleeping')
   const shopping = getHours(allocations, 'Shopping, Cooking')
   const commute = getHours(allocations, 'Commuting')
+  const hobbies = getHours(allocations, 'Hobbies')
   const gaming = getHours(allocations, 'Gaming, Gambling')
   const reading = getHours(allocations, 'Reading')
   const socializing = getHours(allocations, 'Socializing w/ Friends')
@@ -114,9 +116,9 @@ export function computeTimeRecommendations(
   const avgCommute = avgDaily(commute.weekday, commute.weekend)
   const avgSocializing = avgDaily(socializing.weekday, socializing.weekend)
 
-  // Hobbies threshold fix (spec §6)
-  const hobbiesWeekday = gaming.weekday + reading.weekday
-  const hobbiesWeekend = gaming.weekend + reading.weekend
+  // Hobbies: dedicated category + Gaming + Reading combined
+  const hobbiesWeekday = hobbies.weekday + gaming.weekday + reading.weekday
+  const hobbiesWeekend = hobbies.weekend + gaming.weekend + reading.weekend
   const avgHobbies = avgDaily(hobbiesWeekday, hobbiesWeekend)
   const hobbiesIsUnderweight = avgHobbies < 0.5
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useCallback } from 'react'
-import { Lightbulb } from 'lucide-react'
+import { Lightbulb, ChevronLeft, ChevronRight } from 'lucide-react'
 import { upsertTimeAllocations } from '../actions'
 import type { TimeAllocation } from '../types'
 import { computeTimeRecommendations, type TimeRecommendation } from '../recommendationEngine'
@@ -10,6 +10,7 @@ const TIME_CATEGORIES = [
     'Work',
     'Commuting',
     'Shopping, Cooking',
+    'Hobbies',
     'Exercise, Self-Maintenance',
     'Socializing w/ Friends',
     'Family Care, Spouse Time',
@@ -76,7 +77,9 @@ export default function YourTime({ initialData }: YourTimeProps) {
     const [rows, setRows] = useState<TimeRow[]>(() => buildInitialRows(initialData))
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
     const [recommendations, setRecommendations] = useState<TimeRecommendation[] | null>(null)
+    const [recoIndex, setRecoIndex] = useState(0)
     const hasRecommendations = recommendations !== null
+    const currentReco = recommendations !== null ? recommendations[recoIndex] ?? null : null
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const totals = useMemo(() => {
         const weekday = rows.reduce((sum, r) => sum + r.weekday, 0)
@@ -130,6 +133,7 @@ export default function YourTime({ initialData }: YourTimeProps) {
             updated_at: '',
         }))
         setRecommendations(computeTimeRecommendations(allocations))
+        setRecoIndex(0)
     }
 
     function updateRow(index: number, field: 'weekday' | 'weekend' | 'notes', value: string) {
@@ -164,6 +168,65 @@ export default function YourTime({ initialData }: YourTimeProps) {
                     {hasRecommendations ? 'Refresh Recommendations' : 'Get Recommendation'}
                 </button>
             </div>
+
+            {/* Recommendation Card — shown above the table */}
+            {hasRecommendations && (
+                <div className="mb-6 rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4 flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center">
+                                <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-brand-purple mb-1" style={{ letterSpacing: '0.4px' }}>
+                                    FriendLens Insight
+                                </p>
+                                {currentReco ? (
+                                    <div className="flex flex-col gap-1">
+                                        <p className="text-sm font-medium text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                            {currentReco.title}
+                                        </p>
+                                        <p className="text-sm text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                            {currentReco.trade}
+                                        </p>
+                                        <p className="text-sm text-[#62748E] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                            {currentReco.reason}
+                                        </p>
+                                        <p className="text-sm text-brand-purple leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                            {currentReco.expectedImpact}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                        Your time allocation looks balanced — no changes needed right now.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        {recommendations && recommendations.length > 1 && (
+                            <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+                                <button
+                                    onClick={() => setRecoIndex((i) => Math.max(i - 1, 0))}
+                                    disabled={recoIndex === 0}
+                                    className="p-1 rounded-lg text-[#62748E] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <span className="text-xs text-[#62748E] font-medium w-8 text-center">
+                                    {recoIndex + 1} / {recommendations.length}
+                                </span>
+                                <button
+                                    onClick={() => setRecoIndex((i) => Math.min(i + 1, recommendations.length - 1))}
+                                    disabled={recoIndex === recommendations.length - 1}
+                                    className="p-1 rounded-lg text-[#62748E] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             <div className="w-full rounded-2xl bg-white overflow-hidden border border-[#E2E8F0] shadow-xl">
                 {/* Desktop Table - hidden on mobile */}
@@ -357,55 +420,6 @@ export default function YourTime({ initialData }: YourTimeProps) {
                 )}
             </div>
 
-            {/* Recommendation Cards */}
-            {hasRecommendations && (
-                <div className="mt-6">
-                    {recommendations!.length === 0 ? (
-                        <div className="rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center flex-shrink-0">
-                                    <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
-                                </div>
-                                <p className="text-sm text-[#0F172B]" style={{ letterSpacing: '-0.15px' }}>
-                                    Your time allocation looks balanced — no changes needed right now.
-                                </p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col gap-3">
-                            {recommendations!.map((reco) => (
-                                <div
-                                    key={reco.id}
-                                    className="rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4 flex flex-col gap-2"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-brand-purple/10 flex items-center justify-center flex-shrink-0">
-                                            <Lightbulb className="w-4 h-4 text-brand-purple" strokeWidth={1.67} />
-                                        </div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-purple" style={{ letterSpacing: '0.4px' }}>
-                                            FriendLens Insight
-                                        </p>
-                                    </div>
-                                    <div className="flex flex-col gap-1 pl-11">
-                                        <p className="text-sm font-semibold text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
-                                            {reco.title}
-                                        </p>
-                                        <p className="text-sm text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
-                                            {reco.trade}
-                                        </p>
-                                        <p className="text-sm text-[#62748E] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
-                                            {reco.reason}
-                                        </p>
-                                        <p className="text-sm text-brand-purple leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
-                                            {reco.expectedImpact}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
 
             {/* Guidance Text */}
             {/* <div className="mt-8 space-y-1 text-sm text-[#45556C]" style={{ letterSpacing: '-0.15px' }}>
