@@ -17,6 +17,7 @@ type UpdatePayload = Pick<
   | 'did_they_invite_you'
   | 'made_you_happier'
   | 'do_you_miss_them'
+  | 'last_meeting'
 >
 
 async function getAuthenticatedUser() {
@@ -126,6 +127,7 @@ export async function updateFriend(
     'did_they_invite_you',
     'made_you_happier',
     'do_you_miss_them',
+    'last_meeting',
   ]
 
   const update: Record<string, unknown> = {}
@@ -173,6 +175,27 @@ export async function updateFriend(
         }
         if (typeof value === 'string' && value.length > 100) {
           return { error: 'relationship_type is too long (max 100 characters).' }
+        }
+      }
+
+      // Validate last_meeting as ISO date string YYYY-MM-DD or null
+      if (key === 'last_meeting') {
+        if (value !== null) {
+          if (typeof value !== 'string') {
+            return { error: 'last_meeting must be a date string or null.' }
+          }
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return { error: 'last_meeting must be in YYYY-MM-DD format.' }
+          }
+          const d = new Date(value)
+          if (isNaN(d.getTime())) {
+            return { error: 'last_meeting is not a valid date.' }
+          }
+          const todayStart = new Date()
+          todayStart.setHours(0, 0, 0, 0)
+          if (d > todayStart) {
+            return { error: 'Last meeting cannot be a future date.' }
+          }
         }
       }
 

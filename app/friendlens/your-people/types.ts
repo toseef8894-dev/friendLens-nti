@@ -10,6 +10,7 @@ export interface Friend {
   did_they_invite_you: boolean | null
   made_you_happier: boolean | null
   do_you_miss_them: boolean | null
+  last_meeting: string | null
   created_at: string
   updated_at: string
 }

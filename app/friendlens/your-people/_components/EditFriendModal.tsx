@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { X, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { updateFriend, deleteFriend } from '../actions'
 import type { Friend } from '../types'
 import FriendTypesModal from './FriendTypesModal'
@@ -83,6 +83,267 @@ function ReflectionToggle({
   )
 }
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+
+function CalendarDatePicker({
+  label,
+  value,
+  onChange,
+  onError,
+}: {
+  label: string
+  value: string | null
+  onChange: (iso: string | null) => void
+  onError?: (hasError: boolean) => void
+}) {
+  const [inputText, setInputText] = useState('')
+  const [inputError, setInputError] = useState('')
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date())
+  const containerRef = useRef<HTMLDivElement>(null)
+  const calendarRef = useRef<HTMLDivElement>(null)
+  const [calPos, setCalPos] = useState({ top: 0, left: 0, width: 0 })
+
+  // Sync text input from ISO value
+  useEffect(() => {
+    if (value) {
+      const parts = value.split('-')
+      if (parts.length === 3) {
+        const [y, m, d] = parts
+        setInputText(`${m}/${d}/${y.slice(2)}`)
+      }
+    } else {
+      setInputText('')
+    }
+  }, [value])
+
+  // Bubble error state to parent
+  useEffect(() => {
+    onError?.(inputError !== '')
+  }, [inputError, onError])
+
+  // Close calendar on outside click
+  useEffect(() => {
+    if (!showCalendar) return
+    function handleMouseDown(e: MouseEvent) {
+      if (
+        containerRef.current?.contains(e.target as Node) ||
+        calendarRef.current?.contains(e.target as Node)
+      ) return
+      setShowCalendar(false)
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [showCalendar])
+
+  // Parse US date MM/DD/YY or MM/DD/YYYY → ISO YYYY-MM-DD
+  function parseUSDate(text: string): string | null {
+    const trimmed = text.trim()
+    if (!trimmed) return null
+    const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/)
+    if (!match) return null
+    const month = parseInt(match[1], 10)
+    const day = parseInt(match[2], 10)
+    let year = parseInt(match[3], 10)
+    if (year < 100) year += 2000
+    const date = new Date(year, month - 1, day)
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) return null
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  }
+
+  function isFutureISO(iso: string): boolean {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return new Date(iso + 'T00:00:00') > today
+  }
+
+  function handleInputBlur() {
+    if (!inputText.trim()) {
+      setInputError('')
+      onChange(null)
+      return
+    }
+    const iso = parseUSDate(inputText)
+    if (!iso) {
+      setInputError('Use MM/DD/YY format, e.g. 04/14/26')
+    } else if (isFutureISO(iso)) {
+      setInputError('Last meeting cannot be a future date.')
+    } else {
+      setInputError('')
+      onChange(iso)
+      const [y, m, d] = iso.split('-')
+      setInputText(`${m}/${d}/${y.slice(2)}`)
+    }
+  }
+
+  function openCalendar() {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      setCalPos({ top: rect.bottom + 8, left: rect.left, width: rect.width })
+    }
+    setCalendarDate(value ? new Date(value + 'T00:00:00') : new Date())
+    setShowCalendar(true)
+  }
+
+  const today = new Date()
+  const selectedDate = value ? new Date(value + 'T00:00:00') : null
+  const calYear = calendarDate.getFullYear()
+  const calMonth = calendarDate.getMonth()
+  const numDays = new Date(calYear, calMonth + 1, 0).getDate()
+  const firstDay = new Date(calYear, calMonth, 1).getDay()
+
+  const cells: (number | null)[] = []
+  for (let i = 0; i < firstDay; i++) cells.push(null)
+  for (let d = 1; d <= numDays; d++) cells.push(d)
+  while (cells.length % 7 !== 0) cells.push(null)
+
+  function selectDay(day: number) {
+    const iso = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    if (isFutureISO(iso)) return
+    onChange(iso)
+    setInputText(`${String(calMonth + 1).padStart(2, '0')}/${String(day).padStart(2, '0')}/${String(calYear).slice(2)}`)
+    setInputError('')
+    setShowCalendar(false)
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <label
+        className="block text-sm font-semibold text-[#0F172B] mb-3"
+        style={{ letterSpacing: '-0.15px' }}
+      >
+        {label}{' '}
+        <span className="text-[#90A1B9] font-normal text-xs">(optional)</span>
+      </label>
+      <div className="relative flex items-center">
+        <input
+          type="text"
+          value={inputText}
+          onChange={(e) => { setInputText(e.target.value); setInputError('') }}
+          onBlur={handleInputBlur}
+          placeholder="MM/DD/YY"
+          className={[
+            'w-full px-4 py-3 pr-12 rounded-xl border bg-white text-[#0F172B] font-normal text-sm focus:outline-none focus:ring-2 focus:border-transparent',
+            inputError
+              ? 'border-red-400 focus:ring-red-400/20'
+              : 'border-gray-200 focus:ring-purple-500/20',
+          ].join(' ')}
+          style={{ letterSpacing: '-0.312px' }}
+        />
+        <button
+          type="button"
+          onClick={openCalendar}
+          tabIndex={-1}
+          className="absolute right-3 text-gray-400 hover:text-purple-600 transition-colors"
+        >
+          <Calendar className="w-5 h-5" strokeWidth={1.67} />
+        </button>
+      </div>
+      {inputError && (
+        <p className="text-xs text-red-500 mt-1.5 ml-1">{inputError}</p>
+      )}
+
+      {showCalendar && (
+        <div
+          ref={calendarRef}
+          className="fixed z-[200] bg-white rounded-2xl shadow-2xl border border-gray-100 p-4"
+          style={{ top: calPos.top, left: calPos.left, width: Math.max(calPos.width, 288) }}
+        >
+          {/* Month / year navigation */}
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              onClick={() => setCalendarDate(new Date(calYear, calMonth - 1, 1))}
+              className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 text-[#62748E]" strokeWidth={1.67} />
+            </button>
+            <span className="text-sm font-semibold text-[#0F172B]">
+              {MONTHS[calMonth]} {calYear}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCalendarDate(new Date(calYear, calMonth + 1, 1))}
+              className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 text-[#62748E]" strokeWidth={1.67} />
+            </button>
+          </div>
+
+          {/* Day-of-week headers */}
+          <div className="grid grid-cols-7 mb-1">
+            {DAYS.map((d) => (
+              <div
+                key={d}
+                className="text-center text-xs font-semibold text-[#90A1B9] py-1"
+              >
+                {d}
+              </div>
+            ))}
+          </div>
+
+          {/* Day cells */}
+          <div className="grid grid-cols-7 gap-y-1">
+            {cells.map((day, idx) => {
+              if (!day) return <div key={`e-${idx}`} />
+              const iso = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+              const isFuture = isFutureISO(iso)
+              const isSelected =
+                !isFuture &&
+                selectedDate &&
+                selectedDate.getFullYear() === calYear &&
+                selectedDate.getMonth() === calMonth &&
+                selectedDate.getDate() === day
+              const isToday =
+                today.getFullYear() === calYear &&
+                today.getMonth() === calMonth &&
+                today.getDate() === day
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => selectDay(day)}
+                  disabled={isFuture}
+                  className={[
+                    'w-8 h-8 mx-auto rounded-full text-xs font-medium transition-all flex items-center justify-center',
+                    isFuture
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : isSelected
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                      : isToday
+                      ? 'bg-purple-50 text-purple-600 font-semibold'
+                      : 'text-[#0F172B] hover:bg-gray-100',
+                  ].join(' ')}
+                >
+                  {day}
+                </button>
+              )
+            })}
+          </div>
+
+          {value && (
+            <button
+              type="button"
+              onClick={() => { onChange(null); setInputText(''); setShowCalendar(false) }}
+              className="mt-3 w-full text-xs text-center text-[#90A1B9] hover:text-red-500 transition-colors py-1"
+            >
+              Clear date
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function EditFriendModal({
   open,
   onClose,
@@ -105,6 +366,8 @@ export default function EditFriendModal({
     madeHappy: friend.made_you_happier,
     missThem: friend.do_you_miss_them,
   })
+  const [lastMeeting, setLastMeeting] = useState<string | null>(friend.last_meeting ?? null)
+  const [lastMeetingHasError, setLastMeetingHasError] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showFriendTypesModal, setShowFriendTypesModal] = useState(false)
@@ -124,6 +387,7 @@ export default function EditFriendModal({
       madeHappy: friend.made_you_happier,
       missThem: friend.do_you_miss_them,
     })
+    setLastMeeting(friend.last_meeting ?? null)
     setShowDropdown(false)
   }, [friend])
 
@@ -141,6 +405,11 @@ export default function EditFriendModal({
       return
     }
 
+    if (lastMeetingHasError) {
+      toast.error('Fix the Last Meeting date before saving.')
+      return
+    }
+
     setIsSaving(true)
     try {
       const payload: Record<string, unknown> = {
@@ -153,6 +422,7 @@ export default function EditFriendModal({
         did_they_invite_you: reflection.invitedYou,
         made_you_happier: reflection.madeHappy,
         do_you_miss_them: reflection.missThem,
+        last_meeting: lastMeeting,
       }
 
       const result = await updateFriend(friend.id, payload)
@@ -176,6 +446,7 @@ export default function EditFriendModal({
           did_they_invite_you: reflection.invitedYou,
           made_you_happier: reflection.madeHappy,
           do_you_miss_them: reflection.missThem,
+          last_meeting: lastMeeting,
         })
       }
 
@@ -323,6 +594,16 @@ export default function EditFriendModal({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Last Meeting */}
+          <div className="mb-8">
+            <CalendarDatePicker
+              label="Last Meeting"
+              value={lastMeeting}
+              onChange={setLastMeeting}
+              onError={setLastMeetingHasError}
+            />
           </div>
 
           {/* Interaction Metrics */}
