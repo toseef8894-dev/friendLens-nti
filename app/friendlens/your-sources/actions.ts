@@ -85,11 +85,14 @@ export async function getSourcesWithSignal(): Promise<{
 
   const result: SourceWithSignal[] = (sources as Source[]).map((s) => {
     const data = signalMap.get(s.id) || { total: 0, reciprocal: 0 }
+    // Prefer the user-set signal from the DB; fall back to computed signal only
+    // when no value has been saved yet (null/undefined).
+    const storedSignal = (s as unknown as Record<string, unknown>).signal as Signal | null | undefined
     return {
       ...s,
       reciprocal_count: data.reciprocal,
       associated_people_count: data.total,
-      signal: computeSignal(data.reciprocal),
+      signal: storedSignal ?? computeSignal(data.reciprocal),
     }
   })
 

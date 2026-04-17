@@ -29,6 +29,7 @@ export default async function YourSourcesPage() {
                 <YourSources
                     initialSources={sourcesResult.sources || []}
                     allFriends={friendsResult.friends || []}
+                    totalFriendsCount={(friendsResult.friends || []).length}
                 />
             </main>
         </div>

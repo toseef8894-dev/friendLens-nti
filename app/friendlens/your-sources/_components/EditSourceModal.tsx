@@ -6,11 +6,13 @@ import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { updateSource, deleteSource } from '../actions'
 import { SOURCE_TYPES } from '../types'
 import type { SourceWithSignal } from '../types'
+import SourceRecommendationsCarousel from './SourceRecommendationsCarousel'
 
 interface EditSourceModalProps {
   open: boolean
   onClose: () => void
   source: SourceWithSignal
+  totalFriendsCount: number
   onSaved?: (updated: SourceWithSignal) => void
   onDeleted?: () => void
   onManagePeople?: () => void
@@ -20,6 +22,7 @@ export default function EditSourceModal({
   open,
   onClose,
   source,
+  totalFriendsCount,
   onSaved,
   onDeleted,
   onManagePeople,
@@ -286,6 +289,16 @@ export default function EditSourceModal({
               </div>
             </div>
           </div> */}
+
+          {/* Recommendations for this source */}
+          <div className="mb-6">
+            <SourceRecommendationsCarousel
+              key={source.id}
+              source={source}
+              totalFriendsCount={totalFriendsCount}
+              showInstrumentalNote
+            />
+          </div>
 
           {/* Linked People Summary */}
           <div className="mb-6">

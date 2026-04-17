@@ -3,13 +3,15 @@
 import { useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
-import { ChevronUp, ChevronDown, ArrowUpDown, Plus } from 'lucide-react'
+import { ChevronUp, ChevronDown, ArrowUpDown, Plus, Lightbulb } from 'lucide-react'
 import { createSource, getSourcesWithSignal } from '../actions'
 import { SOURCE_TYPES } from '../types'
 import type { SourceWithSignal, Signal } from '../types'
 import type { Friend } from '../../your-people/types'
 import EditSourceModal from './EditSourceModal'
 import LinkPeopleModal from './LinkPeopleModal'
+import SourceRecommendationsCarousel from './SourceRecommendationsCarousel'
+import { getSourceRecommendations } from '../lib/recommendations'
 
 // ── Signal config ────────────────────────────────────────────
 
@@ -201,9 +203,10 @@ function SortIcon({
 interface YourSourcesProps {
     initialSources: SourceWithSignal[]
     allFriends: Friend[]
+    totalFriendsCount: number
 }
 
-export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) => {
+export const YourSources = ({ initialSources, allFriends, totalFriendsCount }: YourSourcesProps) => {
     const [sources, setSources] = useState<SourceWithSignal[]>(initialSources)
     const [sortColumn, setSortColumn] = useState<string>('created_at')
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
@@ -213,6 +216,10 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
     const [newName, setNewName] = useState('')
     const [newType, setNewType] = useState('')
     const [isAdding, setIsAdding] = useState(false)
+
+    // Recommendation state — incrementing refreshKey resets the carousel index
+    const [refreshKey, setRefreshKey] = useState(0)
+    const hasStarted = refreshKey > 0
 
     // Edit modal
     const [editSource, setEditSource] = useState<SourceWithSignal | null>(null)
@@ -386,16 +393,69 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                 <div className="w-full">
                     <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
                         <h2 className="text-xl sm:text-2xl text-[#0F172B] font-bold">Your Sources</h2>
-                        <button
-                            onClick={() => setShowAddModal(true)}
-                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-3xl bg-[#F8F4FF] hover:bg-[#F0E7FF] transition-colors border border-[#E9D5FF] shrink-0"
-                        >
-                            <Plus className="w-4 h-4 text-[#9810FA]" strokeWidth={1.33} />
-                            <span className="text-[#9810FA] text-xs sm:text-sm font-semibold leading-5 tracking-[-0.15px]">
-                                Add Source
-                            </span>
-                        </button>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={() => setRefreshKey((k) => k + 1)}
+                                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 rounded-xl bg-[#9810FA] hover:bg-[#9810FA]/90 transition-colors text-white recommendation-pulse"
+                            >
+                                <Lightbulb className="w-4 h-4" strokeWidth={1.67} />
+                                <span className="text-xs sm:text-sm font-semibold leading-5" style={{ letterSpacing: '-0.15px' }}>
+                                    {hasStarted ? 'Refresh Recommendation' : 'Get Recommendation'}
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setShowAddModal(true)}
+                                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-3xl bg-[#F8F4FF] hover:bg-[#F0E7FF] transition-colors border border-[#E9D5FF]"
+                            >
+                                <Plus className="w-4 h-4 text-[#9810FA]" strokeWidth={1.33} />
+                                <span className="text-[#9810FA] text-xs sm:text-sm font-semibold leading-5 tracking-[-0.15px]">
+                                    Add Source
+                                </span>
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Recommendation Carousel — shown only after button press */}
+                    {hasStarted && (() => {
+                        const sourcesWithRecs = sources
+                            .map((s) => ({
+                                source: s,
+                                recs: getSourceRecommendations(s, totalFriendsCount),
+                            }))
+                            .filter(({ recs }) => recs.length > 0)
+
+                        if (sourcesWithRecs.length === 0) {
+                            return (
+                                <div className="mb-4 sm:mb-6 rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#9810FA] to-[#C800DE] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <Lightbulb className="w-4 h-4 text-white" strokeWidth={1.67} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase text-[#9810FA] mb-1" style={{ letterSpacing: '0.6px' }}>
+                                                FriendLens Insight
+                                            </p>
+                                            <p className="text-sm text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                                Your sources look good — set a Friend Potential or map people to a source to unlock recommendations.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        sourcesWithRecs.sort((a, b) => a.recs[0].priority - b.recs[0].priority)
+                        const best = sourcesWithRecs[0]
+
+                        return (
+                            <div key={`${best.source.id}-${refreshKey}`} className="mb-4 sm:mb-6">
+                                <SourceRecommendationsCarousel
+                                    source={best.source}
+                                    totalFriendsCount={totalFriendsCount}
+                                />
+                            </div>
+                        )
+                    })()}
 
                     {/* Mobile Card Layout */}
                     <div className="sm:hidden flex flex-col gap-3">
@@ -552,6 +612,7 @@ export const YourSources = ({ initialSources, allFriends }: YourSourcesProps) =>
                     open={!!editSource}
                     onClose={() => setEditSource(null)}
                     source={editSource}
+                    totalFriendsCount={totalFriendsCount}
                     onSaved={handleSourceSaved}
                     onDeleted={() => handleSourceDeleted(editSource.id)}
                     onManagePeople={() => {
