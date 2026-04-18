@@ -93,6 +93,7 @@ export default function EditSourceModal({
           name: trimmedName,
           source_type: selectedType || null,
           signal: selectedSignal,
+          signalIsSet: true,
           // active_members: parseNum(activeMembers),
           // relevant_pct: parseNum(relevantPct),
         })
@@ -290,15 +291,17 @@ export default function EditSourceModal({
             </div>
           </div> */}
 
-          {/* Recommendations for this source */}
-          <div className="mb-6">
-            <SourceRecommendationsCarousel
-              key={source.id}
-              source={source}
-              totalFriendsCount={totalFriendsCount}
-              showInstrumentalNote
-            />
-          </div>
+          {/* Recommendations for this source — only from persisted qualified state */}
+          {(source.signalIsSet || source.associated_people_count > 0) && (
+            <div className="mb-6">
+              <SourceRecommendationsCarousel
+                key={source.id}
+                source={source}
+                totalFriendsCount={totalFriendsCount}
+                showInstrumentalNote
+              />
+            </div>
+          )}
 
           {/* Linked People Summary */}
           <div className="mb-6">

@@ -10,8 +10,7 @@ import type { SourceWithSignal, Signal } from '../types'
 import type { Friend } from '../../your-people/types'
 import EditSourceModal from './EditSourceModal'
 import LinkPeopleModal from './LinkPeopleModal'
-import SourceRecommendationsCarousel from './SourceRecommendationsCarousel'
-import { getSourceRecommendations } from '../lib/recommendations'
+import { getPageLevelRecommendation } from '../lib/recommendations'
 
 // ── Signal config ────────────────────────────────────────────
 
@@ -286,6 +285,7 @@ export const YourSources = ({ initialSources, allFriends, totalFriendsCount }: Y
                     reciprocal_count: 0,
                     associated_people_count: 0,
                     signal: 'low',
+                    signalIsSet: false,
                 }
                 setSources((prev) => [newSource, ...prev])
                 setEditSource(newSource)
@@ -372,7 +372,7 @@ export const YourSources = ({ initialSources, allFriends, totalFriendsCount }: Y
                         {/* Right Column */}
                         <div className="flex flex-col gap-4">
                             <InstructionStep
-                                title="Rate the source for potential of qualituy people"
+                                title="Rate the source for potential of quality people"
                                 description="Higher, Medium, or Lower"
                             />
                             <InstructionStep
@@ -415,16 +415,11 @@ export const YourSources = ({ initialSources, allFriends, totalFriendsCount }: Y
                         </div>
                     </div>
 
-                    {/* Recommendation Carousel — shown only after button press */}
+                    {/* Page-level recommendation — shown only after button press */}
                     {hasStarted && (() => {
-                        const sourcesWithRecs = sources
-                            .map((s) => ({
-                                source: s,
-                                recs: getSourceRecommendations(s, totalFriendsCount),
-                            }))
-                            .filter(({ recs }) => recs.length > 0)
+                        const rec = getPageLevelRecommendation(sources)
 
-                        if (sourcesWithRecs.length === 0) {
+                        if (!rec) {
                             return (
                                 <div className="mb-4 sm:mb-6 rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4">
                                     <div className="flex items-start gap-3">
@@ -436,7 +431,7 @@ export const YourSources = ({ initialSources, allFriends, totalFriendsCount }: Y
                                                 FriendLens Insight
                                             </p>
                                             <p className="text-sm text-[#0F172B] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
-                                                Your sources look good — set a Friend Potential or map people to a source to unlock recommendations.
+                                                Set a Friend Potential or map people to a source to unlock recommendations.
                                             </p>
                                         </div>
                                     </div>
@@ -444,15 +439,47 @@ export const YourSources = ({ initialSources, allFriends, totalFriendsCount }: Y
                             )
                         }
 
-                        sourcesWithRecs.sort((a, b) => a.recs[0].priority - b.recs[0].priority)
-                        const best = sourcesWithRecs[0]
+                        const isSourceScoped = rec.kind === 'source-scoped'
+                        const boundSource = isSourceScoped
+                            ? sources.find((s) => s.id === rec.sourceId) ?? null
+                            : null
 
                         return (
-                            <div key={`${best.source.id}-${refreshKey}`} className="mb-4 sm:mb-6">
-                                <SourceRecommendationsCarousel
-                                    source={best.source}
-                                    totalFriendsCount={totalFriendsCount}
-                                />
+                            <div
+                                key={`${rec.sourceId ?? 'diagnostic'}-${refreshKey}`}
+                                className={`mb-4 sm:mb-6 rounded-2xl border border-purple-100 bg-white shadow-md px-5 py-4 ${isSourceScoped ? 'cursor-pointer hover:bg-[#FAFAFF] transition-colors' : ''}`}
+                                onClick={() => { if (boundSource) setEditSource(boundSource) }}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#9810FA] to-[#C800DE] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <Lightbulb className="w-4 h-4 text-white" strokeWidth={1.67} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <p className="text-[10px] font-bold uppercase text-[#9810FA]" style={{ letterSpacing: '0.6px' }}>
+                                                FriendLens Insight
+                                            </p>
+                                            {isSourceScoped && (
+                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ backgroundColor: '#F5F3FF', color: '#7C3AED' }}>
+                                                    Primary
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-sm font-semibold text-[#0F172B] leading-snug mb-1" style={{ letterSpacing: '-0.15px' }}>
+                                            {rec.title}
+                                        </p>
+                                        {rec.body && (
+                                            <p className="text-sm text-[#62748E] leading-relaxed" style={{ letterSpacing: '-0.15px' }}>
+                                                {rec.body}
+                                            </p>
+                                        )}
+                                        {isSourceScoped && (
+                                            <p className="text-xs text-[#9810FA] font-medium mt-1.5" style={{ letterSpacing: '-0.15px' }}>
+                                                Tap to open source →
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )
                     })()}

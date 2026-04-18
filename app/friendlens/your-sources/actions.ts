@@ -93,6 +93,7 @@ export async function getSourcesWithSignal(): Promise<{
       reciprocal_count: data.reciprocal,
       associated_people_count: data.total,
       signal: storedSignal ?? computeSignal(data.reciprocal),
+      signalIsSet: storedSignal != null,
     }
   })
 

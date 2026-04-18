@@ -26,4 +26,5 @@ export interface SourceWithSignal extends Source {
   reciprocal_count: number
   associated_people_count: number
   signal: Signal
+  signalIsSet: boolean
 }

@@ -213,6 +213,107 @@ export function getSourceRecommendations(
   return getRecommendationsForEngine(engineSource)
 }
 
+// ── Page-level types ──────────────────────────────────────────────────────────
+
+export interface PageLevelRecommendation {
+  sourceId?: string | null
+  sourceName?: string | null
+  title: string
+  body?: string
+  kind: 'source-scoped' | 'global-diagnostic'
+}
+
+// ── Page-level shape (subset of SourceWithSignal used by page helpers) ────────
+
+interface PageSource {
+  id: string
+  name: string
+  sourceType: string | null | undefined
+  friendPotential: FriendPotential | null
+  mappedPeopleCount: number
+  updatedAt: string | null | undefined
+}
+
+/**
+ * Returns eligible relational sources only.
+ * A source is eligible if it has a friendPotential set OR has at least 1 mapped person.
+ */
+export function getEligibleSources(sources: PageSource[]): PageSource[] {
+  return sources.filter((s) => {
+    const purpose = inferPurpose(s.sourceType)
+    return purpose === 'relational' && (!!s.friendPotential || s.mappedPeopleCount > 0)
+  })
+}
+
+/**
+ * Deterministic source ranking for page-level selection.
+ * Order: tier → has mapped people → mapped count → most recently updated → alphabetical
+ */
+export function rankSourcesForPage(sources: PageSource[]): PageSource[] {
+  const tierRank: Record<FriendPotential, number> = { higher: 1, medium: 2, lower: 3 }
+
+  return [...sources].sort((a, b) => {
+    const aTier = a.friendPotential ? tierRank[a.friendPotential] : 999
+    const bTier = b.friendPotential ? tierRank[b.friendPotential] : 999
+    if (aTier !== bTier) return aTier - bTier
+
+    const aHasMapped = a.mappedPeopleCount > 0 ? 1 : 0
+    const bHasMapped = b.mappedPeopleCount > 0 ? 1 : 0
+    if (aHasMapped !== bHasMapped) return bHasMapped - aHasMapped
+
+    if (a.mappedPeopleCount !== b.mappedPeopleCount) return b.mappedPeopleCount - a.mappedPeopleCount
+
+    const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
+    const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
+    if (aUpdated !== bUpdated) return bUpdated - aUpdated
+
+    return a.name.localeCompare(b.name)
+  })
+}
+
+/**
+ * Returns a single page-level recommendation derived from the best eligible source.
+ * - higher/medium best source  → source-scoped recommendation naming that source
+ * - lower-only sources         → global-diagnostic (no source binding)
+ * - no eligible sources        → null
+ */
+export function getPageLevelRecommendation(
+  sources: import('../types').SourceWithSignal[],
+): PageLevelRecommendation | null {
+  const pageSources: PageSource[] = sources.map((s) => ({
+    id: s.id,
+    name: s.name,
+    sourceType: s.source_type,
+    friendPotential: s.signalIsSet ? toFriendPotential(s.signal) : null,
+    mappedPeopleCount: s.associated_people_count,
+    updatedAt: s.updated_at,
+  }))
+
+  const eligible = getEligibleSources(pageSources)
+  if (!eligible.length) return null
+
+  const ranked = rankSourcesForPage(eligible)
+  const best = ranked[0]
+
+  if (best.friendPotential === 'lower' || best.friendPotential === null) {
+    return {
+      kind: 'global-diagnostic',
+      sourceId: null,
+      sourceName: null,
+      title: 'No strong sources detected',
+      body: 'Pull back from weaker sources and add one higher-potential source.',
+    }
+  }
+
+  return {
+    kind: 'source-scoped',
+    sourceId: best.id,
+    sourceName: best.name,
+    title: `Focus relational attention on ${best.name}`,
+    body: 'This source currently has the highest chance of producing real friendships.',
+  }
+}
+
 /**
  * Returns the single strongest CTA to surface after a Step 2 save.
  * Preference order: map → secondary → primary → first available
