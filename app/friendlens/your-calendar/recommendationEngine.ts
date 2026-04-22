@@ -84,28 +84,28 @@ const RECOMMENDATION_COPY: Record<RecommendationCase, { message: string; cta: st
     cta: 'Log an event',
   },
   STALE: {
-    message: "It's been a bit since your last plan. A simple lunch or drink can help restart your social momentum.",
+    message: "Your social momentum has slowed. A simple lunch or drink is the easiest way to get it moving again.",
     cta: 'Create an event',
   },
   LOW_HOSTING: {
-    message: "You've mostly been joining others' plans. Hosting something simple is one of the fastest ways to build stronger friendships.",
-    cta: 'Host something small',
+    message: "You've been joining more than initiating. Start something simple to create more pull.",
+    cta: 'Host something simple',
   },
   HIGH_HOSTING_LOW_INVITES: {
-    message: "You've been hosting frequently, but you're not being pulled into others' plans as much. Smaller, more personal plans are more likely to be reciprocated.",
-    cta: 'Plan a lunch, drink, or smaller get-together',
+    message: "You're putting a lot of energy out. Pause hosting events and give other people a chance to invite you.",
+    cta: 'Pause and listen',
   },
   EXPANSION_STREAK: {
-    message: "Larger plans are great for meeting people. Smaller, more personal plans are more likely to be reciprocated. Invite someone you met at a recent event to a lunch.",
-    cta: 'Create a more personal plan',
+    message: "You've been meeting new people. Shift focus to second and third meetings and see if a personal connection develops.",
+    cta: 'Plan a follow-up',
   },
   HIGH_HOSTING: {
-    message: "You've been hosting consistently and the energy is coming back. A more intentional one-on-one plan could deepen one of those connections.",
-    cta: 'Create an intentional plan',
+    message: "You've been hosting consistently and it's coming back to you. Now is a good time to spend time one-on-one with one person.",
+    cta: 'Plan a one-on-one',
   },
   HEALTHY_DEFAULT: {
-    message: "You've been active socially. Reach out to someone you haven't seen lately and make a smaller, more personal plan.",
-    cta: 'Plan something personal',
+    message: "You have social momentum. Keep it going by balancing invites and invitations, larger events and smaller events, and quality one-on-one events.",
+    cta: 'Plan a variety of events',
   },
 }
 
