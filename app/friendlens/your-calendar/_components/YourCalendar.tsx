@@ -9,6 +9,8 @@ import {
     updateCalendarEvent,
     deleteCalendarEvent,
 } from '../actions'
+import { getEventRecommendation, type EventInput } from '../recommendationEngine'
+import EventRecommendationCard from './EventRecommendationCard'
 
 const ROLE_COLORS = {
     hosting: '#9810FA',
@@ -188,16 +190,35 @@ export default function YourCalendar({ initialEvents }: Props) {
         today.getMonth() === currentMonth.getMonth() &&
         today.getDate() === day
 
+    // ── Event recommendation ──
+    const eventInputs: EventInput[] = events.map((e) => ({
+        id: e.id,
+        title: e.title,
+        role: e.role,
+        date: e.date,
+    }))
+    const recommendation = getEventRecommendation(eventInputs)
+
+    const openAddEventForm = () => {
+        setFormData({ title: '', date: '', time: '', role: 'invited' })
+        setShowAddEvent(true)
+    }
+
     return (
         <>
             <main className="w-full max-w-[1200px] mx-auto px-2 sm:px-4 py-6 sm:py-12 md:py-8">
+                {/* Recommendation card */}
+                <div className="mb-6">
+                    <EventRecommendationCard
+                        recommendation={recommendation}
+                        onCTAClick={openAddEventForm}
+                    />
+                </div>
+
                 {/* Add Event button above calendar */}
                 <div className="flex items-center justify-end mb-4">
                     <button
-                        onClick={() => {
-                            setFormData({ title: '', date: '', time: '', role: 'invited' })
-                            setShowAddEvent(true)
-                        }}
+                        onClick={openAddEventForm}
                         className="flex items-center gap-2 px-6 py-2 rounded-xl bg-purple-100 text-purple-600 text-sm font-semibold leading-5 hover:bg-purple-200 transition-colors"
                     >
                         <Plus className="w-4 h-4" strokeWidth={1.33} />
