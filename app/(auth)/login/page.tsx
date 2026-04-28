@@ -173,7 +173,7 @@ export default function LoginPage() {
                     }).catch(() => { })
 
                     toast.success('Account created successfully!')
-                    router.push('/')
+                    router.push('/friendlens/start-here')
                     router.refresh()
                 }
             } else {
@@ -209,7 +209,7 @@ export default function LoginPage() {
                 if (typeof window !== 'undefined') {
                     window.history.replaceState({}, '', window.location.pathname)
                 }
-                router.push('/')
+                router.push('/friendlens/start-here')
                 router.refresh()
             }
         } catch (err: any) {

@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Friend } from './types'
+
+/** Per-request friends fetch so new rows show after onboarding without a manual reload. */
+export const dynamic = 'force-dynamic'
 import HeroSection from './_components/HeroSection'
 import AddFriendsContent from './_components/AddFriendsScreen'
 import FriendsListContent from './_components/FriendsListScreen'

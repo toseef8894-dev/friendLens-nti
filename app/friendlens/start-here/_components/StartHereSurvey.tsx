@@ -1,416 +1,322 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
+import { saveOnboardingFriend } from '../actions'
+import {
+    AFTER_CONTACT_FEELING_OPTIONS,
+    CONTACT_FREQUENCY_OPTIONS,
+    DESIRED_DIRECTION_OPTIONS,
+    generateOnboardingInsight,
+    INITIATION_PATTERN_OPTIONS,
+    RELATIONSHIP_STAGE_OPTIONS,
+    type OnboardingInsight,
+    type OnboardingPersonInput,
+} from '../_lib/onboardingInsight'
+import StartHereLensSurvey1b from './StartHereLensSurvey1b'
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
-type Level = 'ok' | 'good' | 'excellent'
-
-type ItemKey =
-    | 'quality'
-    | 'across_places'
-    | 'local_friends'
-    | 'overall_social'
-    | 'interpret_manage'
-
-type SurveyAnswers = Record<ItemKey, Level | null>
-
-type LensKey = 'people' | 'events' | 'time' | 'sources' | 'style'
-
-type Recommendation =
-    | {
-        kind: 'threeStep'
-        title: string
-        subtitle: string
-        steps: Array<{ lens: LensKey; label: string; blurb: string }>
-    }
-    | {
-        kind: 'twoOptional'
-        title: string
-        subtitle: string
-        options: Array<{ lens: LensKey; label: string; blurb: string }>
-    }
-
-// ── Lens config ────────────────────────────────────────────────────────────
-
-const LENS: Record<LensKey, { label: string; href: string; accent: 'blue' | 'purple' | 'green' | 'teal' }> = {
-    people: { label: 'Your People', href: '/friendlens/your-people', accent: 'blue' },
-    events: { label: 'Your Events', href: '/friendlens/your-calendar', accent: 'purple' },
-    time: { label: 'Your Time', href: '/friendlens/your-time', accent: 'green' },
-    sources: { label: 'Your Sources', href: '/friendlens/your-sources', accent: 'teal' },
-    style: { label: 'Your Style', href: '/friendlens/your-style', accent: 'purple' },
+type FormState = {
+    name: string
+    relationshipStage: OnboardingPersonInput['relationshipStage'] | ''
+    contactFrequency: OnboardingPersonInput['contactFrequency'] | ''
+    initiationPattern: OnboardingPersonInput['initiationPattern'] | ''
+    afterContactFeeling: OnboardingPersonInput['afterContactFeeling'] | ''
+    desiredDirection: OnboardingPersonInput['desiredDirection'] | ''
 }
 
-// ── Recommendation logic (locked) ──────────────────────────────────────────
-
-function computeRecommendation(answers: SurveyAnswers): Recommendation | null {
-    const allAnswered = Object.values(answers).every((v) => v !== null)
-    if (!allAnswered) return null
-
-    const isLow = (k: ItemKey) => answers[k] === 'ok'
-    const lows = (Object.keys(answers) as ItemKey[]).filter((k) => isLow(k))
-    const goodOrExcellentCount = (Object.keys(answers) as ItemKey[]).filter(
-        (k) => answers[k] === 'good' || answers[k] === 'excellent'
-    ).length
-
-    if (lows.length === 0 && goodOrExcellentCount >= 3) {
-        return {
-            kind: 'twoOptional',
-            title: 'Your social life looks balanced',
-            subtitle: "Nothing here needs fixing. Explore what's working and why.",
-            options: [
-                { lens: 'people', label: 'Your People', blurb: 'See reciprocity and stability in your local circles' },
-                { lens: 'sources', label: 'Your Sources', blurb: 'Understand where your energy actually comes from' },
-            ],
-        }
-    }
-
-    if (isLow('local_friends')) {
-        return {
-            kind: 'threeStep',
-            title: "Here's a good place to start",
-            subtitle: 'Based on your answers, these areas tend to unlock clarity first.',
-            steps: [
-                { lens: 'people', label: 'Your People', blurb: "See who's active, reciprocal, and local" },
-                { lens: 'events', label: 'Your Events', blurb: 'See your event rhythm and momentum' },
-                { lens: 'time', label: 'Your Time', blurb: 'See whether capacity is the constraint' },
-            ],
-        }
-    }
-
-    if (isLow('interpret_manage')) {
-        return {
-            kind: 'threeStep',
-            title: "Here's a good place to start",
-            subtitle: 'Based on your answers, these areas tend to unlock clarity first.',
-            steps: [
-                { lens: 'style', label: 'Your Style', blurb: 'Clarify how you read signals and initiate' },
-                { lens: 'sources', label: 'Your Sources', blurb: 'See where your social energy comes from' },
-                { lens: 'people', label: 'Your People', blurb: 'Ground insights in real names and reciprocity' },
-            ],
-        }
-    }
-
-    if (isLow('overall_social')) {
-        return {
-            kind: 'threeStep',
-            title: "Here's a good place to start",
-            subtitle: 'Based on your answers, these areas tend to unlock clarity first.',
-            steps: [
-                { lens: 'time', label: 'Your Time', blurb: 'See where your hours actually go' },
-                { lens: 'events', label: 'Your Events', blurb: 'Rebuild rhythm: recurring collisions with people' },
-                { lens: 'people', label: 'Your People', blurb: 'Reconnect activities to humans who reciprocate' },
-            ],
-        }
-    }
-
-    // Fallback
-    return {
-        kind: 'threeStep',
-        title: "Here's a good place to start",
-        subtitle: 'Based on your answers, these areas tend to unlock clarity first.',
-        steps: [
-            { lens: 'people', label: 'Your People', blurb: 'See reciprocity patterns' },
-            { lens: 'events', label: 'Your Events', blurb: 'See rhythm and collisions' },
-            { lens: 'time', label: 'Your Time', blurb: 'See capacity and constraints' },
-        ],
-    }
+const EMPTY_FORM: FormState = {
+    name: '',
+    relationshipStage: '',
+    contactFrequency: '',
+    initiationPattern: '',
+    afterContactFeeling: '',
+    desiredDirection: '',
 }
 
-// ── AccentDot ──────────────────────────────────────────────────────────────
+const ONBOARDING_INSIGHT_STORAGE_KEY = 'fl_onboarding_insight_v1'
 
-function AccentDot({ accent, children }: { accent: string; children: React.ReactNode }) {
-    const map: Record<string, string> = {
-        blue: 'bg-blue-500/20   text-blue-700   border-blue-500/20',
-        purple: 'bg-violet-500/20 text-violet-700 border-violet-500/20',
-        green: 'bg-emerald-500/20 text-emerald-700 border-emerald-500/20',
-        teal: 'bg-teal-500/20   text-teal-700   border-teal-500/20',
+function readInsightFromUrlStorage(): OnboardingInsight | null {
+    if (typeof window === 'undefined') return null
+    try {
+        const sp = new URLSearchParams(window.location.search)
+        if (sp.get('after') !== '1') return null
+        const raw = sessionStorage.getItem(ONBOARDING_INSIGHT_STORAGE_KEY)
+        if (!raw) return null
+        const parsed = JSON.parse(raw) as OnboardingInsight
+        if (parsed && typeof parsed.title === 'string') return parsed
+    } catch {
+        // ignore
     }
-    return (
-        <div
-            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold flex-shrink-0 ${map[accent] ?? 'bg-slate-500/10 text-slate-700 border-slate-500/10'
-                }`}
-        >
-            {children}
-        </div>
-    )
+    return null
 }
 
-// ── ThreeStepPath ──────────────────────────────────────────────────────────
-
-function ThreeStepPath({
-    title,
-    subtitle,
-    steps,
-    onBack,
-    onRetake,
-}: {
-    title: string
-    subtitle: string
-    steps: Array<{ lens: LensKey; label: string; blurb: string }>
-    onBack: () => void
-    onRetake: () => void
-}) {
-    const accents: Array<'blue' | 'purple' | 'green'> = ['blue', 'purple', 'green']
-
-    return (
-        <div className="w-full max-w-3xl mx-auto">
-            <div className="py-8 text-center">
-                <h2 className="text-2xl font-semibold text-[#0F172B]">{title}</h2>
-                <p className="mt-2 text-[#62748E]">{subtitle}</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {steps.slice(0, 3).map((s, idx) => {
-                        const meta = LENS[s.lens];
-                        const accent = accents[idx] ?? meta.accent;
-
-                        return (
-                            <div key={s.lens} className="relative">
-                                <div className="flex items-center gap-3">
-                                    <AccentDot accent={accent}>{idx + 1}</AccentDot>
-                                    {idx < 2 ? (
-                                        <div className="hidden h-px flex-1 bg-slate-200 md:block" />
-                                    ) : null}
-                                </div>
-
-                                <div className="mt-4">
-                                    <div className="text-base font-semibold text-slate-900">
-                                        {idx + 1}. {s.label}
-                                    </div>
-                                    <div className="mt-2 text-sm text-slate-600">{s.blurb}</div>
-
-                                    <a
-                                        href={meta.href}
-                                        className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-                                    >
-                                        GO <span aria-hidden>→</span>
-                                    </a>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-center gap-6">
-                <button
-                    onClick={onBack}
-                    className="text-sm font-medium text-[#9810FA] hover:text-[#7810D0] transition-colors"
-                >
-                    ← Back
-                </button>
-                <button
-                    onClick={onRetake}
-                    className="text-sm text-[#62748E] hover:text-[#0F172B] transition-colors"
-                >
-                    Start over
-                </button>
-            </div>
-
-            <div className="mt-6 text-center border-t border-[#E2E8F0] pt-6">
-                <p className="text-xs text-[#90A1B9] mb-2">Want a deeper read on your social style?</p>
-                <Link
-                    href="/assessment"
-                    className="text-sm font-medium text-[#62748E] hover:text-[#0F172B] transition-colors"
-                >
-                    Take the full assessment →
-                </Link>
-            </div>
-        </div>
-    )
-}
-
-// ── TwoOptionalPaths ───────────────────────────────────────────────────────
-
-function TwoOptionalPaths({
-    title,
-    subtitle,
+function SelectField<T extends string>({
+    label,
+    value,
     options,
-    onBack,
-    onRetake,
+    onChange,
 }: {
-    title: string
-    subtitle: string
-    options: Array<{ lens: LensKey; label: string; blurb: string }>
-    onBack: () => void
-    onRetake: () => void
+    label: string
+    value: T | ''
+    options: Array<[T, string]>
+    onChange: (v: T) => void
 }) {
     return (
-        <div className="w-full max-w-3xl mx-auto">
-            <div className="rounded-2xl border border-[#E2E8F0] bg-white/80 backdrop-blur-sm shadow-sm">
-                <div className="px-7 pt-8 text-center">
-                    <h2 className="text-2xl sm:text-3xl font-semibold text-[#0F172B]">{title}</h2>
-                    <p className="mt-3 text-[#62748E]">{subtitle}</p>
-                    <div className="mt-6 flex items-center justify-center gap-3 text-xs font-semibold tracking-widest text-[#90A1B9]">
-                        <div className="h-px w-10 bg-[#E2E8F0]" />
-                        OPTIONAL NEXT PATHS
-                        <div className="h-px w-10 bg-[#E2E8F0]" />
-                    </div>
-                </div>
-
-                <div className="px-7 pb-8 pt-6">
-                    <div className="space-y-4">
-                        {options.slice(0, 2).map((o, idx) => {
-                            const meta = LENS[o.lens]
-                            const highlighted = idx === 0
-                            return (
-                                <div
-                                    key={o.lens}
-                                    className={`flex items-center justify-between rounded-xl border bg-white px-6 py-5 ${highlighted ? 'border-[#9810FA]/30 shadow-sm' : 'border-[#E2E8F0]'
-                                        }`}
-                                >
-                                    <div>
-                                        <div className="text-base font-semibold text-[#0F172B]">{o.label}</div>
-                                        <div className="mt-1 text-sm text-[#62748E]">{o.blurb}</div>
-                                    </div>
-
-                                    <Link
-                                        href={meta.href}
-                                        className="ml-4 flex-shrink-0 inline-flex items-center gap-2 rounded-xl border border-[#9810FA]/30 bg-white px-4 py-3 text-sm font-semibold text-[#9810FA] hover:bg-[#FAF5FF] transition-colors"
-                                    >
-                                        GO <span aria-hidden>→</span>
-                                    </Link>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-center gap-6">
-                <button
-                    onClick={onBack}
-                    className="text-sm font-medium text-[#9810FA] hover:text-[#7810D0] transition-colors"
-                >
-                    ← Back
-                </button>
-                <button
-                    onClick={onRetake}
-                    className="text-sm text-[#62748E] hover:text-[#0F172B] transition-colors"
-                >
-                    Start over
-                </button>
-            </div>
-
-            <div className="mt-6 text-center border-t border-[#E2E8F0] pt-6">
-                <p className="text-xs text-[#90A1B9] mb-2">Want a deeper read on your social style?</p>
-                <Link
-                    href="/assessment"
-                    className="text-sm font-medium text-[#62748E] hover:text-[#0F172B] transition-colors"
-                >
-                    Take the full assessment →
-                </Link>
-            </div>
-        </div>
+        <label className="block">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#62748E]">{label}</span>
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value as T)}
+                className="w-full rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172B] outline-none transition-colors focus:border-[#9810FA]"
+            >
+                <option value="">Choose one</option>
+                {options.map(([val, display]) => (
+                    <option key={val} value={val}>
+                        {display}
+                    </option>
+                ))}
+            </select>
+        </label>
     )
 }
 
-// ── Survey rows config ─────────────────────────────────────────────────────
-
-const ROWS: Array<{ key: ItemKey; label: string }> = [
-    { key: 'quality', label: 'Quality of my friendships' },
-    { key: 'across_places', label: 'Number of friends across places' },
-    { key: 'local_friends', label: 'Number of local friends' },
-    { key: 'overall_social', label: 'My overall social life (outside family and spouse)' },
-    { key: 'interpret_manage', label: 'My ability to interpret and manage all of the above.' },
-]
-
-const LEVELS: Level[] = ['ok', 'good', 'excellent']
-const LEVEL_LABELS: Record<Level, string> = { ok: 'OK', good: 'Good', excellent: 'Excellent' }
-
-// ── Main export ────────────────────────────────────────────────────────────
-
+/**
+ * Start Here: 1a (add one person + insight) gates 1b (lens survey).
+ * 1b renders only while an insight is present — not from stale session flags — so the form step stays clean.
+ */
 export default function StartHereSurvey() {
-    const [answers, setAnswers] = useState<SurveyAnswers>({
-        quality: null,
-        across_places: null,
-        local_friends: null,
-        overall_social: null,
-        interpret_manage: null,
-    })
-    const [submitted, setSubmitted] = useState(false)
+    const router = useRouter()
+    const [form, setForm] = useState<FormState>(EMPTY_FORM)
+    const [insight, setInsight] = useState<OnboardingInsight | null>(readInsightFromUrlStorage)
+    const [isSaving, setIsSaving] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
-    const allAnswered = Object.values(answers).every((v) => v !== null)
-    const reco = useMemo(() => (submitted ? computeRecommendation(answers) : null), [submitted, answers])
+    const isFormComplete = useMemo(
+        () =>
+            Boolean(
+                form.name.trim() &&
+                    form.relationshipStage &&
+                    form.contactFrequency &&
+                    form.initiationPattern &&
+                    form.afterContactFeeling &&
+                    form.desiredDirection,
+            ),
+        [form],
+    )
 
-    const handleBack = () => {
-        setSubmitted(false)
-    }
+    const handleSubmit = async () => {
+        if (!isFormComplete || isSaving) return
+        setIsSaving(true)
+        setError(null)
 
-    const handleRetake = () => {
-        setSubmitted(false)
-        setAnswers({ quality: null, across_places: null, local_friends: null, overall_social: null, interpret_manage: null })
-    }
-
-    if (submitted && reco) {
-        if (reco.kind === 'threeStep') {
-            return <ThreeStepPath title={reco.title} subtitle={reco.subtitle} steps={reco.steps} onBack={handleBack} onRetake={handleRetake} />
+        const payload: OnboardingPersonInput = {
+            name: form.name.trim(),
+            relationshipStage: form.relationshipStage as OnboardingPersonInput['relationshipStage'],
+            contactFrequency: form.contactFrequency as OnboardingPersonInput['contactFrequency'],
+            initiationPattern: form.initiationPattern as OnboardingPersonInput['initiationPattern'],
+            afterContactFeeling: form.afterContactFeeling as OnboardingPersonInput['afterContactFeeling'],
+            desiredDirection: form.desiredDirection as OnboardingPersonInput['desiredDirection'],
         }
-        return <TwoOptionalPaths title={reco.title} subtitle={reco.subtitle} options={reco.options} onBack={handleBack} onRetake={handleRetake} />
+
+        const result = await saveOnboardingFriend(payload)
+        if (result.error) {
+            setError(result.error)
+            setIsSaving(false)
+            return
+        }
+
+        const generated = generateOnboardingInsight(payload)
+        try {
+            sessionStorage.setItem(ONBOARDING_INSIGHT_STORAGE_KEY, JSON.stringify(generated))
+        } catch {
+            // ignore
+        }
+        setInsight(generated)
+        setIsSaving(false)
+        router.replace('/friendlens/start-here?after=1')
     }
+
+    const resetToForm = () => {
+        try {
+            sessionStorage.removeItem(ONBOARDING_INSIGHT_STORAGE_KEY)
+        } catch {
+            // ignore
+        }
+        setForm(EMPTY_FORM)
+        setInsight(null)
+        setError(null)
+        router.replace('/friendlens/start-here?add=1')
+    }
+
+    const confidenceLevel = insight
+        ? insight.confidence === 'high'
+            ? 3
+            : insight.confidence === 'medium'
+              ? 2
+              : 1
+        : 0
+    const confidenceLabel = insight
+        ? insight.confidence === 'high'
+            ? 'Strong signal'
+            : insight.confidence === 'medium'
+              ? 'Moderate confidence'
+              : 'Early signal'
+        : ''
 
     return (
-        <div className="w-full max-w-3xl mx-auto">
-            {/* Card */}
-            <div className="rounded-2xl border border-[#E2E8F0] bg-white/80 backdrop-blur-sm shadow-sm overflow-hidden">
-                {/* Card header */}
-                <div className="px-6 sm:px-7 pt-6 pb-4 border-b border-[#E2E8F0]">
-                    <h2 className="text-xl font-semibold text-[#0F172B]">Welcome to FriendLens.</h2>
-                    <p className="mt-1 text-sm text-[#62748E]">
-                        Take this quick survey to get a recommended place to start. There are no right or wrong answers.
-                    </p>
-                </div>
-
-                {/* Table header */}
-                <div className="grid grid-cols-[1fr_60px_60px_80px] sm:grid-cols-[1fr_100px_100px_110px] border-b border-[#E2E8F0] px-4 sm:px-7 py-3">
-                    <div className="font-medium text-[#45556C] text-xs sm:text-sm">Social satisfaction levels:</div>
-                    {LEVELS.map((lvl) => (
-                        <div key={lvl} className="text-center font-medium text-[#45556C] text-xs sm:text-sm">
-                            {LEVEL_LABELS[lvl]}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Rows — single responsive grid, no duplicate radio names */}
-                {ROWS.map((r) => (
-                    <div
-                        key={r.key}
-                        className="grid grid-cols-[1fr_60px_60px_80px] sm:grid-cols-[1fr_100px_100px_110px] items-center border-b border-[#E2E8F0] last:border-b-0 px-4 sm:px-7 py-3 sm:py-4"
-                    >
-                        <div className="text-xs sm:text-sm text-[#0F172B] pr-2 leading-snug">{r.label}</div>
-                        {LEVELS.map((lvl) => (
-                            <div key={lvl} className="flex justify-center">
-                                <input
-                                    aria-label={`${r.label} ${LEVEL_LABELS[lvl]}`}
-                                    type="radio"
-                                    name={r.key}
-                                    checked={answers[r.key] === lvl}
-                                    onChange={() => setAnswers((prev) => ({ ...prev, [r.key]: lvl }))}
-                                    className="h-5 w-5 cursor-pointer accent-violet-600"
-                                />
+        <div className="w-full max-w-3xl mx-auto space-y-8">
+            <section aria-label="Add your first person">
+                {insight ? (
+                    <>
+                        <div className="rounded-2xl border border-[#E2E8F0] bg-white/80 backdrop-blur-sm shadow-sm overflow-hidden">
+                            <div className="px-6 sm:px-7 pt-6 pb-4 border-b border-[#E2E8F0]">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9810FA]">
+                                    FriendLens Insight
+                                </p>
+                                <h2 className="mt-2 text-2xl font-semibold text-[#0F172B]">{insight.title}</h2>
+                                <p className="mt-2 text-sm text-[#62748E] leading-relaxed">{insight.message}</p>
                             </div>
-                        ))}
-                    </div>
-                ))}
-            </div>
 
-            {/* Continue button */}
-            <div className="mt-5 flex items-center justify-end">
-                <button
-                    type="button"
-                    disabled={!allAnswered}
-                    onClick={() => setSubmitted(true)}
-                    className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-sm transition ${allAnswered
-                        ? 'bg-[#9810FA] text-white hover:bg-[#7D0DD0]'
-                        : 'bg-[#E2E8F0] text-[#90A1B9] cursor-not-allowed'
-                        }`}
-                >
-                    Continue <span aria-hidden>→</span>
-                </button>
-            </div>
+                            <div className="px-6 sm:px-7 py-6">
+                                <div className="rounded-xl bg-[#FAF5FF] border border-[#E9D5FF] p-4">
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9810FA]">
+                                        {insight.actionLabel}
+                                    </p>
+                                    <p className="mt-2 text-sm text-[#0F172B] leading-relaxed">{insight.actionSuggestion}</p>
+                                </div>
+
+                                <div className="mt-5 flex items-center gap-2">
+                                    <div className="flex items-center gap-1">
+                                        {[1, 2, 3].map((i) => (
+                                            <span
+                                                key={i}
+                                                className={`h-2 w-2 rounded-full ${
+                                                    i <= confidenceLevel ? 'bg-[#9810FA]' : 'bg-[#E2E8F0]'
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                    <span className="text-xs text-[#62748E]">{confidenceLabel}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={resetToForm}
+                                className="inline-flex items-center rounded-full border border-[#E2E8F0] bg-white px-5 py-2.5 text-sm font-semibold text-[#0F172B] hover:bg-[#F8FAFC] transition-colors"
+                            >
+                                Add one more person
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    try {
+                                        sessionStorage.removeItem(ONBOARDING_INSIGHT_STORAGE_KEY)
+                                    } catch {
+                                        // ignore
+                                    }
+                                    router.push('/friendlens/your-people')
+                                }}
+                                className="inline-flex items-center gap-2 rounded-full bg-[#9810FA] px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#7D0DD0] transition"
+                            >
+                                Go to People <span aria-hidden>→</span>
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="rounded-2xl border border-[#E2E8F0] bg-white/80 backdrop-blur-sm shadow-sm overflow-hidden">
+                            <div className="px-6 sm:px-7 pt-6 pb-4 border-b border-[#E2E8F0]">
+                                <h2 className="text-xl font-semibold text-[#0F172B]">
+                                    Add one person. Get one useful insight.
+                                </h2>
+                                <p className="mt-1 text-sm text-[#62748E]">
+                                    Pick someone real in your life. After you add them, FriendLens will show one clear
+                                    insight and one simple next step.
+                                </p>
+                            </div>
+
+                            <div className="px-6 sm:px-7 py-6 space-y-4">
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#62748E]">
+                                        Their name
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={form.name}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                                        placeholder="First name is fine"
+                                        className="w-full rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172B] outline-none transition-colors focus:border-[#9810FA]"
+                                    />
+                                </label>
+
+                                <SelectField
+                                    label="Relationship stage"
+                                    value={form.relationshipStage}
+                                    options={RELATIONSHIP_STAGE_OPTIONS}
+                                    onChange={(v) => setForm((prev) => ({ ...prev, relationshipStage: v }))}
+                                />
+                                <SelectField
+                                    label="How often do you interact?"
+                                    value={form.contactFrequency}
+                                    options={CONTACT_FREQUENCY_OPTIONS}
+                                    onChange={(v) => setForm((prev) => ({ ...prev, contactFrequency: v }))}
+                                />
+                                <SelectField
+                                    label="Who usually initiates?"
+                                    value={form.initiationPattern}
+                                    options={INITIATION_PATTERN_OPTIONS}
+                                    onChange={(v) => setForm((prev) => ({ ...prev, initiationPattern: v }))}
+                                />
+                                <SelectField
+                                    label="How do you feel after contact?"
+                                    value={form.afterContactFeeling}
+                                    options={AFTER_CONTACT_FEELING_OPTIONS}
+                                    onChange={(v) => setForm((prev) => ({ ...prev, afterContactFeeling: v }))}
+                                />
+                                <SelectField
+                                    label="What do you want with this person?"
+                                    value={form.desiredDirection}
+                                    options={DESIRED_DIRECTION_OPTIONS}
+                                    onChange={(v) => setForm((prev) => ({ ...prev, desiredDirection: v }))}
+                                />
+
+                                {error ? <p className="text-sm text-red-600">{error}</p> : null}
+                            </div>
+                        </div>
+
+                        <div className="mt-5 flex items-center justify-end">
+                            <button
+                                type="button"
+                                disabled={!isFormComplete || isSaving}
+                                onClick={handleSubmit}
+                                className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-sm transition ${
+                                    isFormComplete && !isSaving
+                                        ? 'bg-[#9810FA] text-white hover:bg-[#7D0DD0]'
+                                        : 'bg-[#E2E8F0] text-[#90A1B9] cursor-not-allowed'
+                                }`}
+                            >
+                                {isSaving ? 'Creating insight...' : 'Show my insight'} <span aria-hidden>→</span>
+                            </button>
+                        </div>
+                    </>
+                )}
+            </section>
+
+            {insight ? (
+                <section aria-label="Where to look in FriendLens" className="pt-6">
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-[#E2E8F0] to-transparent mb-5" />
+                    <p className="mb-4 text-center text-sm leading-relaxed text-[#62748E]">
+                        When you&apos;re ready, a very short pulse on how you&apos;re doing socially — then we&apos;ll
+                        suggest where to look in FriendLens.
+                    </p>
+                    <div className="rounded-xl border border-[#E2E8F0]/80 bg-white/60 p-3 sm:p-4 shadow-sm">
+                        <StartHereLensSurvey1b />
+                    </div>
+                </section>
+            ) : null}
         </div>
     )
 }
