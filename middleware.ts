@@ -134,7 +134,7 @@ export async function middleware(request: NextRequest) {
 
     if (request.nextUrl.pathname.startsWith('/login')) {
         if (user) {
-            return NextResponse.redirect(new URL('/', request.url))
+            return NextResponse.redirect(new URL('/start-here-1a', request.url))
         }
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
+import { trackEvent } from '@/lib/analytics'
 
 export async function POST(request: NextRequest) {
     try {
@@ -51,11 +52,6 @@ export async function POST(request: NextRequest) {
             password: password
         })
 
-        await supabase.auth.signOut()
-
-        cookieStore.delete('reset_user_id')
-        cookieStore.delete('reset_session')
-
         if (updateError) {
             return NextResponse.json(
                 { error: updateError.message },
@@ -63,6 +59,11 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        await supabase.auth.signOut()
+        cookieStore.delete('reset_user_id')
+        cookieStore.delete('reset_session')
+
+        trackEvent('password_reset_completed')
         return NextResponse.json({
             success: true,
             message: 'Password reset successfully'

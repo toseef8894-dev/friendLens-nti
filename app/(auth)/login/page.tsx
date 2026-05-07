@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { setAuthToken, setAuthUser, clearAuthToken } from '@/lib/auth-storage'
 import { getPendingAnonymousResults, setPendingAnonymousResults } from '@/lib/storage-utils'
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
+import { trackEvent } from '@/lib/analytics'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -13,9 +15,13 @@ export default function LoginPage() {
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [loading, setLoading] = useState(false)
+    const [oauthBusy, setOauthBusy] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isSignUp, setIsSignUp] = useState(false)
     const [signupComplete, setSignupComplete] = useState(false)
+    const [resendLoading, setResendLoading] = useState(false)
+    const [resendCooldown, setResendCooldown] = useState(0)
+    const [showSignupGoogleFallback, setShowSignupGoogleFallback] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -28,6 +34,7 @@ export default function LoginPage() {
     const signupParam = searchParams?.get('signup')
     const verifiedParam = searchParams?.get('verified')
     const messageParam = searchParams?.get('message')
+    const errorDescriptionParam = searchParams?.get('error_description')
 
     useEffect(() => {
         if (signupParam === 'true') {
@@ -88,6 +95,26 @@ export default function LoginPage() {
                 errorMessage = 'Email confirmation failed. Please request a new confirmation link.'
             } else if (errorParam === 'auth-code-error') {
                 errorMessage = 'Invalid or expired confirmation link. Please try again.'
+            } else if (errorParam === 'access_denied') {
+                errorMessage = 'Google sign-in was canceled.'
+            } else if (errorParam === 'invalid_or_expired_link') {
+                errorMessage =
+                    errorDescriptionParam?.replace(/\+/g, ' ') ||
+                    'Invalid or expired confirmation link. Please try again.'
+            } else if (errorParam === 'missing_code') {
+                errorMessage =
+                    errorDescriptionParam?.replace(/\+/g, ' ') ||
+                    'The sign-in link is missing required parameters. Please try again.'
+            } else if (errorParam === 'oauth_failed' || errorParam === 'server_error') {
+                errorMessage =
+                    "We couldn't complete Google sign-in. Try email instead."
+            }
+            if (
+                errorParam === 'access_denied' ||
+                errorParam === 'oauth_failed' ||
+                errorParam === 'server_error'
+            ) {
+                trackEvent('google_oauth_failed', { reason: errorParam })
             }
             setError(errorMessage)
             toast.error(errorMessage)
@@ -106,7 +133,26 @@ export default function LoginPage() {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [errorParam, confirmedParam, verifiedParam, messageParam])
+    }, [errorParam, errorDescriptionParam, confirmedParam, verifiedParam, messageParam])
+
+    useEffect(() => {
+        if (!signupComplete) {
+            setShowSignupGoogleFallback(false)
+            return
+        }
+        const timer = setTimeout(() => {
+            setShowSignupGoogleFallback(true)
+        }, 12000)
+        return () => clearTimeout(timer)
+    }, [signupComplete])
+
+    useEffect(() => {
+        if (resendCooldown <= 0) return
+        const interval = setInterval(() => {
+            setResendCooldown((prev) => Math.max(0, prev - 1))
+        }, 1000)
+        return () => clearInterval(interval)
+    }, [resendCooldown])
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -132,10 +178,12 @@ export default function LoginPage() {
                 const hasPendingResults = !!getPendingAnonymousResults()
                 
                 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-                const redirectTo = hasPendingResults 
-                    ? `${baseUrl}/auth/callback?next=/&save_results=true`
+                const redirectTo = hasPendingResults
+                    ? `${baseUrl}/auth/callback?save_results=true`
                     : `${baseUrl}/auth/callback`
 
+                trackEvent('signup_started')
+                trackEvent('email_signup_submitted')
                 const { data: signupData, error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -161,6 +209,7 @@ export default function LoginPage() {
                 }
 
                 if (signupData.user && !signupData.session) {
+                    trackEvent('email_confirmation_requested')
                     setSignupComplete(true)
                 } else if (signupData.session) {
                     if (signupData.session.access_token) {
@@ -173,7 +222,7 @@ export default function LoginPage() {
                     }).catch(() => { })
 
                     toast.success('Account created successfully!')
-                    router.push('/friendlens/start-here')
+                    router.push('/start-here-1a')
                     router.refresh()
                 }
             } else {
@@ -206,10 +255,11 @@ export default function LoginPage() {
                 })
 
                 toast.success('Signed in successfully')
+                trackEvent('login_success')
                 if (typeof window !== 'undefined') {
                     window.history.replaceState({}, '', window.location.pathname)
                 }
-                router.push('/friendlens/start-here')
+                router.push('/start-here-1a')
                 router.refresh()
             }
         } catch (err: any) {
@@ -217,6 +267,32 @@ export default function LoginPage() {
             toast.error(err.message)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleResendConfirmation = async () => {
+        if (!email || resendCooldown > 0 || resendLoading) return
+        setResendLoading(true)
+        setError(null)
+        trackEvent('resend_confirmation_clicked')
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+            const { error } = await supabase.auth.resend({
+                type: 'signup',
+                email,
+                options: {
+                    emailRedirectTo: `${baseUrl}/auth/callback`,
+                },
+            })
+            if (error) throw error
+            toast.success('Confirmation email sent. Please check your inbox.')
+            setResendCooldown(60)
+        } catch (err: any) {
+            const message = err?.message || 'Could not resend confirmation email.'
+            setError(message)
+            toast.error(message)
+        } finally {
+            setResendLoading(false)
         }
     }
 
@@ -266,6 +342,29 @@ export default function LoginPage() {
                         </p>
                         <button
                             type="button"
+                            disabled={resendLoading || resendCooldown > 0 || !email}
+                            onClick={() => void handleResendConfirmation()}
+                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+                        >
+                            {resendCooldown > 0
+                                ? `Resend in ${resendCooldown}s`
+                                : resendLoading
+                                  ? 'Sending...'
+                                  : 'Resend confirmation email'}
+                        </button>
+                        {showSignupGoogleFallback ? (
+                            <div className="mt-6 border-t border-gray-200 pt-4">
+                                <p className="text-sm text-gray-600 mb-3">Having trouble?</p>
+                                <GoogleSignInButton
+                                    disabled={loading || oauthBusy || resendLoading}
+                                    onBusyChange={setOauthBusy}
+                                    label="Continue with Google instead - no email required"
+                                />
+                            </div>
+                        ) : null}
+                        <div className="mt-4" />
+                        <button
+                            type="button"
                             onClick={() => {
                                 setSignupComplete(false)
                                 setIsSignUp(false)
@@ -282,7 +381,20 @@ export default function LoginPage() {
                     </div>
                 ) : (
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                    <GoogleSignInButton
+                        disabled={loading || oauthBusy}
+                        onBusyChange={setOauthBusy}
+                    />
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                            <div className="w-full border-t border-gray-300" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="bg-white px-2 text-gray-500">or use email</span>
+                        </div>
+                    </div>
                     <form className="space-y-6" onSubmit={handleAuth}>
+                        <fieldset disabled={loading || oauthBusy} className="min-w-0 space-y-6 border-0 p-0 m-0">
                         {isSignUp && (
                             <>
                                 <div className="grid grid-cols-2 gap-4">
@@ -447,18 +559,26 @@ export default function LoginPage() {
                         )}
 
                         {error && (
-                            <div className="text-red-600 text-sm">{error}</div>
+                            <div className="space-y-2">
+                                <div className="text-red-600 text-sm">{error}</div>
+                                {(errorParam === 'access_denied' ||
+                                  errorParam === 'oauth_failed' ||
+                                  errorParam === 'server_error') && (
+                                    <div className="text-xs text-gray-600">Use email instead.</div>
+                                )}
+                            </div>
                         )}
 
                         <div>
                             <button
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || oauthBusy}
                                 className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
                             >
                                 {loading ? 'Processing...' : isSignUp ? 'Sign up' : 'Sign in'}
                             </button>
                         </div>
+                        </fieldset>
                     </form>
                 </div>
                 )}

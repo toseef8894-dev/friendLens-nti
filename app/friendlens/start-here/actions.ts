@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { OnboardingPersonInput } from './_lib/onboardingInsight'
+import { trackEvent } from '@/lib/analytics'
 
 const PEOPLE_PATH = '/friendlens/your-people'
 
@@ -83,6 +84,7 @@ export async function saveOnboardingFriend(input: OnboardingPersonInput): Promis
     return { error: `Failed to save person: ${error.message}` }
   }
 
+  trackEvent('first_person_added')
   // Invalidate Your People only (not start-here) so "Go to People" shows the new row without a full reload.
   revalidatePath(PEOPLE_PATH)
   return { success: true }

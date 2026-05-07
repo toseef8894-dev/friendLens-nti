@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { trackEvent } from '@/lib/analytics'
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('')
@@ -27,6 +28,7 @@ export default function ForgotPasswordPage() {
 
             if (error) throw error
 
+            trackEvent('password_reset_requested')
             setSuccess(true)
             toast.success('Password reset email sent! Check your inbox.')
         } catch (err: any) {

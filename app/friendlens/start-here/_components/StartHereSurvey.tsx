@@ -148,21 +148,6 @@ export default function StartHereSurvey() {
         router.replace('/friendlens/start-here?add=1')
     }
 
-    const confidenceLevel = insight
-        ? insight.confidence === 'high'
-            ? 3
-            : insight.confidence === 'medium'
-              ? 2
-              : 1
-        : 0
-    const confidenceLabel = insight
-        ? insight.confidence === 'high'
-            ? 'Strong signal'
-            : insight.confidence === 'medium'
-              ? 'Moderate confidence'
-              : 'Early signal'
-        : ''
-
     return (
         <div className="w-full max-w-3xl mx-auto space-y-8">
             <section aria-label="Add your first person">
@@ -185,19 +170,6 @@ export default function StartHereSurvey() {
                                     <p className="mt-2 text-sm text-[#0F172B] leading-relaxed">{insight.actionSuggestion}</p>
                                 </div>
 
-                                <div className="mt-5 flex items-center gap-2">
-                                    <div className="flex items-center gap-1">
-                                        {[1, 2, 3].map((i) => (
-                                            <span
-                                                key={i}
-                                                className={`h-2 w-2 rounded-full ${
-                                                    i <= confidenceLevel ? 'bg-[#9810FA]' : 'bg-[#E2E8F0]'
-                                                }`}
-                                            />
-                                        ))}
-                                    </div>
-                                    <span className="text-xs text-[#62748E]">{confidenceLabel}</span>
-                                </div>
                             </div>
                         </div>
 
