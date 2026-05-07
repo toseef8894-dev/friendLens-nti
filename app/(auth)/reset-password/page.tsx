@@ -130,84 +130,70 @@ function ResetPasswordForm() {
 
     if (isValid === null) {
         return (
-            <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
-                <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                        <div className="text-center">
-                            <p className="text-gray-600">Verifying reset link...</p>
-                        </div>
-                    </div>
+            <AuthShell>
+                <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-sm py-7 px-6 sm:px-10 text-center">
+                    <p className="text-[#45556C]">Verifying reset link...</p>
                 </div>
-            </div>
+            </AuthShell>
         )
     }
 
     if (isValid === false) {
         return (
-            <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
-                <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                        <div className="space-y-4">
-                            <div className="rounded-md bg-red-50 p-4">
-                                <div className="text-sm text-red-700">
-                                    {error || 'Invalid or expired reset link'}
-                                </div>
+            <AuthShell
+                title={<><span className="text-[#0F172B]">Link </span><span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">expired</span></>}
+                subtitle="Please request a new password reset link."
+            >
+                <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-sm py-6 px-6 sm:py-7 sm:px-10">
+                    <div className="space-y-4">
+                        <div className="rounded-lg bg-red-50/80 backdrop-blur-sm border border-red-100 p-3">
+                            <div className="text-sm text-red-700">
+                                {error || 'Invalid or expired reset link'}
                             </div>
-                            <div className="text-center space-y-2">
-                                <Link
-                                    href="/forgot-password"
-                                    className="block font-medium text-indigo-600 hover:text-indigo-500"
-                                >
-                                    Request a new reset link
-                                </Link>
-                                <Link
-                                    href="/login"
-                                    className="block text-sm text-gray-600 hover:text-gray-900"
-                                >
-                                    Back to sign in
-                                </Link>
-                            </div>
+                        </div>
+                        <div className="text-center space-y-2">
+                            <Link
+                                href="/forgot-password"
+                                className="block font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+                            >
+                                Request a new reset link
+                            </Link>
+                            <Link
+                                href="/login"
+                                className="block text-sm text-[#62748E] hover:text-[#0F172B] transition-colors"
+                            >
+                                Back to sign in
+                            </Link>
                         </div>
                     </div>
                 </div>
-            </div>
+            </AuthShell>
         )
     }
 
     return (
-        <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-                    Set new password
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Enter your new password below.
-                </p>
-            </div>
-
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                    {success ? (
-                        <div className="space-y-4">
-                            <div className="rounded-md bg-green-50 p-4">
-                                <div className="flex">
-                                    <div className="ml-3">
-                                        <h3 className="text-sm font-medium text-green-800">
-                                            Password reset successful!
-                                        </h3>
-                                        <div className="mt-2 text-sm text-green-700">
-                                            <p>Your password has been updated successfully. Redirecting to login...</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+        <AuthShell
+            title={<><span className="text-[#0F172B]">Set new </span><span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">password</span></>}
+            subtitle="Enter your new password below."
+        >
+            <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-sm py-6 px-6 sm:py-7 sm:px-10">
+                {success ? (
+                    <div className="space-y-4">
+                        <div className="rounded-xl bg-green-50/80 backdrop-blur-sm border border-green-100 p-4">
+                            <h3 className="text-sm font-semibold text-green-800">
+                                Password reset successful!
+                            </h3>
+                            <p className="mt-1.5 text-sm text-green-700">
+                                Your password has been updated successfully. Redirecting to login...
+                            </p>
                         </div>
-                    ) : (
-                        <form className="space-y-6" onSubmit={handleResetPassword}>
+                    </div>
+                ) : (
+                    <form className="space-y-4" onSubmit={handleResetPassword}>
                         <div>
                             <label
                                 htmlFor="password"
-                                className="block text-sm font-medium text-gray-700"
+                                className="block text-sm font-medium text-[#0F172B]"
                             >
                                 New Password
                             </label>
@@ -220,7 +206,7 @@ function ResetPasswordForm() {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                    className="block w-full appearance-none rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-[#0F172B] placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:text-sm transition-colors"
                                     placeholder="Enter new password"
                                 />
                             </div>
@@ -229,7 +215,7 @@ function ResetPasswordForm() {
                         <div>
                             <label
                                 htmlFor="confirmPassword"
-                                className="block text-sm font-medium text-gray-700"
+                                className="block text-sm font-medium text-[#0F172B]"
                             >
                                 Confirm New Password
                             </label>
@@ -242,21 +228,23 @@ function ResetPasswordForm() {
                                     required
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                    className="block w-full appearance-none rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-[#0F172B] placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:text-sm transition-colors"
                                     placeholder="Confirm new password"
                                 />
                             </div>
                         </div>
 
                         {error && (
-                            <div className="text-red-600 text-sm">{error}</div>
+                            <div className="rounded-lg bg-red-50/80 backdrop-blur-sm border border-red-100 p-3">
+                                <div className="text-red-700 text-sm">{error}</div>
+                            </div>
                         )}
 
-                        <div>
+                        <div className="pt-1">
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                                className="flex w-full justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-2.5 px-4 text-sm font-semibold text-white shadow-sm hover:shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:hover:shadow-sm"
                             >
                                 {loading ? 'Resetting...' : 'Reset password'}
                             </button>
@@ -265,14 +253,47 @@ function ResetPasswordForm() {
                         <div className="text-center">
                             <Link
                                 href="/login"
-                                className="font-medium text-indigo-600 hover:text-indigo-500"
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
                             >
                                 Back to sign in
                             </Link>
                         </div>
                     </form>
-                    )}
-                </div>
+                )}
+            </div>
+        </AuthShell>
+    )
+}
+
+function AuthShell({
+    children,
+    title,
+    subtitle,
+}: {
+    children: React.ReactNode
+    title?: React.ReactNode
+    subtitle?: string
+}) {
+    return (
+        <div
+            className="w-full flex-1 bg-cover bg-center bg-fixed flex items-center justify-center px-4 py-6 sm:py-10"
+            style={{ backgroundImage: "url('/bgImage.png')" }}
+        >
+            <div className="w-full max-w-md">
+                {title && (
+                    <div className="text-center mb-5 sm:mb-6">
+                        <h2
+                            className="text-3xl sm:text-4xl font-semibold tracking-tight"
+                            style={{ letterSpacing: '-1px' }}
+                        >
+                            {title}
+                        </h2>
+                        {subtitle && (
+                            <p className="mt-2 text-sm text-[#45556C]">{subtitle}</p>
+                        )}
+                    </div>
+                )}
+                {children}
             </div>
         </div>
     )
@@ -281,15 +302,11 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
     return (
         <Suspense fallback={
-            <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
-                <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                        <div className="text-center">
-                            <p className="text-gray-600">Loading...</p>
-                        </div>
-                    </div>
+            <AuthShell>
+                <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-sm py-7 px-6 sm:px-10 text-center">
+                    <p className="text-[#45556C]">Loading...</p>
                 </div>
-            </div>
+            </AuthShell>
         }>
             <ResetPasswordForm />
         </Suspense>
