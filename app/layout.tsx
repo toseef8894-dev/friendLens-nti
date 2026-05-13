@@ -22,8 +22,8 @@ const SaveAnonymousResults = dynamic(() => import('@/components/SaveAnonymousRes
 })
 
 export const metadata = {
-  title: 'FriendLens',
-  description: 'FriendLens — intake survey and friendship type result.',
+  title: 'FriendLens.ai | Make Better, More Reliable Friends',
+  description: 'A friendship navigation platform that helps you make one more good friend, then another through clarity, better social decisions, stronger reciprocity, and real-world connection.',
   icons: {
     icon: '/favicon.png',
     apple: '/favicon.png',

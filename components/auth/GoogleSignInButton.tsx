@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
 import { getPendingAnonymousResults } from '@/lib/storage-utils'
 import { trackEvent } from '@/lib/analytics'
 
@@ -15,7 +14,6 @@ type GoogleSignInButtonProps = {
 
 export default function GoogleSignInButton({ disabled, label, onBusyChange }: GoogleSignInButtonProps) {
     const [loading, setLoading] = useState(false)
-    const supabase = createClient()
 
     const handleGoogle = async () => {
         if (disabled || loading) return
@@ -29,18 +27,30 @@ export default function GoogleSignInButton({ disabled, label, onBusyChange }: Go
             if (!baseUrl) {
                 throw new Error('Missing site URL configuration.')
             }
-            const hasPendingResults = !!getPendingAnonymousResults()
-            const callbackPath = hasPendingResults
-                ? `${baseUrl}/auth/callback?save_results=true`
-                : `${baseUrl}/auth/callback`
+            const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+            if (!clientId) {
+                throw new Error('Missing Google client ID configuration.')
+            }
 
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: callbackPath,
-                },
+            // Store a random state value to verify on callback (CSRF protection)
+            const state = crypto.randomUUID()
+            document.cookie = `google_oauth_state=${state}; path=/; max-age=600; samesite=lax; secure`
+
+            const hasPendingResults = !!getPendingAnonymousResults()
+            if (hasPendingResults) {
+                document.cookie = `google_oauth_save_results=true; path=/; max-age=600; samesite=lax; secure`
+            }
+
+            const params = new URLSearchParams({
+                client_id: clientId,
+                redirect_uri: `${baseUrl}/auth/callback`,
+                response_type: 'code',
+                scope: 'openid email profile',
+                access_type: 'offline',
+                state,
             })
-            if (error) throw error
+
+            window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
         } catch (e: unknown) {
             setLoading(false)
             onBusyChange?.(false)
