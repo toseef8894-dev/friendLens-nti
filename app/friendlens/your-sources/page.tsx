@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import HeroSection from './_components/HeroSection'
 import { YourSources } from './_components/YourSources'
 import { getSourcesWithSignal, getAllFriends } from './actions'
+import ProlificSurveyCTA from '@/components/ProlificSurveyCTA'
 
 export default async function YourSourcesPage() {
     const supabase = createClient()
@@ -31,6 +32,7 @@ export default async function YourSourcesPage() {
                     allFriends={friendsResult.friends || []}
                     totalFriendsCount={(friendsResult.friends || []).length}
                 />
+                <ProlificSurveyCTA />
             </main>
         </div>
     );

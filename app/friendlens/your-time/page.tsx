@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import HeroSection from './_components/HeroSection'
 import YourTime from './_components/YourTime'
 import { getTimeAllocations } from './actions'
+import ProlificSurveyCTA from '@/components/ProlificSurveyCTA'
 
 export default async function YourTimePage() {
     const supabase = createClient()
@@ -24,6 +25,7 @@ export default async function YourTimePage() {
             <main className="flex flex-col items-center pt-[40px] px-4 pb-20">
                 <HeroSection />
                 <YourTime initialData={allocations} />
+                <ProlificSurveyCTA />
             </main>
         </div>
     )

@@ -10,6 +10,7 @@ import { EmailCaptureForm } from './EmailCaptureForm'
 import { toast } from 'sonner'
 import Insights from './Insights'
 import { setPendingAnonymousResults } from '@/lib/storage-utils'
+import ProlificSurveyCTA from './ProlificSurveyCTA'
 
 interface ResultData {
     id?: string
@@ -380,17 +381,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
 
 
                         {/* Prolific Beta Feedback Survey */}
-                        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center space-y-4">
-                            <p className="text-gray-600 text-sm">
-                                Help us improve FriendLens. Please complete a brief feedback survey (approximately 2 minutes).
-                            </p>
-                            <a
-                                href="https://docs.google.com/forms/d/e/1FAIpQLSfwyUL9CjwIZD2zu2OQP1NqPvsSlGNNw9m7JTShXaObd2MVRA/viewform?usp=header"
-                                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg transition-shadow"
-                            >
-                                Complete Beta Feedback Survey
-                            </a>
-                        </div>
+                        <ProlificSurveyCTA />
 
                         <div className="text-center pt-4">
                             <Link href="/friendlens/your-style?retake=true" className="text-indigo-600 hover:text-indigo-500 font-medium">

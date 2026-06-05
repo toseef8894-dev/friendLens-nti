@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import HeroSection from './_components/HeroSection'
 import YourCalendar from './_components/YourCalendar'
 import { getCalendarEvents } from './actions'
+import ProlificSurveyCTA from '@/components/ProlificSurveyCTA'
 
 export default async function YourCalendarPage() {
     const supabase = createClient()
@@ -24,6 +25,7 @@ export default async function YourCalendarPage() {
             <main className="flex flex-col items-center pt-6 sm:pt-[40px] px-3 sm:px-4 pb-20">
                 <HeroSection />
                 <YourCalendar initialEvents={events || []} />
+                <ProlificSurveyCTA />
             </main>
         </div>
     )

@@ -2,13 +2,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Friend } from './types'
 
-/** Per-request friends fetch so new rows show after onboarding without a manual reload. */
-export const dynamic = 'force-dynamic'
 import HeroSection from './_components/HeroSection'
 import AddFriendsContent from './_components/AddFriendsScreen'
 import FriendsListContent from './_components/FriendsListScreen'
 import FriendsTableContent from './_components/FriendsTableScreen'
 import HowToUseSection from './_components/HowToUseSection'
+import ProlificSurveyCTA from '@/components/ProlificSurveyCTA'
 
 type Step = 'add' | 'list' | 'table'
 
@@ -88,6 +87,7 @@ export default async function YourPeoplePage({ searchParams }: PageProps) {
         {step === 'add' && <AddFriendsContent single={searchParams.single === 'true'} />}
         {step === 'list' && <FriendsListContent friends={friendsList} />}
         {step === 'table' && <FriendsTableContent friends={friendsList} />}
+        <ProlificSurveyCTA />
       </main>
     </div>
   );
