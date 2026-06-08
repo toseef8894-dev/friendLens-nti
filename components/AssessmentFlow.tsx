@@ -1,35 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { QUESTIONS } from '@/lib/nti-config'
 import { UserResponse } from '@/lib/nti-scoring'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
 
 type AnswerMap = Record<string, string[]> // question_id -> ranked option_ids
 
 export default function AssessmentFlow() {
-    const router = useRouter()
     const [currentIndex, setCurrentIndex] = useState(0)
     const [answers, setAnswers] = useState<AnswerMap>({})
     const [submitting, setSubmitting] = useState(false)
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-    const supabase = createClient()
-
-    useEffect(() => {
-        const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            setIsAuthenticated(!!user)
-        }
-        checkAuth()
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            setIsAuthenticated(!!session?.user)
-        })
-
-        return () => subscription.unsubscribe()
-    }, [supabase])
 
     const questions = QUESTIONS
     const total = questions.length
@@ -87,11 +68,7 @@ export default function AssessmentFlow() {
                 })
             )
 
-            const { data: { user } } = await supabase.auth.getUser()
-            const isAuth = !!user
-
-            const endpoint = isAuth ? '/api/nti/v1/submit' : '/api/nti/v1/submit-anonymous'
-            const res = await fetch(endpoint, {
+            const res = await fetch('/api/nti/v1/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ responses })
@@ -105,17 +82,8 @@ export default function AssessmentFlow() {
                 return
             }
 
-            if (isAuth) {
-                toast.success('Assessment complete!')
-                window.location.href = '/results?redirected=true'
-            } else {
-                const anonymousData = {
-                    result: data.result,
-                    responses: responses 
-                }
-                sessionStorage.setItem('anonymousResults', JSON.stringify(anonymousData))
-                router.push('/results?anonymous=true')
-            }
+            toast.success('Assessment complete!')
+            window.location.href = '/results?redirected=true'
         } catch (err: any) {
             toast.error('Something went wrong. Please try again.')
             setSubmitting(false)

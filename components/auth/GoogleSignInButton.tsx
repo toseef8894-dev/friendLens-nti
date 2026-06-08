@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { getPendingAnonymousResults } from '@/lib/storage-utils'
+import { createClient } from '@/lib/supabase/client'
 import { trackEvent } from '@/lib/analytics'
 
 type GoogleSignInButtonProps = {
@@ -32,14 +32,16 @@ export default function GoogleSignInButton({ disabled, label, onBusyChange }: Go
                 throw new Error('Missing Google client ID configuration.')
             }
 
+            // If the current user is anonymous, flag for post-upgrade toast
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user?.is_anonymous) {
+                localStorage.setItem('upgrading_anonymous', 'true')
+            }
+
             // Store a random state value to verify on callback (CSRF protection)
             const state = crypto.randomUUID()
             document.cookie = `google_oauth_state=${state}; path=/; max-age=600; samesite=lax; secure`
-
-            const hasPendingResults = !!getPendingAnonymousResults()
-            if (hasPendingResults) {
-                document.cookie = `google_oauth_save_results=true; path=/; max-age=600; samesite=lax; secure`
-            }
 
             const params = new URLSearchParams({
                 client_id: clientId,

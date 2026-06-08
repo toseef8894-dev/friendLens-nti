@@ -92,14 +92,22 @@ export async function GET(request: Request) {
     }
 
     cookieStore.delete('google_oauth_state')
+    cookieStore.delete('google_oauth_save_results')
 
-    const saveResults = cookieStore.get('google_oauth_save_results')?.value === 'true'
-    if (saveResults) cookieStore.delete('google_oauth_save_results')
+    // Upsert profile — creates for new users, upgrades anonymous placeholder to real data
+    const googleUserId = data.user.id
+    const meta = data.user.user_metadata
+    await supabase.from('profiles').upsert({
+        id: googleUserId,
+        email: data.user.email || '',
+        first_name: meta?.given_name || meta?.first_name || null,
+        last_name: meta?.family_name || meta?.last_name || null,
+        full_name: meta?.full_name || meta?.name || null,
+        is_anonymous: false,
+    }, { onConflict: 'id' })
 
     trackEvent('google_oauth_success')
-    const target = new URL(POST_LOGIN_PATH, baseUrl)
-    if (saveResults) target.searchParams.set('save_results', 'true')
-    return NextResponse.redirect(target)
+    return NextResponse.redirect(new URL(POST_LOGIN_PATH, baseUrl))
   }
 
   // ── Supabase email flow (email confirmation, password reset) ───────────────
@@ -154,16 +162,22 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/reset-password', baseUrl))
   }
 
-  const saveResults = url.searchParams.get('save_results')
-  const target = new URL(POST_LOGIN_PATH, baseUrl)
-  if (saveResults === 'true') {
-    target.searchParams.set('save_results', 'true')
-  }
+  // Upsert profile — creates for new users, upgrades anonymous placeholder to real data
+  const emailMeta = data.user?.user_metadata
+  await supabase.from('profiles').upsert({
+    id: userId,
+    email: data.user?.email || '',
+    first_name: emailMeta?.first_name || null,
+    last_name: emailMeta?.last_name || null,
+    full_name: emailMeta?.full_name || null,
+    is_anonymous: false,
+  }, { onConflict: 'id' })
+
   const provider = data.user?.app_metadata?.provider
   if (provider === 'google') {
     trackEvent('google_oauth_success')
   } else {
     trackEvent('email_confirmed')
   }
-  return NextResponse.redirect(target)
+  return NextResponse.redirect(new URL(POST_LOGIN_PATH, baseUrl))
 }

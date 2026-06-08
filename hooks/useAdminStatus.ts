@@ -2,19 +2,16 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useDeferredCallback } from './useDeferredCallback'
 
 interface UseAdminStatusOptions {
     userId: string | null | undefined
-    defer?: boolean
 }
 
 export function useAdminStatus(options: UseAdminStatusOptions) {
-    const { userId, defer = true } = options
+    const { userId } = options
     const [isAdmin, setIsAdmin] = useState(false)
     const [loading, setLoading] = useState(false)
     const supabase = useMemo(() => createClient(), [])
-    const { defer: deferCallback } = useDeferredCallback()
 
     useEffect(() => {
         if (!userId) {
@@ -26,50 +23,25 @@ export function useAdminStatus(options: UseAdminStatusOptions) {
         const checkAdminStatus = async () => {
             try {
                 setLoading(true)
-                const { data: userRoles, error: userRolesError } = await supabase
+                const { data } = await supabase
                     .from('user_roles')
-                    .select('role_id')
+                    .select('roles!inner(name)')
                     .eq('user_id', userId)
+                    .eq('roles.name', 'admin')
+                    .limit(1)
+                    .maybeSingle()
 
-                if (userRolesError) {
-                    setIsAdmin(false)
-                    setLoading(false)
-                    return
-                }
-
-                if (userRoles && userRoles.length > 0) {
-                    const { data: roles, error: rolesError } = await supabase
-                        .from('roles')
-                        .select('id, name')
-
-                    if (roles && !rolesError) {
-                        const adminRole = roles.find(r => r.name === 'admin')
-                        if (adminRole) {
-                            const hasAdmin = userRoles.some(ur => ur.role_id === adminRole.id)
-                            setIsAdmin(hasAdmin)
-                        } else {
-                            setIsAdmin(false)
-                        }
-                    } else {
-                        setIsAdmin(false)
-                    }
-                } else {
-                    setIsAdmin(false)
-                }
-                setLoading(false)
+                setIsAdmin(!!data)
             } catch (err) {
                 console.error('Error checking admin status:', err)
                 setIsAdmin(false)
+            } finally {
                 setLoading(false)
             }
         }
 
-        if (defer) {
-            deferCallback(checkAdminStatus, { timeout: 2000 })
-        } else {
-            checkAdminStatus()
-        }
-    }, [userId, defer, supabase, deferCallback])
+        checkAdminStatus()
+    }, [userId, supabase])
 
     return { isAdmin, loading }
 }

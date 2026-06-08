@@ -23,6 +23,7 @@ const NAV_ITEMS = [
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+    const [showLogoutWarning, setShowLogoutWarning] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
     const mobileNavRef = useRef<HTMLDivElement>(null)
     const router = useRouter()
@@ -179,8 +180,11 @@ export default function Header() {
                             {isMenuOpen && (
                                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                                     <div className="px-4 py-2 border-b border-gray-100">
-                                        <p className="text-sm text-gray-500 truncate">{user.email}</p>
-                                        {isAdmin && (
+                                        <p className="text-sm text-gray-500 truncate">{user.email || 'Guest'}</p>
+                                        {user.is_anonymous && (
+                                            <p className="text-xs text-amber-600 font-medium">Not signed in</p>
+                                        )}
+                                        {isAdmin && !user.is_anonymous && (
                                             <p className="text-xs text-purple-600 font-medium">Admin</p>
                                         )}
                                     </div>
@@ -211,7 +215,14 @@ export default function Header() {
                                         </Link>
                                     )}
                                     <button
-                                        onClick={handleLogout}
+                                        onClick={() => {
+                                            if (user?.is_anonymous) {
+                                                setIsMenuOpen(false)
+                                                setShowLogoutWarning(true)
+                                            } else {
+                                                handleLogout()
+                                            }
+                                        }}
                                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                     >
                                         <LogOut size={16} />
@@ -243,6 +254,36 @@ export default function Header() {
                     </button>
                 </div>
             </header>
+
+            {/* Anonymous logout warning dialog */}
+            {showLogoutWarning && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Are you sure?</h3>
+                        <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                            If you log out now, all your results will be lost. Create an account first to save them permanently.
+                        </p>
+                        <div className="flex gap-3">
+                            <Link
+                                href="/login?signup=true"
+                                onClick={() => setShowLogoutWarning(false)}
+                                className="flex-1 text-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+                            >
+                                Create Account
+                            </Link>
+                            <button
+                                onClick={() => {
+                                    setShowLogoutWarning(false)
+                                    handleLogout()
+                                }}
+                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                            >
+                                Log out anyway
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Mobile Navigation Drawer */}
             {isMobileNavOpen && (

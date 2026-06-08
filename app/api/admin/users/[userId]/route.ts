@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/rbac'
+import { getErrorMessage, sanitizeErrorForClient } from '@/lib/api-error'
 
 export async function DELETE(
     _request: NextRequest,
@@ -66,16 +67,17 @@ export async function DELETE(
             message: 'User deleted successfully'
         })
 
-    } catch (error: any) {
-        if (error.message === 'Not authenticated') {
+    } catch (error: unknown) {
+        const msg = getErrorMessage(error)
+        if (msg === 'Not authenticated') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
-        if (error.message === 'Admin access required') {
+        if (msg === 'Admin access required') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
         console.error('Delete user error:', error)
         return NextResponse.json(
-            { error: error.message || 'Internal server error' },
+            { error: sanitizeErrorForClient(error) },
             { status: 500 }
         )
     }

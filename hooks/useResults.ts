@@ -16,19 +16,6 @@ interface ResultData {
     created_at?: string
 }
 
-interface AnonymousResult {
-    nti_type: {
-        id: string
-        name: string
-        short_label: string
-        description?: string
-        distance: number
-    }
-    primary_archetype: ArchetypeId
-    secondary_archetype: ArchetypeId
-    normalized_scores: Record<DimensionId, number>
-}
-
 export interface NormalizedResults {
     ntiType: ReturnType<typeof getNTITypeById>
     primaryArchetypeId: ArchetypeId
@@ -50,55 +37,8 @@ export function useResults(userId?: string, initialData?: ResultData | null) {
         setLoading(true)
         setError(null)
 
-        const anonymousParam = searchParams.get('anonymous')
         const fromLoginParam = searchParams.get('from_login')
 
-        // Handle anonymous results
-        if (anonymousParam === 'true') {
-            const stored = sessionStorage.getItem('anonymousResults')
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored)
-                    const resultData = parsed.result || parsed
-                    const anonymousResult = resultData as AnonymousResult
-
-                    const ntiType = getNTITypeById(anonymousResult.nti_type.id)
-                    const primaryArchetypeId = anonymousResult.primary_archetype
-                    const secondaryArchetypeId = anonymousResult.secondary_archetype
-                    const primaryArchetype = ARCHETYPES[primaryArchetypeId]
-                    const secondaryArchetype = secondaryArchetypeId ? ARCHETYPES[secondaryArchetypeId] : null
-
-                    if (!ntiType || !primaryArchetype) {
-                        setError('Unable to load your results. Please try again.')
-                        setLoading(false)
-                        return
-                    }
-
-                    setResults({
-                        ntiType,
-                        primaryArchetypeId,
-                        secondaryArchetypeId,
-                        primaryArchetype,
-                        secondaryArchetype,
-                        scores: anonymousResult.normalized_scores,
-                        isAnonymous: true
-                    })
-                    setLoading(false)
-                    return
-                } catch (e) {
-                    console.error('Error parsing anonymous results:', e)
-                    setError('Unable to load your results. Please try again.')
-                    setLoading(false)
-                    return
-                }
-            } else {
-                setError('No results found. Please complete the assessment first.')
-                setLoading(false)
-                return
-            }
-        }
-
-        // Handle initial data
         if (initialData) {
             const ntiType = getNTITypeById(initialData.archetype_id)
             const primaryArchetypeId = initialData.microtype_id as ArchetypeId
@@ -125,7 +65,6 @@ export function useResults(userId?: string, initialData?: ResultData | null) {
             return
         }
 
-        // Handle from login redirect
         if (fromLoginParam === 'true' && userId && !initialData) {
             const fetchResult = async () => {
                 try {
@@ -176,7 +115,6 @@ export function useResults(userId?: string, initialData?: ResultData | null) {
             return
         }
 
-        // Handle regular user fetch
         if (userId) {
             const fetchResult = async () => {
                 try {

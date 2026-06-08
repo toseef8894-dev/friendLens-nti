@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { isValidEmail, EMAIL } from '@/lib/config'
+import { sanitizeErrorForClient } from '@/lib/api-error'
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
         const { name, email, message } = body
 
-        if (!email || !email.includes('@')) {
+        if (!email || !isValidEmail(email)) {
             return NextResponse.json({ error: 'A valid email is required.' }, { status: 400 })
         }
 
@@ -22,8 +24,8 @@ export async function POST(request: NextRequest) {
         const resend = new Resend(process.env.RESEND_API_KEY)
 
         await resend.emails.send({
-            from: process.env.SUPPORT_EMAIL_FROM || 'Support <support@friendlens.ai>',
-            to: ['toseef8894@gmail.com'],
+            from: EMAIL.SUPPORT_FROM,
+            to: [EMAIL.CONTACT],
             replyTo: email,
             subject: `Contact: ${name ? name : email}`,
             text: [
@@ -39,8 +41,8 @@ export async function POST(request: NextRequest) {
         })
 
         return NextResponse.json({ success: true })
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Contact form error:', err)
-        return NextResponse.json({ error: 'Failed to send message. Please try again.' }, { status: 500 })
+        return NextResponse.json({ error: sanitizeErrorForClient(err) }, { status: 500 })
     }
 }

@@ -4,30 +4,25 @@ import { redirect } from 'next/navigation'
 import { getUserResult } from '@/lib/auth-utils'
 import HeroSection from '@/app/friendlens/your-style/_components/HeroSection'
 
-export default async function ResultsPage({ 
-    searchParams 
-}: { 
-    searchParams: Promise<{ redirected?: string, anonymous?: string, from_login?: string, my_results?: string }> 
+export default async function ResultsPage({
+    searchParams
+}: {
+    searchParams: Promise<{ from_login?: string }>
 }) {
     const supabase = createClient()
     const params = await searchParams
 
     const { data: { user } } = await supabase.auth.getUser()
-    
-    const isAnonymous = params.anonymous === 'true'
-    const fromLogin = params.from_login === 'true'
-    const showRedirectMessage = params.my_results === 'true'
 
-    if (!user && !isAnonymous) {
+    if (!user) {
         redirect('/login')
     }
 
-    let result = null
-    if (user) {
-        result = await getUserResult(user.id)
-        if (!result && !isAnonymous && !fromLogin) {
-            redirect('/assessment')
-        }
+    const fromLogin = params.from_login === 'true'
+
+    const result = await getUserResult(user.id)
+    if (!result && !fromLogin) {
+        redirect('/assessment')
     }
 
     return (
@@ -39,9 +34,8 @@ export default async function ResultsPage({
                 <HeroSection />
                 <ResultsView
                     initialData={result}
-                    userId={user?.id}
-                    showRedirectMessage={showRedirectMessage}
-                    fromLogin={fromLogin}
+                    userId={user.id}
+                    isAnonymous={user.is_anonymous ?? false}
                 />
             </div>
         </div>

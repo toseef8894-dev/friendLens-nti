@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { trackEvent } from '@/lib/analytics'
+import { sanitizeErrorForClient } from '@/lib/api-error'
 
 export async function POST(request: NextRequest) {
     try {
@@ -68,9 +69,10 @@ export async function POST(request: NextRequest) {
             success: true,
             message: 'Password reset successfully'
         })
-    } catch (error: any) {
+    } catch (error: unknown) {
+        console.error('Reset password error:', error)
         return NextResponse.json(
-            { error: error.message || 'Internal server error' },
+            { error: sanitizeErrorForClient(error) },
             { status: 500 }
         )
     }

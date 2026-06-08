@@ -2,7 +2,6 @@
 
 import { Lightbulb, Users, ArrowRightLeft } from 'lucide-react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import { Suspense, useState } from 'react'
 import { ArchetypeModal } from './ArchetypeModal'
 import { InteractionsModal } from './InteractionsModal'
@@ -21,9 +20,6 @@ interface InsightCard {
 }
 
 function InsightsContent({ primaryArchetypeId }: InsightsProps) {
-    const searchParams = useSearchParams()
-    const anonymousParam = searchParams.get('anonymous')
-    const queryString = anonymousParam === 'true' ? '?anonymous=true' : ''
     const [isArchetypeModalOpen, setIsArchetypeModalOpen] = useState(false)
     const [isInteractionsModalOpen, setIsInteractionsModalOpen] = useState(false)
 
@@ -38,7 +34,7 @@ function InsightsContent({ primaryArchetypeId }: InsightsProps) {
             icon: <Users className="w-5 h-5" />,
             title: 'The Other Seven Types',
             description: 'Each type represents a different way people contribute to friendships. Understanding them helps explain why some connections feel easy, while others need more translation.',
-            href: `/results/other-types${queryString}`
+            href: '/results/other-types'
         },
         {
             icon: <ArrowRightLeft className="w-5 h-5" />,

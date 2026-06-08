@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sanitizeErrorForClient } from '@/lib/api-error'
 
 export async function GET(request: NextRequest) {
     try {
@@ -33,10 +34,10 @@ export async function GET(request: NextRequest) {
             profile: profile || null
         })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Me API error:', error)
         return NextResponse.json(
-            { error: error.message || 'Internal server error' },
+            { error: sanitizeErrorForClient(error) },
             { status: 500 }
         )
     }

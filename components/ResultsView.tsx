@@ -7,9 +7,7 @@ import { DimensionId, DIMENSION_IDS, ArchetypeId } from '@/lib/nti-scoring'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { EmailCaptureForm } from './EmailCaptureForm'
-import { toast } from 'sonner'
 import Insights from './Insights'
-import { setPendingAnonymousResults } from '@/lib/storage-utils'
 import ProlificSurveyCTA from './ProlificSurveyCTA'
 
 interface ResultData {
@@ -20,19 +18,6 @@ interface ResultData {
     user_vector: Record<DimensionId, number>
     distance_score?: number
     created_at?: string
-}
-
-interface AnonymousResult {
-    nti_type: {
-        id: string
-        name: string
-        short_label: string
-        description?: string
-        distance: number
-    }
-    primary_archetype: ArchetypeId
-    secondary_archetype: ArchetypeId
-    normalized_scores: Record<DimensionId, number>
 }
 
 const DIMENSION_LABELS: Record<DimensionId, string> = {
@@ -53,20 +38,24 @@ const DIMENSION_COLORS: Record<DimensionId, string> = {
     GABA: '#6366F1'
 }
 
-function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogin, onPrimaryArchetypeChange }: { userId?: string, initialData: ResultData | null, showRedirectMessage?: boolean, fromLogin?: boolean, onPrimaryArchetypeChange?: (id: ArchetypeId | null) => void }) {
+function ResultsViewContent({ userId, initialData, isAnonymous, onPrimaryArchetypeChange }: {
+    userId?: string
+    initialData: ResultData | null
+    isAnonymous?: boolean
+    onPrimaryArchetypeChange?: (id: ArchetypeId | null) => void
+}) {
     const [result, setResult] = useState<ResultData | null>(initialData)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [isAnonymous, setIsAnonymous] = useState(false)
-    const [anonymousResult, setAnonymousResult] = useState<AnonymousResult | null>(null)
     const searchParams = useSearchParams()
     const supabase = createClient()
 
     useEffect(() => {
+        let cancelled = false
+
         setLoading(true)
         setError(null)
 
-        const anonymousParam = searchParams.get('anonymous')
         const fromLoginParam = searchParams.get('from_login')
 
         if (fromLoginParam === 'true' && userId && !initialData) {
@@ -80,57 +69,25 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
                         .limit(1)
                         .maybeSingle()
 
+                    if (cancelled) return
                     if (error) {
                         console.error('Error fetching result:', error)
                         setError('No results found. Please complete the assessment first.')
                     } else if (data) {
                         setResult(data)
-                        setIsAnonymous(false)
-                        setLoading(false)
-                        return
                     } else {
                         setError('No results found. Please complete the assessment first.')
                     }
                 } catch (e) {
+                    if (cancelled) return
                     console.error('Error in fetchResult:', e)
                     setError('No results found. Please complete the assessment first.')
                 } finally {
-                    setLoading(false)
+                    if (!cancelled) setLoading(false)
                 }
             }
             fetchResult()
-            return
-        }
-
-        if (anonymousParam === 'true') {
-            const stored = sessionStorage.getItem('anonymousResults')
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored)
-                    const resultData = parsed.result || parsed
-                    setAnonymousResult(resultData)
-                    setIsAnonymous(true)
-                    setResult({
-                        archetype_id: resultData.nti_type.id,
-                        microtype_id: resultData.primary_archetype,
-                        microtype_tags: [resultData.primary_archetype, resultData.secondary_archetype],
-                        user_vector: resultData.normalized_scores,
-                        distance_score: resultData.nti_type.distance
-                    })
-                    onPrimaryArchetypeChange?.(resultData.primary_archetype)
-                    setLoading(false)
-                    return
-                } catch (e) {
-                    console.error('Error parsing anonymous results:', e)
-                    setError('Unable to load your results. Please try again.')
-                    setLoading(false)
-                    return
-                }
-            } else {
-                setError('No results found. Please complete the assessment first.')
-                setLoading(false)
-                return
-            }
+            return () => { cancelled = true }
         }
 
         if (initialData) {
@@ -150,6 +107,7 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
                         .limit(1)
                         .maybeSingle()
 
+                    if (cancelled) return
                     if (error) {
                         console.error('Error fetching result:', error)
                         setError('No results found. Please complete the assessment first.')
@@ -159,10 +117,11 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
                         setError('No results found. Please complete the assessment first.')
                     }
                 } catch (e) {
+                    if (cancelled) return
                     console.error('Error in fetchResult:', e)
                     setError('No results found. Please complete the assessment first.')
                 } finally {
-                    setLoading(false)
+                    if (!cancelled) setLoading(false)
                 }
             }
             fetchResult()
@@ -170,6 +129,8 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
             setError('No results found. Please complete the assessment first.')
             setLoading(false)
         }
+
+        return () => { cancelled = true }
     }, [userId, initialData, searchParams, supabase, onPrimaryArchetypeChange])
 
     if (loading) {
@@ -226,12 +187,8 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
         <div className="w-full py-8 px-4">
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 gap-8">
-                    {/* Main Content */}
                     <div className="lg:col-span-2 space-y-8">
                         <div className="text-center">
-                            {/* <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-2">
-                                Your Friend Type
-                            </p> */}
                             <h1 className="text-4xl font-bold text-gray-900 mb-2">
                                 {ntiType.name}
                             </h1>
@@ -294,62 +251,17 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
                             </div>
                         </div>
 
-                        {/* <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Match Confidence</h3>
-                            <p className="text-sm text-gray-500">How closely you match this type</p>
-                        </div>
-                        <div className="text-3xl font-bold text-indigo-600">
-                            {Math.round((1 - Math.min(result.distance_score / 100, 1)) * 100)}%
-                        </div>
-                    </div>
-                </div> */}
-
-                        {/* Account creation prompt for anonymous users */}
                         {isAnonymous && (
                             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6 shadow-sm space-y-4">
                                 <div>
                                     <h3 className="text-lg font-semibold text-yellow-900 mb-2">
-                                        Save Your Results & Get Email Report
+                                        Save Your Results Permanently
                                     </h3>
                                     <p className="text-yellow-800 mb-4">
-                                        Create a free account to save your results in "My Results" and receive a detailed email report of your Friendship Archetype.
+                                        Create a free account to keep your results permanently and receive a detailed email report of your Friendship Archetype.
                                     </p>
                                     <Link
                                         href="/login?signup=true"
-                                        onClick={() => {
-                                            if (result) {
-                                                const storedData = sessionStorage.getItem('anonymousResults')
-                                                let responses: unknown[] = []
-
-                                                if (storedData) {
-                                                    try {
-                                                        const parsed = JSON.parse(storedData)
-                                                        responses = Array.isArray(parsed.responses) ? parsed.responses : []
-                                                    } catch (e) {
-                                                        console.warn('Could not parse stored responses', e)
-                                                    }
-                                                }
-
-                                                const anonymousResults = {
-                                                    archetype_id: result.archetype_id,
-                                                    microtype_id: result.microtype_id,
-                                                    microtype_tags: result.microtype_tags,
-                                                    user_vector: result.user_vector,
-                                                    distance_score: result.distance_score,
-                                                    responses,
-                                                    nti_type: ntiType ? {
-                                                        name: ntiType.name,
-                                                        short_label: ntiType.short_label,
-                                                        description: ntiType.description
-                                                    } : undefined
-                                                }
-
-                                                setPendingAnonymousResults(anonymousResults)
-                                                console.log('Anonymous results and responses stored for account creation')
-                                            }
-                                        }}
                                         className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg transition-shadow"
                                     >
                                         Create Account to Save Results
@@ -379,8 +291,6 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
                             </div>
                         )}
 
-
-                        {/* Prolific Beta Feedback Survey */}
                         <ProlificSurveyCTA />
 
                         <div className="text-center pt-4">
@@ -398,35 +308,15 @@ function ResultsViewContent({ userId, initialData, showRedirectMessage, fromLogi
 export default function ResultsView({
     userId,
     initialData,
-    showRedirectMessage,
-    fromLogin,
+    isAnonymous,
 }: {
     userId?: string
     initialData: ResultData | null
-    showRedirectMessage?: boolean
-    fromLogin?: boolean
+    isAnonymous?: boolean
 }) {
     const [primaryArchetypeId, setPrimaryArchetypeId] = useState<ArchetypeId | null>(
         initialData?.microtype_id as ArchetypeId | null
     )
-
-    // Also check for anonymous results
-    useEffect(() => {
-        if (!primaryArchetypeId) {
-            const stored = sessionStorage.getItem('anonymousResults')
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored)
-                    const resultData = parsed.result || parsed
-                    if (resultData.primary_archetype) {
-                        setPrimaryArchetypeId(resultData.primary_archetype)
-                    }
-                } catch (e) {
-                    // Ignore parsing errors
-                }
-            }
-        }
-    }, [primaryArchetypeId])
 
     return (
         <Suspense
@@ -446,8 +336,7 @@ export default function ResultsView({
                             <ResultsViewContent
                                 userId={userId}
                                 initialData={initialData}
-                                showRedirectMessage={showRedirectMessage}
-                                fromLogin={fromLogin}
+                                isAnonymous={isAnonymous}
                                 onPrimaryArchetypeChange={setPrimaryArchetypeId}
                             />
                         </div>

@@ -3,15 +3,12 @@
 import { Suspense, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useResults } from '@/hooks/useResults'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArchetypeCard } from '@/components/ArchetypeCard'
 import { ArchetypeModal } from '@/components/ArchetypeModal'
 import { ArchetypeId } from '@/lib/nti-scoring'
-import { ARCHETYPES } from '@/lib/nti-config'
 
 function OtherTypesContent() {
-    const searchParams = useSearchParams()
     const [userId, setUserId] = useState<string | undefined>(undefined)
     const [selectedArchetype, setSelectedArchetype] = useState<ArchetypeId | null>(null)
     const [primaryArchetypeId, setPrimaryArchetypeId] = useState<ArchetypeId | null>(null)
@@ -25,33 +22,13 @@ function OtherTypesContent() {
         getUser()
     }, [supabase])
 
-    useEffect(() => {
-        const anonymousParam = searchParams.get('anonymous')
-        if (anonymousParam === 'true') {
-            const stored = sessionStorage.getItem('anonymousResults')
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored)
-                    const resultData = parsed.result || parsed
-                    if (resultData.primary_archetype) {
-                        setPrimaryArchetypeId(resultData.primary_archetype)
-                    }
-                } catch (e) {
-                    // Ignore parsing errors
-                }
-            }
-        }
-    }, [searchParams])
-
-    const { results } = useResults(userId && !primaryArchetypeId ? userId : undefined, null)
+    const { results } = useResults(userId, null)
 
     useEffect(() => {
         if (results?.primaryArchetypeId) {
             setPrimaryArchetypeId(results.primaryArchetypeId)
         }
     }, [results])
-
-    const anonymousParam = searchParams.get('anonymous')
 
     const allArchetypeIds: ArchetypeId[] = ['Anchor', 'Connector', 'Hunter', 'Bonder', 'Sage', 'FlowMaker', 'Builder', 'Explorer']
     const otherArchetypes = primaryArchetypeId
@@ -87,7 +64,7 @@ function OtherTypesContent() {
 
                 <div className="text-center pt-4">
                     <Link
-                        href={`/results${anonymousParam === 'true' ? '?anonymous=true' : ''}`}
+                        href="/results"
                         className="text-indigo-600 hover:text-indigo-500 font-medium"
                     >
                         ← Back to Results

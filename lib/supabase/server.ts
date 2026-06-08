@@ -28,12 +28,16 @@ export function createClient() {
                     try {
                         cookieStore.set({ name, value, ...options })
                     } catch (error) {
+                        // Next.js throws when attempting to set cookies inside a Server Component read phase.
+                        // This is expected — the middleware or Route Handler is responsible for setting auth cookies.
+                        console.warn(`[supabase/server] Could not set cookie "${name}":`, error)
                     }
                 },
                 remove(name: string, options: CookieOptions) {
                     try {
                         cookieStore.set({ name, value: '', ...options })
                     } catch (error) {
+                        console.warn(`[supabase/server] Could not remove cookie "${name}":`, error)
                     }
                 },
             },

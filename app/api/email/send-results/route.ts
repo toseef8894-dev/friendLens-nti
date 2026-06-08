@@ -3,6 +3,8 @@ import { getNTITypeById } from '@/lib/nti-config'
 import { ARCHETYPES } from '@/lib/nti-config'
 import type { ArchetypeId, DimensionId } from '@/lib/nti-scoring'
 import { DIMENSION_IDS } from '@/lib/nti-scoring'
+import { isValidEmail } from '@/lib/config'
+import { sanitizeErrorForClient } from '@/lib/api-error'
 
 interface EmailRequest {
     email: string
@@ -274,7 +276,7 @@ export async function POST(request: NextRequest) {
         const body: EmailRequest = await request.json()
         const { email, resultData } = body
 
-        if (!email || !email.includes('@')) {
+        if (!email || !isValidEmail(email)) {
             return NextResponse.json(
                 { error: 'Valid email address is required' },
                 { status: 400 }
@@ -298,10 +300,10 @@ export async function POST(request: NextRequest) {
             ...emailResult
         })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Email send error:', error)
         return NextResponse.json(
-            { error: error.message || 'Failed to send email' },
+            { error: sanitizeErrorForClient(error) },
             { status: 500 }
         )
     }

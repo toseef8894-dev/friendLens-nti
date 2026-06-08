@@ -193,14 +193,61 @@ export default function AdminUsersPage() {
         )
     }
 
+    function exportCSV() {
+        const headers = ['Name', 'Email', 'Role', 'Signed Up', 'Survey Status', 'NTI Type', 'NTI Label', 'Archetype', 'Assessed At']
+
+        const rows = users.map(u => {
+            const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.full_name || ''
+            const signedUp = new Date(u.created_at).toLocaleDateString('en-GB')
+            const surveyStatus = u.result ? 'Completed' : 'Not assessed'
+            const assessedAt = u.result?.assessed_at ? new Date(u.result.assessed_at).toLocaleDateString('en-GB') : ''
+            return [
+                name,
+                u.email,
+                u.role,
+                signedUp,
+                surveyStatus,
+                u.result?.nti_type ?? '',
+                u.result?.nti_type_label ?? '',
+                u.result?.archetype ?? '',
+                assessedAt,
+            ]
+        })
+
+        const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
+        const csv = [headers, ...rows].map(r => r.map(escape).join(',')).join('\r\n')
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `friendlens-users-${new Date().toISOString().slice(0, 10)}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
+    }
+
     return (
         <div className="p-8">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Users</h1>
-                <p className="text-gray-600 mt-1">
-                    {users.length} registered user{users.length !== 1 ? 's' : ''}
-                </p>
+            <div className="mb-8 flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+                    <p className="text-gray-600 mt-1">
+                        {users.length} registered user{users.length !== 1 ? 's' : ''}
+                    </p>
+                </div>
+                <button
+                    onClick={exportCSV}
+                    disabled={users.length === 0}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Export CSV
+                </button>
             </div>
 
             {/* Users Table */}

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/rbac'
 import { ARCHETYPES, getNTITypeById } from '@/lib/nti-config'
+import { getErrorMessage, sanitizeErrorForClient } from '@/lib/api-error'
 
 export async function GET() {
     try {
@@ -11,6 +12,7 @@ export async function GET() {
         const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
             .select('id, email, first_name, last_name, full_name, created_at')
+            .eq('is_anonymous', false)
             .order('created_at', { ascending: false })
 
         if (profilesError) {
@@ -72,16 +74,17 @@ export async function GET() {
 
         return NextResponse.json({ users })
 
-    } catch (error: any) {
-        if (error.message === 'Not authenticated') {
+    } catch (error: unknown) {
+        const msg = getErrorMessage(error)
+        if (msg === 'Not authenticated') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
-        if (error.message === 'Admin access required') {
+        if (msg === 'Admin access required') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
         console.error('Admin users error:', error)
         return NextResponse.json(
-            { error: error.message || 'Internal server error' },
+            { error: sanitizeErrorForClient(error) },
             { status: 500 }
         )
     }

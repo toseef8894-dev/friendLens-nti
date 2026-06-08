@@ -17,6 +17,10 @@ const Toaster = dynamic(() => import('sonner').then(mod => ({ default: mod.Toast
   ssr: false,
 })
 
+const SessionInit = dynamic(() => import('@/components/SessionInit'), {
+  ssr: false,
+})
+
 const SaveAnonymousResults = dynamic(() => import('@/components/SaveAnonymousResults'), {
   ssr: false,
 })
@@ -42,6 +46,7 @@ export default function RootLayout({
         <main className="flex-1 flex flex-col">{children}</main>
         <Footer />
         <Toaster position="top-center" richColors />
+        <SessionInit />
         <SaveAnonymousResults />
       </body>
     </html>

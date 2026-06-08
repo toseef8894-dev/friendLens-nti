@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { runNTIScoring, UserResponse } from '@/lib/nti-scoring'
 import { QUESTIONS, NTI_TYPES, ARCHETYPES, BEHAVIORAL_RULES } from '@/lib/nti-config'
+import { getErrorMessage } from '@/lib/api-error'
 
 interface ScoreUserInput {
     responses: UserResponse[]
@@ -56,6 +57,10 @@ export async function scoreUser(input: ScoreUserInput) {
         }
 
         revalidatePath('/results')
+        revalidatePath('/friendlens/your-people')
+        revalidatePath('/friendlens/your-sources')
+        revalidatePath('/friendlens/your-time')
+        revalidatePath('/friendlens/your-calendar')
 
         return {
             success: true,
@@ -68,8 +73,8 @@ export async function scoreUser(input: ScoreUserInput) {
                 confidence: result.confidence,
             }
         }
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Scoring error:', err)
-        return { error: err.message || 'Scoring failed' }
+        return { error: getErrorMessage(err) || 'Scoring failed' }
     }
 }

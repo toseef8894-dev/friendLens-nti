@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { runNTIScoring, UserResponse } from '@/lib/nti-scoring'
 import { QUESTIONS, NTI_TYPES, BEHAVIORAL_RULES } from '@/lib/nti-config'
 import { toPrimaryType } from '@/lib/nti-utils'
+import { HAS_RESULTS_COOKIE, sanitizeErrorForClient } from '@/lib/api-error'
 
 export async function POST(request: NextRequest) {
     try {
@@ -16,29 +17,31 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', user.id)
-            .single()
-
-        if (!existingProfile) {
-            const { error: profileError } = await supabase
+        if (!user.is_anonymous) {
+            const { data: existingProfile } = await supabase
                 .from('profiles')
-                .insert({
-                    id: user.id,
-                    email: user.email || '',
-                    first_name: user.user_metadata?.first_name || null,
-                    last_name: user.user_metadata?.last_name || null,
-                    full_name: user.user_metadata?.full_name || null,
-                })
+                .select('id')
+                .eq('id', user.id)
+                .maybeSingle()
 
-            if (profileError) {
-                console.error('Profile creation error:', profileError)
-                return NextResponse.json(
-                    { error: 'Failed to create user profile. Please contact support.' },
-                    { status: 500 }
-                )
+            if (!existingProfile) {
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        email: user.email || '',
+                        first_name: user.user_metadata?.first_name || null,
+                        last_name: user.user_metadata?.last_name || null,
+                        full_name: user.user_metadata?.full_name || null,
+                    })
+
+                if (profileError) {
+                    console.error('Profile creation error:', profileError)
+                    return NextResponse.json(
+                        { error: 'Failed to create user profile. Please contact support.' },
+                        { status: 500 }
+                    )
+                }
             }
         }
 
@@ -96,7 +99,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        return NextResponse.json({
+        const successResponse = NextResponse.json({
             success: true,
             result: {
                 id: result.id,
@@ -108,11 +111,13 @@ export async function POST(request: NextRequest) {
                 confidence: scoringResult.confidence,
             }
         })
+        successResponse.cookies.set(HAS_RESULTS_COOKIE.name, HAS_RESULTS_COOKIE.value, HAS_RESULTS_COOKIE.options)
+        return successResponse
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Submit API error:', error)
         return NextResponse.json(
-            { error: error.message || 'Internal server error' },
+            { error: sanitizeErrorForClient(error) },
             { status: 500 }
         )
     }

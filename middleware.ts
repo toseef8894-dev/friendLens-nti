@@ -68,11 +68,10 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const isResetSession = request.cookies.get('reset_session')?.value === 'true'
+    const hasResultsCookie = request.cookies.get('has_results')?.value === '1'
 
     if (request.nextUrl.pathname.startsWith('/results')) {
-        const isAnonymous = request.nextUrl.searchParams.get('anonymous') === 'true'
-
-        if (!user && !isAnonymous) {
+        if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
 
@@ -87,7 +86,7 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/reset-password', request.url))
         }
     } else if (request.nextUrl.pathname.startsWith('/friendlens')) {
-        if (!user && request.nextUrl.pathname !== '/friendlens/start-here') {
+        if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
         if (isResetSession) {
@@ -98,6 +97,10 @@ export async function middleware(request: NextRequest) {
         if (request.nextUrl.pathname === '/friendlens/your-style') {
             const isRetake = request.nextUrl.searchParams.get('retake') === 'true'
             if (user && !isRetake) {
+                if (hasResultsCookie) {
+                    return NextResponse.redirect(new URL('/results?my_results=true', request.url))
+                }
+                // Fallback DB check for existing users who don't have the cookie yet
                 const { data: result } = await supabase
                     .from('results')
                     .select('id')
@@ -105,7 +108,9 @@ export async function middleware(request: NextRequest) {
                     .limit(1)
                     .maybeSingle()
                 if (result) {
-                    return NextResponse.redirect(new URL('/results?my_results=true', request.url))
+                    const redirectRes = NextResponse.redirect(new URL('/results?my_results=true', request.url))
+                    redirectRes.cookies.set('has_results', '1', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax', httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+                    return redirectRes
                 }
             }
         }
@@ -117,23 +122,30 @@ export async function middleware(request: NextRequest) {
         }
         const isRetake = request.nextUrl.searchParams.get('retake') === 'true'
         if (user && !isRetake) {
+            if (hasResultsCookie) {
+                const redirectUrl = new URL('/results', request.url)
+                redirectUrl.searchParams.set('redirected', 'true')
+                return NextResponse.redirect(redirectUrl)
+            }
+            // Fallback DB check for existing users who don't have the cookie yet
             const { data: result } = await supabase
                 .from('results')
                 .select('id')
                 .eq('user_id', user.id)
                 .limit(1)
                 .maybeSingle()
-
             if (result) {
                 const redirectUrl = new URL('/results', request.url)
                 redirectUrl.searchParams.set('redirected', 'true')
-                return NextResponse.redirect(redirectUrl)
+                const redirectRes = NextResponse.redirect(redirectUrl)
+                redirectRes.cookies.set('has_results', '1', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax', httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+                return redirectRes
             }
         }
     }
 
     if (request.nextUrl.pathname.startsWith('/login')) {
-        if (user) {
+        if (user && !user.is_anonymous) {
             return NextResponse.redirect(new URL('/start-here-1a', request.url))
         }
     }
@@ -141,23 +153,6 @@ export async function middleware(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith('/reset-password') ||
         request.nextUrl.pathname.startsWith('/forgot-password')) {
         return response
-    }
-
-    if (request.nextUrl.pathname.startsWith('/results')) {
-        const isAnonymous = request.nextUrl.searchParams.get('anonymous') === 'true'
-
-        if (user) {
-            const { data: result } = await supabase
-                .from('results')
-                .select('id')
-                .eq('user_id', user.id)
-                .limit(1)
-                .maybeSingle()
-
-            if (!result && !isAnonymous) {
-                return NextResponse.redirect(new URL('/assessment', request.url))
-            }
-        }
     }
 
     return response

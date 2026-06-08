@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { setAuthToken, setAuthUser, clearAuthToken } from '@/lib/auth-storage'
-import { getPendingAnonymousResults, setPendingAnonymousResults } from '@/lib/storage-utils'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
 import { trackEvent } from '@/lib/analytics'
 
@@ -52,38 +51,16 @@ export default function LoginPage() {
                     await supabase.auth.signOut()
                     clearAuthToken()
                     if (typeof window !== 'undefined') {
-                        const pendingResults = getPendingAnonymousResults()
                         localStorage.clear()
                         sessionStorage.clear()
-                        if (pendingResults) {
-                            try {
-                                const parsed = JSON.parse(pendingResults)
-                                setPendingAnonymousResults(parsed)
-                            } catch (e) {
-                                if (typeof window !== 'undefined') {
-                                    localStorage.setItem('pending_anonymous_results', pendingResults)
-                                }
-                            }
-                        }
                     }
                 }
             } catch (err) {
                 console.error('Error clearing stale auth:', err)
                 clearAuthToken()
                 if (typeof window !== 'undefined') {
-                    const pendingResults = getPendingAnonymousResults()
                     localStorage.clear()
                     sessionStorage.clear()
-                    if (pendingResults) {
-                        try {
-                            const parsed = JSON.parse(pendingResults)
-                            setPendingAnonymousResults(parsed)
-                        } catch (e) {
-                            if (typeof window !== 'undefined') {
-                                localStorage.setItem('pending_anonymous_results', pendingResults)
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -127,10 +104,6 @@ export default function LoginPage() {
         if (verifiedParam === 'true') {
             const message = messageParam || 'Verification complete. Redirecting to login screen.'
             toast.success(message)
-            const hasPendingResults = !!getPendingAnonymousResults()
-            if (hasPendingResults) {
-                console.log('Pending anonymous results detected - will be saved after login')
-            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [errorParam, errorDescriptionParam, confirmedParam, verifiedParam, messageParam])
@@ -175,12 +148,31 @@ export default function LoginPage() {
                     return
                 }
 
-                const hasPendingResults = !!getPendingAnonymousResults()
+                const { data: { user: currentUser } } = await supabase.auth.getUser()
+
+                if (currentUser?.is_anonymous) {
+                    // Upgrade anonymous account — preserves user_id and all saved data
+                    localStorage.setItem('upgrading_anonymous', 'true')
+                    trackEvent('signup_started')
+                    trackEvent('email_signup_submitted')
+                    const { error } = await supabase.auth.updateUser({
+                        email,
+                        password,
+                        data: {
+                            first_name: firstName.trim(),
+                            last_name: lastName.trim(),
+                            full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+                        },
+                    })
+                    if (error) throw error
+                    trackEvent('email_confirmation_requested')
+                    setSignupComplete(true)
+                    setLoading(false)
+                    return
+                }
 
                 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-                const redirectTo = hasPendingResults
-                    ? `${baseUrl}/auth/callback?save_results=true`
-                    : `${baseUrl}/auth/callback`
+                const redirectTo = `${baseUrl}/auth/callback`
 
                 trackEvent('signup_started')
                 trackEvent('email_signup_submitted')

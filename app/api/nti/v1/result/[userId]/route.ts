@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { ARCHETYPES, getNTITypeById } from '@/lib/nti-config'
 import type { ArchetypeId } from '@/lib/nti-scoring'
+import { sanitizeErrorForClient } from '@/lib/api-error'
 
 export async function GET(
     request: NextRequest,
@@ -83,10 +84,10 @@ export async function GET(
             }
         })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Result API error:', error)
         return NextResponse.json(
-            { error: error.message || 'Internal server error' },
+            { error: sanitizeErrorForClient(error) },
             { status: 500 }
         )
     }
