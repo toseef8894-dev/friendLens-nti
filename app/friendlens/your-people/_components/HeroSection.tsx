@@ -9,7 +9,7 @@ export default function HeroSection() {
   const subheading =
     step === 'table'
       ? 'A living picture of the people in your life right now'
-      : 'Identify and enter your friends'
+      : 'People, Sources, Time, and Events are the four primary components of social connection'
 
   return (
     <div className="flex flex-col items-center mb-12 max-w-3xl">

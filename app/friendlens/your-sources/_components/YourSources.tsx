@@ -356,6 +356,10 @@ export const YourSources = ({ initialSources, allFriends, totalFriendsCount }: Y
                         </h2>
                     </div>
 
+                    <p className="text-sm text-[#62748E] leading-5 mb-6" style={{ letterSpacing: '-0.15px' }}>
+                        Sources are where your new friends come from. Understanding and optimizing your sources helps you find better opportunities to meet compatible people.
+                    </p>
+
                     <div className="grid md:grid-cols-2 gap-x-6 gap-y-0">
                         {/* Left Column */}
                         <div className="flex flex-col gap-4">

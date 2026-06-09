@@ -15,14 +15,14 @@ export default function HeroSection() {
                 className="text-base sm:text-2xl font-medium leading-6 sm:leading-7 text-center text-[#45556C] max-w-[640px]"
                 style={{ letterSpacing: '1.3px' }}
             >
-                of connections and future friends
+                New connections and future friends
             </p>
 
             <p
                 className="text-xs sm:text-sm font-normal leading-5 sm:leading-6 text-center text-[#62748E] max-w-[320px] sm:max-w-none"
                 style={{ letterSpacing: '-0.312px', paddingTop: '16px' }}
             >
-                Use this tool to manage breadth and diversity of exposure to new and quality people
+                Identify and manage sources of new and quality people
             </p>
         </div>
     )

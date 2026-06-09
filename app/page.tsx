@@ -50,7 +50,8 @@ export default function Home() {
               className="mt-6 text-lg sm:text-xl font-medium text-center text-[#45556C] max-w-xl mx-auto"
               style={{ letterSpacing: '-0.2px' }}
             >
-              Whether you have a few friends or many, <br /> one more good friend is always possible.
+              Struggling to maintain enough meaningful friendships?
+              <br /> FriendLens helps you close the friendship gap.
             </p>
             <div className="mt-10">
               <CTAButton text="Get your friendship snapshot" variant="primary" />
@@ -73,14 +74,14 @@ export default function Home() {
                 className="text-xl sm:text-2xl font-semibold text-center text-[#0F172B] mb-8"
                 style={{ letterSpacing: '-0.5px' }}
               >
-                What you&apos;ll see with FriendLens
+                What you'll see with FriendLens
               </h2>
               <ul className="space-y-4 max-w-md mx-auto">
                 {[
-                  'Where to meet one more good friend',
-                  'How much time you actually have',
                   'How to develop one more good friend',
                   'Which relationships aren’t working',
+                  'Where to meet one more good friend',
+                  'How much time you actually have',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <span className="mt-1 w-5 h-5 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -174,7 +175,10 @@ export default function Home() {
                 FriendLens was created by Erik Newton, an entrepreneur and author who has spent years studying how friendships actually work.
               </p>
               <p className="text-base text-[#45556C] leading-relaxed">
-                It&apos;s a private tool to help you see your social world clearly and invest your time where it works.
+                His research revealed that one behavior signals friendship suitability better than any other.
+              </p>
+              <p className="text-base text-[#45556C] leading-relaxed">
+                FriendLens is a private tool that helps you see your social world more clearly and invest your time where it works.
               </p>
               <div className="mt-8">
                 <CTAButton text="Get your friendship snapshot" variant="primary" />

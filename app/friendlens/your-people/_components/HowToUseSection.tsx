@@ -31,29 +31,37 @@ export default function HowToUseSection() {
           </div>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-x-6 gap-y-0">
-          <div className="flex flex-col gap-4">
-            <InstructionStep
-              description="Enter name"
-            />
-            <InstructionStep
-              description="Select the friend type from the dropdown"
-            />
-          </div>
-          <div className="flex flex-col gap-4">
-            <InstructionStep
-              description="Answer the four questions about the interaction"
-            />
-            <InstructionStep
-              description="Do not list contacts and potential friends--just friends"
-            />
-            <div className="pt-6 border-t border-[#E2E8F0]/50">
-              <p className="text-[#90A1B9] text-xs leading-4 italic">
-                💡After you build the initial list, you can view it as a table by clicking on the icon to the right of Add Person
-              </p>
+        <>
+          <p className="text-sm text-[#62748E] leading-5 mb-6" style={{ letterSpacing: '-0.15px' }}>
+            Add a few friends and answer four questions about each relationship. FriendLens uses these inputs to identify patterns and provide insights based on our research into what keeps friendships strong. You can use nicknames if you like; it is private and only for your use.
+          </p>
+          <h3 className="text-[#0F172B] text-sm font-semibold leading-5 mb-4" style={{ letterSpacing: '-0.15px' }}>
+            Next steps
+          </h3>
+          <div className="grid md:grid-cols-2 gap-x-6 gap-y-0">
+            <div className="flex flex-col gap-4">
+              <InstructionStep
+                description="Enter name"
+              />
+              <InstructionStep
+                description="Select the friend type from the dropdown"
+              />
+            </div>
+            <div className="flex flex-col gap-4">
+              <InstructionStep
+                description="Answer the four questions about the interaction"
+              />
+              <InstructionStep
+                description="Do not list contacts and potential friends--just friends"
+              />
+              <div className="pt-6 border-t border-[#E2E8F0]/50">
+                <p className="text-[#90A1B9] text-xs leading-4 italic">
+                  💡After you build the initial list, you can view it as a table by clicking on the icon to the right of Add Person
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   )

@@ -8,6 +8,7 @@ import FriendsListContent from './_components/FriendsListScreen'
 import FriendsTableContent from './_components/FriendsTableScreen'
 import HowToUseSection from './_components/HowToUseSection'
 import ProlificSurveyCTA from '@/components/ProlificSurveyCTA'
+import InfoSection from '@/components/InfoSectionCard'
 
 type Step = 'add' | 'list' | 'table'
 
@@ -84,9 +85,11 @@ export default async function YourPeoplePage({ searchParams }: PageProps) {
 
         </div>
 
+
         {step === 'add' && <AddFriendsContent single={searchParams.single === 'true'} />}
         {step === 'list' && <FriendsListContent friends={friendsList} />}
         {step === 'table' && <FriendsTableContent friends={friendsList} />}
+        <InfoSection />
         <ProlificSurveyCTA />
       </main>
     </div>
