@@ -37,16 +37,18 @@ export default function AdminBlogPage() {
     }
 
     function handlePublishToggle(post: BlogPost) {
-        startTransition(async () => {
-            const fn = post.is_published ? unpublishPost : publishPost
-            const { error: err } = await fn(post.id)
-            if (err) { toast.error(err); return }
-            toast.success(post.is_published ? 'Post unpublished' : 'Post published')
-            setPosts(prev =>
-                prev.map(p =>
-                    p.id === post.id ? { ...p, is_published: !p.is_published } : p
+        startTransition(() => {
+            void (async () => {
+                const fn = post.is_published ? unpublishPost : publishPost
+                const { error: err } = await fn(post.id)
+                if (err) { toast.error(err); return }
+                toast.success(post.is_published ? 'Post unpublished' : 'Post published')
+                setPosts(prev =>
+                    prev.map(p =>
+                        p.id === post.id ? { ...p, is_published: !p.is_published } : p
+                    )
                 )
-            )
+            })()
         })
     }
 
