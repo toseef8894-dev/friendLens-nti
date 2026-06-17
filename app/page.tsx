@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 
 const CTAButton = dynamic(() => import('@/components/CTAButton'), {
   ssr: false,
@@ -58,6 +59,12 @@ export default function Home() {
             </div>
             <p className="mt-4 text-sm text-[#62748E]">
               Takes 2–3 minutes. Private and secure.
+            </p>
+            <p className="mt-3 text-sm text-[#62748E]">
+              Already have an account?{' '}
+              <Link href="/login" className="text-indigo-600 hover:underline font-medium">
+                Sign in
+              </Link>
             </p>
             {/* <p
               className="mt-2 text-sm font-normal text-center text-[#62748E] max-w-[380px] mx-auto"

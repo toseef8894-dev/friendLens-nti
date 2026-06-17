@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Settings, ChevronLeft } from 'lucide-react'
+import { LayoutDashboard, Users, Settings, ChevronLeft, BookOpen } from 'lucide-react'
 
 const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Blog', href: '/admin/blog', icon: BookOpen },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, User as UserIcon, Shield, Menu, X } from 'lucide-react'
+import { LogOut, LogIn, User as UserIcon, Shield, Menu, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { clearAuthToken } from '@/lib/auth-storage'
 import { useAuth } from '@/hooks/useAuth'
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
     { label: 'Your Sources', href: '/friendlens/your-sources', activePaths: ['/friendlens/your-sources'] },
     { label: 'Your Time', href: '/friendlens/your-time', activePaths: ['/friendlens/your-time'] },
     { label: 'Your Events', href: '/friendlens/your-calendar', activePaths: ['/friendlens/your-calendar'] },
+    { label: 'Blog', href: '/blog', activePaths: ['/blog'], isPublic: true },
 ]
 
 export default function Header() {
@@ -97,8 +98,8 @@ export default function Header() {
         }
     }
 
-    const handleNavClick = (href: string) => {
-        if (user || href === '/friendlens/start-here') {
+    const handleNavClick = (href: string, isPublic?: boolean) => {
+        if (user || href === '/friendlens/start-here' || isPublic) {
             router.push(href)
             setIsMobileNavOpen(false)
         } else {
@@ -132,7 +133,7 @@ export default function Header() {
                     {NAV_ITEMS.map((item) => {
                         const href = getHref(item)
                         const active = getIsActive(item)
-                        return (user || href === '/friendlens/start-here') ? (
+                        return (user || href === '/friendlens/start-here' || item.isPublic) ? (
                             <Link
                                 key={item.label}
                                 href={href}
@@ -144,7 +145,7 @@ export default function Header() {
                         ) : (
                             <button
                                 key={item.label}
-                                onClick={() => handleNavClick(href)}
+                                onClick={() => handleNavClick(href, item.isPublic)}
                                 className="text-sm md:text-base font-medium leading-6 transition-colors text-text-secondary hover:text-text-primary cursor-pointer"
                                 style={{ letterSpacing: '-0.312px' }}
                             >
@@ -192,18 +193,28 @@ export default function Header() {
                                         onClick={(e) => {
                                             e.preventDefault()
                                             setIsMenuOpen(false)
-
-                                            toast.info(
-                                                'Redirecting you to your results page. If you want to retake the survey, see the link at the bottom of the page.',
-                                                { duration: 3000 }
-                                            )
-
+                                            if (!user?.is_anonymous) {
+                                                toast.info(
+                                                    'Redirecting you to your results page. If you want to retake the survey, see the link at the bottom of the page.',
+                                                    { duration: 3000 }
+                                                )
+                                            }
                                             router.push('/results?my_results=true')
                                         }}
                                         className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                     >
                                         My Results
                                     </button>
+                                    {user?.is_anonymous && (
+                                        <Link
+                                            href="/login"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50"
+                                        >
+                                            <LogIn size={16} />
+                                            Log in to your account
+                                        </Link>
+                                    )}
                                     {isAdmin && (
                                         <Link
                                             href="/admin"
@@ -298,7 +309,7 @@ export default function Header() {
                             return (
                                 <button
                                     key={item.label}
-                                    onClick={() => handleNavClick(href)}
+                                    onClick={() => handleNavClick(href, item.isPublic)}
                                     className={`w-full text-left px-6 py-3 text-base font-medium transition-colors ${active
                                         ? 'text-text-primary bg-gray-50'
                                         : 'text-text-secondary hover:text-text-primary hover:bg-gray-50'
@@ -317,6 +328,16 @@ export default function Header() {
                             >
                                 <Shield size={16} />
                                 Admin
+                            </Link>
+                        )}
+                        {user?.is_anonymous && (
+                            <Link
+                                href="/login"
+                                onClick={() => setIsMobileNavOpen(false)}
+                                className="px-6 py-3 text-base font-medium flex items-center gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
+                            >
+                                <LogIn size={16} />
+                                Log in to your account
                             </Link>
                         )}
                     </nav>
