@@ -19,6 +19,7 @@ export default function NewBlogPostPage() {
     const [excerpt, setExcerpt] = useState('')
     const [content, setContent] = useState('')
     const [coverUrl, setCoverUrl] = useState('')
+    const [publishedAt, setPublishedAt] = useState('')
 
     function handleTitleChange(val: string) {
         setTitle(val)
@@ -42,6 +43,7 @@ export default function NewBlogPostPage() {
                     content,
                     excerpt,
                     cover_image_url: coverUrl || undefined,
+                    published_at: publishedAt || undefined,
                 })
                 if (error) { toast.error(error); return }
                 toast.success('Post created!')
@@ -117,6 +119,18 @@ export default function NewBlogPostPage() {
                             placeholder="https://..."
                             className={INPUT_CLASS}
                         />
+                    </div>
+
+                    {/* Publish Date */}
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Publish Date <span className="text-gray-400 font-normal">(optional)</span></label>
+                        <input
+                            type="datetime-local"
+                            value={publishedAt}
+                            onChange={e => setPublishedAt(e.target.value)}
+                            className={INPUT_CLASS}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Controls sort order. Defaults to publish time if left blank.</p>
                     </div>
                 </div>
 

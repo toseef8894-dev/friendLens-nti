@@ -8,6 +8,12 @@ import { ArrowLeft } from 'lucide-react'
 import { getPostById, updatePost } from '../../actions'
 import { slugify } from '@/lib/slugify'
 
+function toDatetimeLocal(iso: string): string {
+    const d = new Date(iso)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 const INPUT_CLASS = 'w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors'
 
 export default function EditBlogPostPage({ params }: { params: { id: string } }) {
@@ -22,6 +28,7 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
     const [excerpt, setExcerpt] = useState('')
     const [content, setContent] = useState('')
     const [coverUrl, setCoverUrl] = useState('')
+    const [publishedAt, setPublishedAt] = useState('')
 
     useEffect(() => {
         async function loadPost() {
@@ -32,6 +39,7 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
             setExcerpt(post.excerpt)
             setContent(post.content)
             setCoverUrl(post.cover_image_url || '')
+            setPublishedAt(post.published_at ? toDatetimeLocal(post.published_at) : '')
             setSlugManuallyEdited(true)
             setLoading(false)
         }
@@ -60,6 +68,7 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
                     content,
                     excerpt,
                     cover_image_url: coverUrl || undefined,
+                    published_at: publishedAt || undefined,
                 })
                 if (error) { toast.error(error); return }
                 toast.success('Post updated!')
@@ -158,6 +167,18 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
                             placeholder="https://..."
                             className={INPUT_CLASS}
                         />
+                    </div>
+
+                    {/* Publish Date */}
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Publish Date <span className="text-gray-400 font-normal">(optional)</span></label>
+                        <input
+                            type="datetime-local"
+                            value={publishedAt}
+                            onChange={e => setPublishedAt(e.target.value)}
+                            className={INPUT_CLASS}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Controls sort order. Defaults to publish time if left blank.</p>
                     </div>
                 </div>
 

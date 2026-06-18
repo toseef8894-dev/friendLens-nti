@@ -38,6 +38,7 @@ export interface BlogPostFormData {
     content: string
     excerpt: string
     cover_image_url?: string
+    published_at?: string
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -166,6 +167,7 @@ export async function createPost(formData: BlogPostFormData): Promise<{ post?: B
             content: formData.content.trim(),
             excerpt: formData.excerpt.trim(),
             cover_image_url: formData.cover_image_url?.trim() || null,
+            published_at: formData.published_at ? new Date(formData.published_at).toISOString() : null,
             author_id: user.id,
         })
         .select()
@@ -206,6 +208,7 @@ export async function updatePost(id: string, formData: BlogPostFormData): Promis
             content: formData.content.trim(),
             excerpt: formData.excerpt.trim(),
             cover_image_url: formData.cover_image_url?.trim() || null,
+            published_at: formData.published_at ? new Date(formData.published_at).toISOString() : null,
         })
         .eq('id', id)
 
@@ -253,9 +256,16 @@ export async function publishPost(id: string): Promise<{ error?: string }> {
     const { supabase } = await getAuthenticatedUser()
     if (!supabase) return { error: 'Not authenticated' }
 
+    // Preserve a manually set published_at; only default to now if none is set
+    const { data: current } = await supabase
+        .from('blog_posts')
+        .select('published_at')
+        .eq('id', id)
+        .single()
+
     const { error: dbError } = await supabase
         .from('blog_posts')
-        .update({ is_published: true, published_at: new Date().toISOString() })
+        .update({ is_published: true, published_at: current?.published_at ?? new Date().toISOString() })
         .eq('id', id)
 
     if (dbError) return { error: dbError.message }
