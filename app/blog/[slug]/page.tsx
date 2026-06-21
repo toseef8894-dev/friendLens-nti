@@ -2,7 +2,6 @@ import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import ReactMarkdown from 'react-markdown'
 import { getPostBySlug as _getPostBySlug } from '@/app/(protected)/admin/blog/actions'
 
 // Deduplicate DB call between generateMetadata and the page component
@@ -72,10 +71,11 @@ export default async function BlogPostPage({ params }: Props) {
 
                 <hr className="border-[#E2E8F0] mb-8" />
 
-                {/* Markdown content */}
-                <div className="prose prose-gray max-w-none">
-                    <ReactMarkdown>{post.content}</ReactMarkdown>
-                </div>
+                {/* Post content */}
+                <div
+                    className="prose prose-gray max-w-none"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                />
 
                 {/* Back link */}
                 <div className="mt-12 pt-8 border-t border-gray-200">

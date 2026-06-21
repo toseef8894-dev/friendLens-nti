@@ -257,7 +257,7 @@ export default function YourTime({ initialData }: YourTimeProps) {
                                     className="px-4 py-3.5 text-left text-sm font-semibold text-[#45556C] whitespace-nowrap"
                                     style={{ letterSpacing: '-0.15px', width: '24%' }}
                                 >
-                                    Any Changes?
+                                    Any Adjustments?
                                 </th>
                             </tr>
                         </thead>

@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import { getPostById, updatePost } from '../../actions'
 import { slugify } from '@/lib/slugify'
+import TiptapEditor from '@/components/TiptapEditor'
 
 function toDatetimeLocal(iso: string): string {
     const d = new Date(iso)
@@ -185,13 +186,7 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
                 {/* Content */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Content</label>
-                    <textarea
-                        value={content}
-                        onChange={e => setContent(e.target.value)}
-                        placeholder="Write your post content here..."
-                        className={`${INPUT_CLASS} min-h-[360px] resize-y font-mono text-sm`}
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Supports Markdown formatting.</p>
+                    <TiptapEditor content={content} onChange={setContent} />
                 </div>
 
                 {/* Actions */}
