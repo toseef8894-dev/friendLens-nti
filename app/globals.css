@@ -38,6 +38,13 @@ body {
   animation: none;
 }
 
+/* Prose image sizing — prevents overflow on mobile */
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+}
+
 /* Tiptap editor placeholder */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
