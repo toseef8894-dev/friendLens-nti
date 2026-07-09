@@ -54,6 +54,7 @@ function revalidateBlog() {
     revalidatePath('/admin/blog')
     revalidatePath('/blog', 'layout')
     revalidatePath('/blog/[slug]', 'page')
+    revalidatePath('/sitemap.xml')
 }
 
 // ── Admin: getAllPostsForAdmin ─────────────────────────────────
@@ -123,6 +124,27 @@ export async function getPublishedPosts(page = 1): Promise<{
     if (dbError) return { error: dbError.message }
     const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE)
     return { posts: data as BlogPostSummary[], totalPages, currentPage: page }
+}
+
+// ── Public: getAllPublishedSlugs ────────────────────────────────
+// Unpaginated — for sitemap generation only. Keep the selected columns minimal.
+
+export interface BlogPostSlug {
+    slug: string
+    updated_at: string
+}
+
+export async function getAllPublishedSlugs(): Promise<{ posts?: BlogPostSlug[]; error?: string }> {
+    const supabase = createClient()
+
+    const { data, error: dbError } = await supabase
+        .from('blog_posts')
+        .select('slug, updated_at')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+
+    if (dbError) return { error: dbError.message }
+    return { posts: data as BlogPostSlug[] }
 }
 
 // ── Public: getPostBySlug ─────────────────────────────────────
