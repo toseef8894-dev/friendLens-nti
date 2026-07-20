@@ -22,7 +22,7 @@ export const EMAIL = {
     SUPPORT_FROM: process.env.SUPPORT_EMAIL_FROM || 'Support <support@friendlens.ai>',
 } as const
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://friendlens.ai'
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.friendlens.ai'
 
 /** Simple RFC-5322-inspired regex — rejects obviously invalid addresses. */
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
